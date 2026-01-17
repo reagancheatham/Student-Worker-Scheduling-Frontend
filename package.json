@@ -1,0 +1,32 @@
+{
+    "name": "student-worker-scheduling-frontend",
+    "version": "1.0.0",
+    "homepage": "https://github.com/reagancheatham/Student-Worker-Scheduling-Frontend#readme",
+    "bugs": {
+        "url": "https://github.com/reagancheatham/Student-Worker-Scheduling-Frontend/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/reagancheatham/Student-Worker-Scheduling-Frontend.git"
+    },
+    "type": "module",
+    "main": "index.ts",
+    "scripts": {
+        "dev": "cross-env VITE_APP_MODE=development vite",
+        "build": "cross-env VITE_APP_MODE=production vite build",
+        "preview": "vite preview",
+        "bundle": "mv .env dist"
+    },
+    "dependencies": {
+        "@nuxt/ui": "^4.3.0",
+        "axios": "^1.13.2",
+        "tailwindcss": "^4.1.18",
+        "vue": "^3.5.26",
+        "vue-router": "^4.6.4"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^6.0.3",
+        "cross-env": "^10.1.0",
+        "vite": "^7.3.1"
+    }
+}
