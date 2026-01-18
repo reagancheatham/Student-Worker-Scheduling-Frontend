@@ -28,17 +28,41 @@ const items = computed<NavigationMenuItem[]>(() => [
         active: route.path.startsWith(Routes.Settings),
     },
 ]);
+
+const searchGroups = computed(() => [
+    {
+        id: "links",
+        label: "Go to",
+        items: items.value.flat(),
+    },
+]);
 </script>
 
 <template>
     <UApp>
-        <UHeader title="" toggle-side="left">
-            <UNavigationMenu orientation="vertical" :items="items" />
-        </UHeader>
         <UMain>
-            <NuxtLayout>
-                <NuxtPage />
-            </NuxtLayout>
+            <UDashboardGroup>
+                <UDashboardSidebar resizable collapsible>
+                    <template #default="{ collapsed }">
+                        <UDashboardSearchButton
+                            :collaped="collapsed"
+                            class="bg-transparent ring-default"
+                        />
+
+                        <UNavigationMenu
+                            orientation="vertical"
+                            :items="items"
+                        />
+                    </template>
+                </UDashboardSidebar>
+                <UDashboardPanel>
+                    <template #header>
+                        <UDashboardNavbar></UDashboardNavbar>
+                    </template>
+                </UDashboardPanel>
+
+                <UDashboardSearch :groups="searchGroups" />
+            </UDashboardGroup>
         </UMain>
         <UFooter />
     </UApp>
