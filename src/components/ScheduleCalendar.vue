@@ -35,8 +35,8 @@ const weekDays = [
 .topCalendarContainer {
     --min-cell-width: 50px;
     --max-cell-width: 160px;
-    --min-cell-height: 50px;
-    --max-cell-height: 70px;
+    --min-cell-height: calc(50px / 60);
+    --max-cell-height: calc(70px / 60);
 
     width: fit-content;
     height: fit-content;
@@ -58,6 +58,11 @@ const weekDays = [
 .timeLabel {
     width: 100%;
     color: var(--color-gray-500);
+    grid-row: span 60;
+    position: relative;
+    justify-content: right;
+    padding-right: 12px;
+    top: 50%;
 }
 
 .calendarBody {
@@ -83,7 +88,7 @@ const weekDays = [
         minmax(var(--min-cell-width), var(--max-cell-width))
     );
     grid-template-rows: repeat(
-        25,
+        calc((1 + 24) * 60),
         minmax(var(--min-cell-height), var(--max-cell-height))
     );
 }
@@ -94,9 +99,14 @@ const weekDays = [
     display: grid;
     grid-area: stack-area;
     grid-column: 2 / -1;
-    grid-row: 2 / -1;
+    grid-row: 61 / -1;
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;
+}
+
+.calendarCell {
+    grid-column: span 1;
+    grid-row: span 60;
 }
 
 .dayDisplay {
@@ -127,8 +137,6 @@ const weekDays = [
 
 .event {
     background-color: rgba(from var(--color-red-400) r g b / 0.5);
-    grid-row-start: 1;
-    grid-row-end: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -182,9 +190,9 @@ const weekDays = [
                         </div>
                         <div class="cellContainer">
                             <UCard
+                                class="calendarCell rounded-none ring-gray-300"
                                 variant="outline"
-                                class="rounded-none ring-gray-300"
-                                v-for="n in 7 * 24"
+                                v-for="_ in 7 * 24"
                             />
                         </div>
                         <div class="eventContainer">
@@ -192,11 +200,7 @@ const weekDays = [
                                 class="event ring-2 ring-red-500"
                                 variant="subtle"
                                 style="
-                                    grid-area: 6 / 2 / span 2 / span 1;
-                                    margin-top: calc(0.25 * var(--cell-height));
-                                    margin-bottom: calc(
-                                        0.5 * var(--cell-height)
-                                    );
+                                    grid-area: calc(60 * 7 + 15) / 2 / span 75 / span 1;
                                 "
                             >
                                 <UBadge
