@@ -35,11 +35,12 @@ const weekDays = [
 .topCalendarContainer {
     --min-cell-width: 50px;
     --max-cell-width: 160px;
-    --min-cell-height: calc(50px / 60);
-    --max-cell-height: calc(70px / 60);
+    --min-cell-height: calc(10px / 60);
+    --max-cell-height: calc(50px / 60);
 
     width: fit-content;
     height: fit-content;
+    margin-left: -5%;
 }
 
 .calendarContainer {
@@ -109,17 +110,24 @@ const weekDays = [
     grid-row: span 60;
 }
 
+.dayContainer {
+    display: grid;
+    grid-column: 2 / -1;
+    grid-row: 1 / 60;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+}
+
 .dayDisplay {
-    min-width: var(--min-cell-width);
-    max-width: var(--max-cell-width);
-    height: calc(var(--min-cell-height) + 20px);
     display: flex;
-    flex: 1 1 0;
     flex-direction: column;
+    grid-column: span 1;
+    grid-row: span 60;
     align-items: center;
     justify-items: center;
     text-align: center;
     color: var(--color-gray-500);
+    margin-top: -16px;
 }
 
 .eventContainer {
@@ -141,7 +149,6 @@ const weekDays = [
     flex-direction: column;
     align-items: center;
     padding-left: 20px;
-    overflow: hidden;
 }
 
 .event > * {
@@ -156,19 +163,21 @@ const weekDays = [
             <div class="calendarBody">
                 <div class="calendarDisplay">
                     <div class="calendarGrid">
-                        <div class="dayDisplay" v-for="n in 7">
-                            <UBadge
-                                class="text-primary"
-                                color="clear"
-                                size="xl"
-                                :label="weekDays[n - 1].abbreviation"
-                            />
-                            <UBadge
-                                class="text-dimmed"
-                                color="clear"
-                                size="xl"
-                                :label="n"
-                            />
+                        <div class="dayContainer">
+                            <div class="dayDisplay" v-for="n in 7">
+                                <UBadge
+                                    class="text-primary"
+                                    color="clear"
+                                    size="xl"
+                                    :label="weekDays[n - 1].abbreviation"
+                                />
+                                <UBadge
+                                    class="text-dimmed"
+                                    color="clear"
+                                    size="xl"
+                                    :label="n"
+                                />
+                            </div>
                         </div>
                         <div class="timeContainer">
                             <UBadge color="clear" class="timeLabel"></UBadge>
@@ -197,21 +206,24 @@ const weekDays = [
                         </div>
                         <div class="eventContainer">
                             <UCard
-                                class="event ring-2 ring-red-500"
+                                class="event ring-2 ring-red-400"
                                 variant="subtle"
                                 style="
-                                    grid-area: calc(60 * 7 + 15) / 2 / span 75 / span 1;
+                                    grid-area: calc(60 * 7 + 15) / 2 / span 75 /
+                                        span 1;
                                 "
                             >
                                 <UBadge
                                     class="font-bold"
                                     variant="ghost"
                                     label="My Event"
+                                    style="max-width: 100%"
                                 />
                                 <UBadge
                                     class="font-normal"
                                     variant="ghost"
                                     label="6:15 AM - 7:30 AM"
+                                    style="max-width: 100%"
                                 />
                             </UCard>
                         </div>
