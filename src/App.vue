@@ -3,6 +3,7 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { Routes } from "./routing/routes.ts";
+import { initializeFirebaseCloudMessaging } from "./firebase/messaging.ts";
 
 const route = useRoute();
 
@@ -36,6 +37,10 @@ const searchGroups = computed(() => [
         items: items.value.flat(),
     },
 ]);
+
+async function initializeMessaging() {
+    await initializeFirebaseCloudMessaging();
+}
 </script>
 
 <template>
@@ -64,6 +69,26 @@ const searchGroups = computed(() => [
                 <UDashboardSearch :groups="searchGroups" />
             </UDashboardGroup>
         </UMain>
+
         <UFooter />
+        <UContainer
+            style="
+                position: relative;
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 200px;
+                margin-top: 20px;
+            "
+        >
+            <UButton type="button" @click="initializeMessaging">
+                Test Notifications
+            </UButton>
+            <UButton type="button" @click="console.log('working')">
+                Test
+            </UButton>
+        </UContainer>
     </UApp>
 </template>

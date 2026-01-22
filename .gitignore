@@ -34,3 +34,6 @@ __screenshots__/
 # Nuxt UI
 auto-imports.d.ts
 components.d.ts
+
+# Firebase Admin
+student-worker-schedulin-add8d-firebase-adminsdk-fbsvc-91284b8394.json
