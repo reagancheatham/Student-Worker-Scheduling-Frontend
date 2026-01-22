@@ -211,7 +211,7 @@ const weekDays = [
                                 variant="ghost"
                                 style="
                                     grid-area: calc(60 * 7 + 15) / 2 / span
-                                        125 / span 1;
+                                        75 / span 1;
                                 "
                             >
                                 <template #header>
@@ -225,24 +225,13 @@ const weekDays = [
 
                                 <template #default>
                                     <UBadge
-                                        class="font-normal text-gray-800 w-full"
+                                        class="font-normal text-gray-800 flex flex-col items-start"
                                         variant="ghost"
                                         label="6:15 AM - 7:30 AM"
-                                        style="
-                                            background-color: green;
-                                            height: 80px;
-                                            display: flex;
-                                            flex-direction: column;
-                                        "
-                                    >
-                                        <template #label="{ label }">
-                                            <span
-                                                class="whitespace-normal text-wrap"
-                                            >
-                                                {{ label }}
-                                            </span>
-                                        </template>
-                                    </UBadge>
+                                        :ui="{
+                                            label: 'text-wrap line-clamp-2',
+                                        }"
+                                    />
                                 </template>
                             </UCard>
                         </div>
