@@ -36,11 +36,11 @@ const weekDays = [
     --min-cell-width: 50px;
     --max-cell-width: 160px;
     --min-cell-height: calc(10px / 60);
-    --max-cell-height: calc(50px / 60);
+    --max-cell-height: calc(40px / 60);
 
     width: fit-content;
     height: fit-content;
-    margin-left: -5%;
+    margin-top: 5vh;
 }
 
 .calendarContainer {
@@ -123,11 +123,11 @@ const weekDays = [
     flex-direction: column;
     grid-column: span 1;
     grid-row: span 60;
+    justify-content: flex-end;
     align-items: center;
-    justify-items: center;
-    text-align: center;
     color: var(--color-gray-500);
-    margin-top: -16px;
+    position: relative;
+    margin-top: -2vh;
 }
 
 .eventContainer {
@@ -144,14 +144,15 @@ const weekDays = [
 }
 
 .event {
-    background-color: rgba(from var(--color-red-400) r g b / 0.5);
+    background-color: rgba(from var(--color-sky-500) r g b / 1);
+    border-left-width: 4px;
+    border-color: var(--color-sky-600);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding-left: 20px;
+    padding-left: 10px;
 }
 
-.event > * {
+.event * {
     padding: 0px;
 }
 </style>
@@ -206,25 +207,43 @@ const weekDays = [
                         </div>
                         <div class="eventContainer">
                             <UCard
-                                class="event ring-2 ring-red-400"
-                                variant="subtle"
+                                class="event"
+                                variant="ghost"
                                 style="
-                                    grid-area: calc(60 * 7 + 15) / 2 / span 75 /
-                                        span 1;
+                                    grid-area: calc(60 * 7 + 15) / 2 / span
+                                        125 / span 1;
                                 "
                             >
-                                <UBadge
-                                    class="font-bold"
-                                    variant="ghost"
-                                    label="My Event"
-                                    style="max-width: 100%"
-                                />
-                                <UBadge
-                                    class="font-normal"
-                                    variant="ghost"
-                                    label="6:15 AM - 7:30 AM"
-                                    style="max-width: 100%"
-                                />
+                                <template #header>
+                                    <UBadge
+                                        class="font-medium text-black"
+                                        variant="ghost"
+                                        label="My Event"
+                                        style="max-width: 100%"
+                                    />
+                                </template>
+
+                                <template #default>
+                                    <UBadge
+                                        class="font-normal text-gray-800 w-full"
+                                        variant="ghost"
+                                        label="6:15 AM - 7:30 AM"
+                                        style="
+                                            background-color: green;
+                                            height: 80px;
+                                            display: flex;
+                                            flex-direction: column;
+                                        "
+                                    >
+                                        <template #label="{ label }">
+                                            <span
+                                                class="whitespace-normal text-wrap"
+                                            >
+                                                {{ label }}
+                                            </span>
+                                        </template>
+                                    </UBadge>
+                                </template>
                             </UCard>
                         </div>
                     </div>
