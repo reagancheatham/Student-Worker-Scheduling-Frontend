@@ -13,13 +13,14 @@
 .calendarCell {
     grid-column: span 1;
     grid-row: span 60;
+    /* background-color: var(--color-gray-800); */
 }
 </style>
 
 <template>
     <div class="cellContainer">
         <UCard
-            class="calendarCell rounded-none ring-gray-400"
+            class="calendarCell rounded-none ring-gray-600"
             variant="outline"
             v-for="_ in 7 * 24"
         />
