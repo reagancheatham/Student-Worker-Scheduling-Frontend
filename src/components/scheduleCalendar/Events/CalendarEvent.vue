@@ -1,17 +1,30 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { EventTime, TimePeriod } from "../../../classes/calendar/eventTime.ts";
 
 // these props are very temporary, we should just pass an event object
 const props = defineProps<{
     color: string;
-    day: number;
-    startHour: number;
-    startMinute: number;
-    startPeriod: string;
-    endHour: number;
-    endMinute: number;
-    endPeriod: string;
+    startTime: EventTime;
+    endTime: EventTime;
 }>();
+
+function getStartHour(): number {
+    let hour = props.startTime.hour;
+
+    if (props.startTime.period == TimePeriod.PM)
+        hour += 12;
+
+    return hour;
+}
+
+function getEndHour(): number {
+    let hour = props.endTime.hour;
+
+    if (props.endTime.period == TimePeriod.PM)
+        hour += 12;
+
+    return hour;
+}
 </script>
 
 <style>
@@ -33,7 +46,7 @@ const props = defineProps<{
         class="event"
         variant="ghost"
         :style="{
-            'grid-area': `calc(60 * (1 + ${startHour}) + ${startMinute}) / calc(1 + ${day}) / span calc(60 * (${endHour} - ${startHour}) + (${endMinute} - ${startMinute})) / span 1`,
+            'grid-area': `calc(60 * (1 + ${getStartHour()}) + ${startTime.minute}) / calc(1 + ${startTime.day}) / span calc(60 * (${getEndHour()} - ${getStartHour()}) + (${endTime.minute} - ${startTime.minute})) / span 1`,
             'background-color': `var(${color})`
         }"
     >
@@ -50,7 +63,7 @@ const props = defineProps<{
             <UBadge
                 class="font-normal text-gray-800 flex flex-col items-start"
                 variant="ghost"
-                :label="`${startHour}:${startMinute} ${startPeriod} - ${endHour}:${endMinute} ${endPeriod}`"
+                :label="`${startTime.hour}:${startTime.minute} ${startTime.period} - ${endTime.hour}:${endTime.minute} ${endTime.period}`"
                 :ui="{
                     label: 'text-wrap line-clamp-2',
                 }"
