@@ -46,7 +46,7 @@ function getEndHour(): number {
         class="event"
         variant="ghost"
         :style="{
-            'grid-area': `calc(60 * (1 + ${getStartHour()}) + ${startTime.minute}) / calc(1 + ${startTime.day}) / span calc(60 * (${getEndHour()} - ${getStartHour()}) + (${endTime.minute} - ${startTime.minute})) / span 1`,
+            'grid-area': `calc(60 * (1 + ${getStartHour()}) + ${startTime.minute}) / calc(1 + ${startTime.day}) / span calc(60 * (${getEndHour()} - ${getStartHour()}) + (${endTime.minute} - ${startTime.minute})) / span calc(1 + ${endTime.day - startTime.day})`,
             'background-color': `var(${color})`
         }"
     >
