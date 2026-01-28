@@ -17,6 +17,7 @@ export async function initializeFirebaseCloudMessaging() {
         .then((currentToken) => {
             if (currentToken) {
                 console.log(currentToken);
+                return currentToken;
             } else {
                 // Show permission request UI
                 console.log(

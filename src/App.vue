@@ -83,12 +83,11 @@ async function initializeMessaging() {
                 margin-top: 20px;
             "
         >
-            <UButton type="button" @click="initializeMessaging">
+            <UButton type="button"  @click="initializeMessaging">
                 Test Notifications
             </UButton>
-            <UButton type="button" @click="console.log('working')">
-                Test
-            </UButton>
+            <p id="test">test</p>
+            
         </UContainer>
     </UApp>
 </template>
