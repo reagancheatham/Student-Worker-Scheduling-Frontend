@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { useTemplateRef, toRef } from "vue";
+import { toRef } from "vue";
 import { EventTime, TimePeriod } from "../../../classes/calendar/eventTime.ts";
 
 type ResizeEvent = (evt: PointerEvent) => void;
 
-const event = useTemplateRef("event");
-
-// these props are very temporary, we should just pass an event object
 const props = defineProps<{
     color: string;
     startTime: EventTime;
@@ -22,7 +19,7 @@ let resizeEndTime: EventTime;
 let resizeEndY: number;
 
 function startStartResize(evt: PointerEvent) {
-    resizeStartTime = refStartTime.value;
+    resizeStartTime = { ...refStartTime.value };
     resizeStartY = evt.clientY;
 
     startResize(evt, onStartResize, stopStartResize);
@@ -30,6 +27,31 @@ function startStartResize(evt: PointerEvent) {
 
 function onStartResize(evt: PointerEvent) {
     const dy = Math.round((evt.clientY - resizeStartY) / 3.5) * 5;
+
+    let calculatedHour = resizeStartTime.hour;
+    let calculatedMinute = resizeStartTime.minute + dy;
+
+    if (calculatedMinute < 0) {
+        calculatedHour -= 1 - Math.ceil(calculatedMinute / 60);
+        calculatedMinute = 60 + (calculatedMinute % 60);
+
+        if (calculatedMinute == 60) {
+            calculatedHour++;
+            calculatedMinute = 0;
+        }
+    } else if (calculatedMinute > 59) {
+        calculatedHour += Math.floor(calculatedMinute / 60);
+        calculatedMinute %= 60;
+    }
+
+    const minuteDifference =
+        60 * (refEndTime.value.hour - calculatedHour) +
+        (refEndTime.value.minute - calculatedMinute);
+
+    if (minuteDifference < 15) return;
+
+    refStartTime.value.hour = calculatedHour;
+    refStartTime.value.minute = calculatedMinute;
 }
 
 function stopStartResize(evt: PointerEvent) {
@@ -37,7 +59,7 @@ function stopStartResize(evt: PointerEvent) {
 }
 
 function startEndResize(evt: PointerEvent) {
-    resizeEndTime = refEndTime.value;
+    resizeEndTime = { ...refEndTime.value };
     resizeEndY = evt.clientY;
 
     startResize(evt, onEndResize, stopEndResize);
@@ -50,12 +72,25 @@ function onEndResize(evt: PointerEvent) {
     let calculatedMinute = resizeEndTime.minute + dy;
 
     if (calculatedMinute < 0) {
-        calculatedHour--;
+        calculatedHour -= 1 - Math.ceil(calculatedMinute / 60);
         calculatedMinute = 60 + (calculatedMinute % 60);
+
+        if (calculatedMinute == 60) {
+            calculatedHour++;
+            calculatedMinute = 0;
+        }
     } else if (calculatedMinute > 59) {
-        calculatedHour++;
+        calculatedHour += Math.floor(calculatedMinute / 60);
         calculatedMinute %= 60;
     }
+
+    const minuteDifference =
+        60 * (calculatedHour - refStartTime.value.hour) +
+        (calculatedMinute - refStartTime.value.minute);
+
+    if (minuteDifference < 15) return;
+
+    // lerp header font size
 
     refEndTime.value.hour = calculatedHour;
     refEndTime.value.minute = calculatedMinute;
@@ -118,6 +153,7 @@ function getMinuteText(minute: number): string {
     display: flex;
     flex-direction: column;
     padding-left: 10px;
+    position: relative;
 }
 
 .event * {
@@ -125,11 +161,11 @@ function getMinuteText(minute: number): string {
 }
 
 .resizeHandle {
-    width: 200%;
     height: 8px;
     cursor: ns-resize;
-    position: relative;
-    margin-left: -10px;
+    position: absolute;
+    left: 0px;
+    right: 0px;
 }
 </style>
 
@@ -148,9 +184,9 @@ function getMinuteText(minute: number): string {
         }"
     >
         <template #header>
-            <div class="resizeHandle" @pointerdown="startStartResize" />
+            <div class="resizeHandle top-0" @pointerdown="startStartResize" />
             <UBadge
-                class="font-medium text-black"
+                class="font-medium text-black select-none"
                 variant="ghost"
                 label="My Event"
                 style="max-width: 100%"
@@ -163,13 +199,13 @@ function getMinuteText(minute: number): string {
                 variant="ghost"
                 :label="`${refStartTime.hour}:${getMinuteText(refStartTime.minute)} ${refStartTime.period} - ${refEndTime.hour}:${getMinuteText(refEndTime.minute)} ${refEndTime.period}`"
                 :ui="{
-                    label: 'text-wrap line-clamp-2',
+                    label: 'text-wrap line-clamp-2 select-none',
                 }"
             />
         </template>
 
         <template #footer>
-            <div class="resizeHandle" @pointerdown="startEndResize" />
+            <div class="resizeHandle bottom-0" @pointerdown="startEndResize" />
         </template>
     </UCard>
 </template>
