@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, toRef } from "vue";
-import { EventTime, TimePeriod } from "../../../classes/calendar/eventTime.ts";
+import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
 
@@ -19,6 +19,8 @@ const refStartTime = toRef<EventTime>(props.startTime);
 const refEndTime = toRef<EventTime>(props.endTime);
 const titleFontSize = ref(fontRange.max);
 const titleMargin = ref(marginRange.max);
+const isOpen = ref(false);
+const canHover = ref(true);
 
 let resizeStartTime: EventTime;
 let resizeStartY: number;
@@ -96,6 +98,8 @@ function startResize(
     document.body.style.userSelect = "none";
     window.addEventListener("pointermove", resizeEvent);
     window.addEventListener("pointerup", stopResizeEvent, { once: true });
+
+    canHover.value = false;
 }
 
 function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
@@ -103,6 +107,8 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
     document.body.style.userSelect = "";
     window.removeEventListener("pointermove", resizeEvent);
     window.removeEventListener("pointerup", stopResizeEvent);
+
+    canHover.value = true;
 }
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
@@ -182,53 +188,71 @@ function resizeTitle(minuteDifference: number): void {
 </style>
 
 <template>
-    <UCard
-        ref="event"
-        class="event"
-        variant="ghost"
-        :style="{
-            'grid-area': `calc(60 * (1 + ${refStartTime.hour}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${refEndTime.hour} - ${refStartTime.hour}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
-            'background-color': `var(${color})`,
-        }"
-        :ui="{
-            footer: 'mt-auto',
-        }"
+    <UPopover
+        mode="hover"
+        v-model:open="isOpen"
+        :content="{ side: 'right' }"
+        @update:open="
+            () => {
+                if (!canHover) isOpen = false;
+            }
+        "
     >
-        <template #header>
-            <div
-                :style="{
-                    marginTop: `${titleMargin}px`,
-                }"
-            >
+        <UCard
+            ref="event"
+            class="event"
+            variant="ghost"
+            :style="{
+                'grid-area': `calc(60 * (1 + ${refStartTime.hour}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${refEndTime.hour} - ${refStartTime.hour}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
+                'background-color': `var(${color})`,
+            }"
+            :ui="{
+                footer: 'mt-auto',
+            }"
+        >
+            <template #header>
                 <div
-                    class="resizeHandle top-0"
-                    @pointerdown="startStartResize"
-                />
-                <UBadge
-                    class="text-black select-none"
-                    variant="ghost"
-                    label="My Event"
-                    style="max-width: 100%"
                     :style="{
-                        fontSize: `${titleFontSize}px`,
+                        marginTop: `${titleMargin}px`,
+                    }"
+                >
+                    <div
+                        class="resizeHandle top-0"
+                        @pointerdown="startStartResize"
+                    />
+                    <UBadge
+                        class="text-black select-none"
+                        variant="ghost"
+                        label="My Event"
+                        style="max-width: 100%"
+                        :style="{
+                            fontSize: `${titleFontSize}px`,
+                        }"
+                    />
+                </div>
+            </template>
+
+            <template #default>
+                <UBadge
+                    class="font-normal text-gray-800 flex flex-col items-start"
+                    variant="ghost"
+                    :label="`${getTimeText(refStartTime)} - ${getTimeText(refEndTime)}`"
+                    :ui="{
+                        label: 'text-wrap line-clamp-2 select-none',
                     }"
                 />
-            </div>
-        </template>
+            </template>
 
-        <template #default>
-            <UBadge
-                class="font-normal text-gray-800 flex flex-col items-start"
-                variant="ghost"
-                :label="`${getTimeText(refStartTime)} - ${getTimeText(refEndTime)}`"
-                :ui="{
-                    label: 'text-wrap line-clamp-2 select-none',
-                }"
-            />
-        </template>
+            <template #footer>
+                <div
+                    class="resizeHandle bottom-0"
+                    @pointerdown="startEndResize"
+                />
+            </template>
+        </UCard>
 
-        <template #footer>
-            <div class="resizeHandle bottom-0" @pointerdown="startEndResize" />
+        <template #content>
+            <UCard class="size-48 m-4 inline-flex" variant="ghost" />
         </template>
-    </UCard>
+    </UPopover>
 </template>
