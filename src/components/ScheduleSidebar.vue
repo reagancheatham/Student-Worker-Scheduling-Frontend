@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { Routes } from "../routing/routes.ts";
@@ -39,8 +38,14 @@ const searchGroups = computed(() => [
 ]);
 </script>
 
+<style>
+.sidebar {
+    background-color: var(--color-maroon-500);
+}
+</style>
+
 <template>
-    <UDashboardSidebar resizable collapsible>
+    <UDashboardSidebar class="sidebar" resizable collapsible>
         <template #header="{ collapsed }">
             <AvatarMenu />
         </template>
@@ -48,10 +53,22 @@ const searchGroups = computed(() => [
         <template #default="{ collapsed }">
             <UDashboardSearchButton
                 :collaped="collapsed"
-                class="bg-transparent ring-default"
+                class="bg-transparent ring-default text-neutral-200 hover:text-black"
             />
 
-            <UNavigationMenu orientation="vertical" :items="items" />
+            <UNavigationMenu orientation="vertical" :items="items">
+                <template #item="{ item, active }">
+                    <span
+                        :class="[
+                            active
+                                ? 'text-maroon-500'
+                                : 'text-neutral-100',
+                        ]"
+                    >
+                        {{ item.label }}
+                    </span>
+                </template>
+            </UNavigationMenu>
         </template>
     </UDashboardSidebar>
 

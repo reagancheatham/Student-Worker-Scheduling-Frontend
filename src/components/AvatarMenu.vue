@@ -9,7 +9,7 @@ defineProps<{
 const user = ref({
     name: "Reagan Cheatham",
     avatar: {
-        src: "../../public/avatar.png",
+        src: "/avatar.png",
         alt: "Reagan Cheatham",
     },
 });
@@ -57,9 +57,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
             variant="ghost"
             block
             :square="collapsed"
-            class="data-[state=open]:bg-elevated"
+            class="
+            data-[state=open]:bg-elevated 
+            data-[state=open]:text-black
+            text-neutral-100
+            hover:text-black"
             :ui="{
-                trailingIcon: 'text-dimmed'
+                trailingIcon: 'text-dimmed',
             }"
         />
     </UDropdownMenu>

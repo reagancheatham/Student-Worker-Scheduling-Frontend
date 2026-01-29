@@ -13,5 +13,5 @@
         "src/**/*.vue",
         "auto-imports.d.ts",
         "components.d.ts"
-    ]
+, "tailwind.config.ts"    ]
 }
