@@ -9,7 +9,10 @@
                     </template>
 
                     <template #body>
-                        <ScheduleCalendar />
+                        <!-- <ScheduleCalendar /> -->
+
+                        <RouterView/>
+
                     </template>
                 </UDashboardPanel>
             </UDashboardGroup>
