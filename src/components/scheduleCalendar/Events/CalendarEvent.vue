@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { toRef } from "vue";
+import { ref, toRef } from "vue";
 import { EventTime, TimePeriod } from "../../../classes/calendar/eventTime.ts";
+import { MathUtil } from "../../../classes/util/mathUtil.ts";
+import { Range } from "../../../classes/util/range.ts";
 
 type ResizeEvent = (evt: PointerEvent) => void;
+
+const fontRange = new Range(8, 12);
+const marginRange = new Range(-10.0, -0.1);
 
 const props = defineProps<{
     color: string;
@@ -12,6 +17,8 @@ const props = defineProps<{
 
 const refStartTime = toRef<EventTime>(props.startTime);
 const refEndTime = toRef<EventTime>(props.endTime);
+const titleFontSize = ref(fontRange.max);
+const titleMargin = ref(marginRange.max);
 
 let resizeStartTime: EventTime;
 let resizeStartY: number;
@@ -28,30 +35,20 @@ function startStartResize(evt: PointerEvent) {
 function onStartResize(evt: PointerEvent) {
     const dy = Math.round((evt.clientY - resizeStartY) / 3.5) * 5;
 
-    let calculatedHour = resizeStartTime.hour;
-    let calculatedMinute = resizeStartTime.minute + dy;
-
-    if (calculatedMinute < 0) {
-        calculatedHour -= 1 - Math.ceil(calculatedMinute / 60);
-        calculatedMinute = 60 + (calculatedMinute % 60);
-
-        if (calculatedMinute == 60) {
-            calculatedHour++;
-            calculatedMinute = 0;
-        }
-    } else if (calculatedMinute > 59) {
-        calculatedHour += Math.floor(calculatedMinute / 60);
-        calculatedMinute %= 60;
-    }
+    let hour = resizeStartTime.hour;
+    let minute = resizeStartTime.minute + dy;
+    [hour, minute] = calculateTimeChange(hour, minute);
 
     const minuteDifference =
-        60 * (refEndTime.value.hour - calculatedHour) +
-        (refEndTime.value.minute - calculatedMinute);
+        60 * (refEndTime.value.hour - hour) +
+        (refEndTime.value.minute - minute);
 
     if (minuteDifference < 15) return;
 
-    refStartTime.value.hour = calculatedHour;
-    refStartTime.value.minute = calculatedMinute;
+    resizeTitle(minuteDifference);
+
+    refStartTime.value.hour = hour;
+    refStartTime.value.minute = minute;
 }
 
 function stopStartResize(evt: PointerEvent) {
@@ -68,32 +65,20 @@ function startEndResize(evt: PointerEvent) {
 function onEndResize(evt: PointerEvent) {
     const dy = Math.round((evt.clientY - resizeEndY) / 3.5) * 5;
 
-    let calculatedHour = resizeEndTime.hour;
-    let calculatedMinute = resizeEndTime.minute + dy;
-
-    if (calculatedMinute < 0) {
-        calculatedHour -= 1 - Math.ceil(calculatedMinute / 60);
-        calculatedMinute = 60 + (calculatedMinute % 60);
-
-        if (calculatedMinute == 60) {
-            calculatedHour++;
-            calculatedMinute = 0;
-        }
-    } else if (calculatedMinute > 59) {
-        calculatedHour += Math.floor(calculatedMinute / 60);
-        calculatedMinute %= 60;
-    }
+    let hour = resizeEndTime.hour;
+    let minute = resizeEndTime.minute + dy;
+    [hour, minute] = calculateTimeChange(hour, minute);
 
     const minuteDifference =
-        60 * (calculatedHour - refStartTime.value.hour) +
-        (calculatedMinute - refStartTime.value.minute);
+        60 * (hour - refStartTime.value.hour) +
+        (minute - refStartTime.value.minute);
 
     if (minuteDifference < 15) return;
 
-    // lerp header font size
+    resizeTitle(minuteDifference);
 
-    refEndTime.value.hour = calculatedHour;
-    refEndTime.value.minute = calculatedMinute;
+    refEndTime.value.hour = hour;
+    refEndTime.value.minute = minute;
 }
 
 function stopEndResize(evt: PointerEvent) {
@@ -120,6 +105,23 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
     window.removeEventListener("pointerup", stopResizeEvent);
 }
 
+function calculateTimeChange(hour: number, minute: number): [number, number] {
+    if (minute < 0) {
+        hour -= 1 - Math.ceil(minute / 60);
+        minute = 60 + (minute % 60);
+
+        if (minute == 60) {
+            hour++;
+            minute = 0;
+        }
+    } else if (minute > 59) {
+        hour += Math.floor(minute / 60);
+        minute %= 60;
+    }
+
+    return [hour, minute];
+}
+
 function getStartHour(): number {
     let hour = refStartTime.value.hour;
 
@@ -143,6 +145,12 @@ function getMinuteText(minute: number): string {
     else text = `0${minute}`;
 
     return text;
+}
+
+function resizeTitle(minuteDifference: number): void {
+    const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
+    titleFontSize.value = fontRange.lerp(t);
+    titleMargin.value = marginRange.lerp(t);
 }
 </script>
 
@@ -179,18 +187,25 @@ function getMinuteText(minute: number): string {
             'background-color': `var(${color})`,
         }"
         :ui="{
-            header: '-mt-0.5',
             footer: 'mt-auto',
         }"
     >
         <template #header>
+            <div
+            :style="{
+                marginTop: `${titleMargin}px`,
+            }">
             <div class="resizeHandle top-0" @pointerdown="startStartResize" />
             <UBadge
-                class="font-medium text-black select-none"
+                class="text-black select-none"
                 variant="ghost"
                 label="My Event"
                 style="max-width: 100%"
+                :style="{
+                    fontSize: `${titleFontSize}px`,
+                }"
             />
+            </div>
         </template>
 
         <template #default>
