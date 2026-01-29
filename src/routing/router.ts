@@ -7,10 +7,11 @@ import SchedulePage from "../pages/SchedulePage.vue"
 import SettingsPage from "../pages/SettingsPage.vue"
 
 const routes = [
-    { path: Routes.Dashboard, component: DashboardPage },
-    { path: Routes.Schedule, component: SchedulePage},
-    { path: Routes.OpenShifts, component: OpenShiftsPage},
-    { path: Routes.Settings, component: SettingsPage},
+    { path: '/', component: DashboardPage, name: 'Dashboard' },
+    { path: Routes.Dashboard, component: DashboardPage, name: 'Dashboard' },
+    { path: Routes.Schedule, component: SchedulePage, name: 'Schedule' },
+    { path: Routes.OpenShifts, component: OpenShiftsPage, name: 'Open Shifts' },
+    { path: Routes.Settings, component: SettingsPage, name: 'Settings' },
 ]
 
 export const router = createRouter({
