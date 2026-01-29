@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { EventTime, TimePeriod } from '../../../classes/calendar/eventTime.ts';
+import { EventTime } from '../../../classes/calendar/eventTime.ts';
 
 </script>
 
@@ -22,13 +22,13 @@ import { EventTime, TimePeriod } from '../../../classes/calendar/eventTime.ts';
     <div class="eventContainer">
         <CalendarEvent
             color="--color-sky-500"
-            :start-time="new EventTime(1, 6, 15, TimePeriod.AM)"
-            :end-time="new EventTime(1, 8, 30, TimePeriod.AM)"
+            :start-time="new EventTime(1, 6, 15)"
+            :end-time="new EventTime(1, 8, 30)"
         />
         <CalendarEvent
             color="--color-orange-500"
-            :start-time="new EventTime(2, 4, 15, TimePeriod.PM)"
-            :end-time="new EventTime(2, 8, 30, TimePeriod.PM)"
+            :start-time="new EventTime(2, 16, 15)"
+            :end-time="new EventTime(2, 20, 30)"
         />
     </div>
 </template>

@@ -108,43 +108,47 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
 function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (minute < 0) {
         hour -= 1 - Math.ceil(minute / 60);
-        minute = 60 + (minute % 60);
 
-        if (minute == 60) {
-            hour++;
-            minute = 0;
+        if (hour < 0) minute = 0;
+        else {
+            minute = 60 + (minute % 60);
+
+            if (minute == 60) {
+                hour++;
+                minute = 0;
+            }
         }
     } else if (minute > 59) {
         hour += Math.floor(minute / 60);
         minute %= 60;
     }
 
+    hour = MathUtil.clamp(hour, 0, 24);
+    if (hour >= 24) minute = 0;
+
     return [hour, minute];
 }
 
-function getStartHour(): number {
-    let hour = refStartTime.value.hour;
+function getTimeText(time: EventTime): string {
+    let hour = time.hour;
+    let minute = time.minute;
 
-    if (refStartTime.value.period == TimePeriod.PM) hour += 12;
+    let hourText = "";
+    let minuteText = "";
+    let periodText = "";
 
-    return hour;
-}
+    if (hour > 12) hour -= 12;
+    else if (hour == 0) hour = 12;
 
-function getEndHour(): number {
-    let hour = refEndTime.value.hour;
+    hourText = hour.toString();
 
-    if (refEndTime.value.period == TimePeriod.PM) hour += 12;
+    if (minute >= 10) minuteText = `${minute}`;
+    else minuteText = `0${minute}`;
 
-    return hour;
-}
+    if (time.hour == 24 || time.hour < 12) periodText = "AM";
+    else periodText = "PM";
 
-function getMinuteText(minute: number): string {
-    let text = "";
-
-    if (minute >= 10) text = `${minute}`;
-    else text = `0${minute}`;
-
-    return text;
+    return `${hourText}:${minuteText} ${periodText}`;
 }
 
 function resizeTitle(minuteDifference: number): void {
@@ -183,7 +187,7 @@ function resizeTitle(minuteDifference: number): void {
         class="event"
         variant="ghost"
         :style="{
-            'grid-area': `calc(60 * (1 + ${getStartHour()}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${getEndHour()} - ${getStartHour()}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
+            'grid-area': `calc(60 * (1 + ${refStartTime.hour}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${refEndTime.hour} - ${refStartTime.hour}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
             'background-color': `var(${color})`,
         }"
         :ui="{
@@ -192,19 +196,23 @@ function resizeTitle(minuteDifference: number): void {
     >
         <template #header>
             <div
-            :style="{
-                marginTop: `${titleMargin}px`,
-            }">
-            <div class="resizeHandle top-0" @pointerdown="startStartResize" />
-            <UBadge
-                class="text-black select-none"
-                variant="ghost"
-                label="My Event"
-                style="max-width: 100%"
                 :style="{
-                    fontSize: `${titleFontSize}px`,
+                    marginTop: `${titleMargin}px`,
                 }"
-            />
+            >
+                <div
+                    class="resizeHandle top-0"
+                    @pointerdown="startStartResize"
+                />
+                <UBadge
+                    class="text-black select-none"
+                    variant="ghost"
+                    label="My Event"
+                    style="max-width: 100%"
+                    :style="{
+                        fontSize: `${titleFontSize}px`,
+                    }"
+                />
             </div>
         </template>
 
@@ -212,7 +220,7 @@ function resizeTitle(minuteDifference: number): void {
             <UBadge
                 class="font-normal text-gray-800 flex flex-col items-start"
                 variant="ghost"
-                :label="`${refStartTime.hour}:${getMinuteText(refStartTime.minute)} ${refStartTime.period} - ${refEndTime.hour}:${getMinuteText(refEndTime.minute)} ${refEndTime.period}`"
+                :label="`${getTimeText(refStartTime)} - ${getTimeText(refEndTime)}`"
                 :ui="{
                     label: 'text-wrap line-clamp-2 select-none',
                 }"
