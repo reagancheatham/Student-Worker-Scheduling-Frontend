@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { EventTime } from '../../../classes/calendar/eventTime.ts';
-
+import { EventTime } from "../../../classes/calendar/eventTime.ts";
 </script>
 
 <style>
@@ -24,6 +23,11 @@ import { EventTime } from '../../../classes/calendar/eventTime.ts';
             color="--color-sky-500"
             :start-time="new EventTime(1, 6, 15)"
             :end-time="new EventTime(1, 8, 30)"
+        />
+        <CalendarEvent
+            color="--color-orange-500"
+            :start-time="new EventTime(1, 7, 15)"
+            :end-time="new EventTime(1, 9, 30)"
         />
         <CalendarEvent
             color="--color-orange-500"

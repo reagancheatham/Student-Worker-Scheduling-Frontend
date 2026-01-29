@@ -8,6 +8,8 @@ type ResizeEvent = (evt: PointerEvent) => void;
 
 const fontRange = new Range(8, 12);
 const marginRange = new Range(-10.0, -0.1);
+const resizeStep = 5;
+const pixelResizeRatio = 3.5;
 
 const props = defineProps<{
     color: string;
@@ -35,7 +37,9 @@ function startStartResize(evt: PointerEvent) {
 }
 
 function onStartResize(evt: PointerEvent) {
-    const dy = Math.round((evt.clientY - resizeStartY) / 3.5) * 5;
+    const dy =
+        Math.round((evt.clientY - resizeStartY) / pixelResizeRatio) *
+        resizeStep;
 
     let hour = resizeStartTime.hour;
     let minute = resizeStartTime.minute + dy;
@@ -65,7 +69,8 @@ function startEndResize(evt: PointerEvent) {
 }
 
 function onEndResize(evt: PointerEvent) {
-    const dy = Math.round((evt.clientY - resizeEndY) / 3.5) * 5;
+    const dy =
+        Math.round((evt.clientY - resizeEndY) / pixelResizeRatio) * resizeStep;
 
     let hour = resizeEndTime.hour;
     let minute = resizeEndTime.minute + dy;
