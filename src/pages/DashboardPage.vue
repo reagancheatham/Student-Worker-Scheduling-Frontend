@@ -3,18 +3,12 @@
 </script>
 
 <template>
-    <UPageGrid>
-        <UPageColumns width="3/4">
-            <!-- big column -->
-             <UPageCard>
+    <UPageGrid class="grid lg:grid-cols-4 gap-4">
+        <UPageGrid class="col-span-3">
 
-             </UPageCard>
-        </UPageColumns>
-        <UPageColumns width="1/4">
-            <!-- small column -->
-             <UPageCard class="h-64">
+        </UPageGrid>
+        <UPageCard class="col-span-1">
 
-             </UPageCard>
-        </UPageColumns>
+        </UPageCard>
     </UPageGrid>
 </template>
