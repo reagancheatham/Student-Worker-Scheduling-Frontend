@@ -3,7 +3,9 @@ import { ref, toRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
+import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
 
+//#region Variables
 type ResizeEvent = (evt: PointerEvent) => void;
 
 const fontRange = new Range(8, 12);
@@ -12,25 +14,29 @@ const resizeStep = 5;
 const pixelResizeRatio = 3.5;
 
 const props = defineProps<{
-    color: string;
-    startTime: EventTime;
-    endTime: EventTime;
+    data: CalendarEventData;
 }>();
 
-const refStartTime = toRef<EventTime>(props.startTime);
-const refEndTime = toRef<EventTime>(props.endTime);
+const refData = toRef<CalendarEventData>(props.data);
 const titleFontSize = ref(fontRange.max);
 const titleMargin = ref(marginRange.max);
 const isOpen = ref(false);
 const canHover = ref(true);
 
+const emit = defineEmits({
+    resizeBegan: (data: CalendarEventData) => true,
+    resizeEnded: (data: CalendarEventData) => true,
+});
+
 let resizeStartTime: EventTime;
 let resizeStartY: number;
 let resizeEndTime: EventTime;
 let resizeEndY: number;
+//#endregion
 
+//#region Resize Callbacks
 function startStartResize(evt: PointerEvent) {
-    resizeStartTime = { ...refStartTime.value };
+    resizeStartTime = { ...refData.value.startTime };
     resizeStartY = evt.clientY;
 
     startResize(evt, onStartResize, stopStartResize);
@@ -46,15 +52,15 @@ function onStartResize(evt: PointerEvent) {
     [hour, minute] = calculateTimeChange(hour, minute);
 
     const minuteDifference =
-        60 * (refEndTime.value.hour - hour) +
-        (refEndTime.value.minute - minute);
+        60 * (refData.value.endTime.hour - hour) +
+        (refData.value.endTime.minute - minute);
 
     if (minuteDifference < 15) return;
 
     resizeTitle(minuteDifference);
 
-    refStartTime.value.hour = hour;
-    refStartTime.value.minute = minute;
+    refData.value.startTime.hour = hour;
+    refData.value.startTime.minute = minute;
 }
 
 function stopStartResize(evt: PointerEvent) {
@@ -62,7 +68,7 @@ function stopStartResize(evt: PointerEvent) {
 }
 
 function startEndResize(evt: PointerEvent) {
-    resizeEndTime = { ...refEndTime.value };
+    resizeEndTime = { ...refData.value.endTime };
     resizeEndY = evt.clientY;
 
     startResize(evt, onEndResize, stopEndResize);
@@ -77,15 +83,15 @@ function onEndResize(evt: PointerEvent) {
     [hour, minute] = calculateTimeChange(hour, minute);
 
     const minuteDifference =
-        60 * (hour - refStartTime.value.hour) +
-        (minute - refStartTime.value.minute);
+        60 * (hour - refData.value.startTime.hour) +
+        (minute - refData.value.startTime.minute);
 
     if (minuteDifference < 15) return;
 
     resizeTitle(minuteDifference);
 
-    refEndTime.value.hour = hour;
-    refEndTime.value.minute = minute;
+    refData.value.endTime.hour = hour;
+    refData.value.endTime.minute = minute;
 }
 
 function stopEndResize(evt: PointerEvent) {
@@ -105,6 +111,7 @@ function startResize(
     window.addEventListener("pointerup", stopResizeEvent, { once: true });
 
     canHover.value = false;
+    emit("resizeBegan", props.data);
 }
 
 function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
@@ -114,7 +121,9 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
     window.removeEventListener("pointerup", stopResizeEvent);
 
     canHover.value = true;
+    emit("resizeEnded", props.data);
 }
+//#endregion
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (minute < 0) {
@@ -208,8 +217,10 @@ function resizeTitle(minuteDifference: number): void {
             class="event"
             variant="ghost"
             :style="{
-                'grid-area': `calc(60 * (1 + ${refStartTime.hour}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${refEndTime.hour} - ${refStartTime.hour}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
-                'background-color': `var(${color})`,
+                'grid-area': `calc(60 * (1 + ${data.startTime.hour}) + ${data.startTime.minute}) / calc(1 + ${data.startTime.day}) / span calc(60 * (${data.endTime.hour} - ${data.startTime.hour}) + (${data.endTime.minute} - ${data.startTime.minute})) / span calc(1 + ${data.endTime.day - data.startTime.day})`,
+                'background-color': `var(${data.color})`,
+                'z-index': `${data.zIndex}`,
+                'margin-left': '0px',
             }"
             :ui="{
                 footer: 'mt-auto',
@@ -241,7 +252,7 @@ function resizeTitle(minuteDifference: number): void {
                 <UBadge
                     class="font-normal text-gray-800 flex flex-col items-start"
                     variant="ghost"
-                    :label="`${getTimeText(refStartTime)} - ${getTimeText(refEndTime)}`"
+                    :label="`${getTimeText(data.startTime)} - ${getTimeText(data.endTime)}`"
                     :ui="{
                         label: 'text-wrap line-clamp-2 select-none',
                     }"
