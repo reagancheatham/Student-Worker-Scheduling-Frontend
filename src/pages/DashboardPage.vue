@@ -1,20 +1,19 @@
 <script>
-
+import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue";
 </script>
 
 <template>
-    <div class="grid grid-cols-5 gap-4 h-full">
-        <!-- Big Side -->
-        <div class="col-span-4 grid grid-cols-2 grid-rows-5 gap-4">
-            <UPageCard class="col-span-2 row-span-3"></UPageCard>
-            <UPageCard class="row-span-2"></UPageCard>
-            <UPageCard class="row-span-2"></UPageCard>
-        </div>
-        
-        <!-- Little Side -->
-         <div class="col-span-1">
-            <UPageCard class="h-full"></UPageCard>
-         </div>
+  <div class="grid grid-cols-5 gap-4 h-full">
+    <!-- Big Side -->
+    <div class="col-span-4 grid grid-cols-2 grid-rows-5 gap-4">
+      <UPageCard title="Schedule" class="col-span-2 row-span-3"></UPageCard>
+      <WorkingCurrently class="row-span-2"></WorkingCurrently>
+      <UPageCard title="Open Shifts" class="row-span-2"></UPageCard>
     </div>
 
+    <!-- Little Side -->
+    <div class="col-span-1">
+      <UPageCard class="h-full"></UPageCard>
+    </div>
+  </div>
 </template>
