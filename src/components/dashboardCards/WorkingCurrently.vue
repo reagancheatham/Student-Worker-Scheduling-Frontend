@@ -17,8 +17,12 @@ const data = ref<ShiftInfo[]>([
 </script>
 
 <template>
-  <UPageCard>
-    <template #title> Working Currently </template>
+  <UCard :ui="{header: 'font-semibold text-black col-span-1', body: '!px-0 !pt-0 !pb-3'}">
+    <template #header> 
+      <span class="mb">
+        Working Currently
+      </span>
+  </template>
     <UTable :data="data"> </UTable>
-  </UPageCard>
+  </UCard>
 </template>
