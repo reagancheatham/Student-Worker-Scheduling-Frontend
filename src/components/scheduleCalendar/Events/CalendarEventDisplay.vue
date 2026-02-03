@@ -8,16 +8,19 @@ import { EventTime } from "@classes/calendar/eventTime.ts";
 
 const events = ref([
     new CalendarEventData(
+        "My Event",
         new EventTime(1, 6, 15),
         new EventTime(1, 10, 30),
         EventColor.Blue,
     ),
     new CalendarEventData(
+        "My Event",
         new EventTime(1, 7, 15),
         new EventTime(1, 9, 30),
         EventColor.Orange,
     ),
     new CalendarEventData(
+        "My Event",
         new EventTime(2, 16, 15),
         new EventTime(2, 20, 30),
         EventColor.Orange,

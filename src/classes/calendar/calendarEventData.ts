@@ -7,6 +7,7 @@ export enum EventColor {
 
 export class CalendarEventData {
     constructor(
+        public name: string,
         public startTime: EventTime,
         public endTime: EventTime,
         public color: EventColor,

@@ -274,7 +274,16 @@ function resizeTitle(minuteDifference: number): void {
         </UCard>
 
         <template #content>
-            <UCard class="size-48 m-4 inline-flex" variant="ghost" />
+            <UCard class="size-48 m-4 inline-flex" variant="ghost">
+                <template #header>
+                    {{ data.name }}
+                </template>
+
+                <template #body>
+                    {{ getTimeText(data.startTime) }} -
+                    {{ getTimeText(data.endTime) }}
+                </template>
+            </UCard>
         </template>
     </UPopover>
 </template>
