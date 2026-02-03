@@ -5,18 +5,23 @@ export class EventTime {
         public minute: number,
     ) {}
 
-    isBefore(other: EventTime) {
-        if (this.day < other.day)
-            return true;
-        else if (other.day < this.day)
-            return false;
-        else if (this.hour < other.hour)
-            return true;
-        else if (other.hour < this.hour)
-            return false;
-        else if (this.minute < other.minute)
-            return true;
-        else
-            return false;
+    isBefore(other: EventTime): boolean {
+        return this.getTotalTime() < other.getTotalTime();
+    }
+
+    isBeforeOrEqual(other: EventTime): boolean {
+        return this.isBefore(other) || this.getTotalTime() === other.getTotalTime();
+    }
+
+    isAfter(other: EventTime): boolean {
+        return this.getTotalTime() > other.getTotalTime();
+    }
+
+    isAfterOrEqual(other: EventTime): boolean {
+        return this.isAfter(other) || this.getTotalTime() === other.getTotalTime();
+    }
+
+    getTotalTime(): number {
+        return (24 * 60 * this.day) + (60 * this.hour) + this.minute;
     }
 }

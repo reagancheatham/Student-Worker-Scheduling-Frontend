@@ -12,6 +12,7 @@ const fontRange = new Range(8, 12);
 const marginRange = new Range(-10.0, -0.1);
 const resizeStep = 5;
 const pixelResizeRatio = 3.5;
+const marginStep = 20;
 
 const props = defineProps<{
     data: CalendarEventData;
@@ -24,8 +25,9 @@ const isOpen = ref(false);
 const canHover = ref(true);
 
 const emit = defineEmits({
-    resizeBegan: (data: CalendarEventData) => true,
-    resizeEnded: (data: CalendarEventData) => true,
+    resizeBegan: (_: CalendarEventData) => true,
+    resized: (_: CalendarEventData) => true,
+    resizeEnded: (_: CalendarEventData) => true,
 });
 
 let resizeStartTime: EventTime;
@@ -61,6 +63,8 @@ function onStartResize(evt: PointerEvent) {
 
     refData.value.startTime.hour = hour;
     refData.value.startTime.minute = minute;
+
+    emit("resized", props.data);
 }
 
 function stopStartResize(evt: PointerEvent) {
@@ -92,6 +96,8 @@ function onEndResize(evt: PointerEvent) {
 
     refData.value.endTime.hour = hour;
     refData.value.endTime.minute = minute;
+
+    emit("resized", props.data);
 }
 
 function stopEndResize(evt: PointerEvent) {
@@ -220,7 +226,7 @@ function resizeTitle(minuteDifference: number): void {
                 'grid-area': `calc(60 * (1 + ${data.startTime.hour}) + ${data.startTime.minute}) / calc(1 + ${data.startTime.day}) / span calc(60 * (${data.endTime.hour} - ${data.startTime.hour}) + (${data.endTime.minute} - ${data.startTime.minute})) / span calc(1 + ${data.endTime.day - data.startTime.day})`,
                 'background-color': `var(${data.color})`,
                 'z-index': `${data.zIndex}`,
-                'margin-left': '0px',
+                'margin-left': `${data.bisectIncrement * marginStep}%`,
             }"
             :ui="{
                 footer: 'mt-auto',
