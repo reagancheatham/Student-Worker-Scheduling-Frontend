@@ -12,7 +12,8 @@ export class CalendarEventData {
         public endTime: EventTime,
         public color: EventColor,
         public zIndex: number = 0,
-        public bisectIncrement: number = 0,
+        public leftBisectMargin: number = 0,
+        public rightBisectMargin: number = 0,
     ) {}
 
     isBetween(data: CalendarEventData): boolean {
@@ -22,7 +23,7 @@ export class CalendarEventData {
         );
     }
 
-    isBisectable(data: CalendarEventData): boolean {
+    isBisecting(data: CalendarEventData): boolean {
         return (
             this.startTime.isAfterOrEqual(data.startTime) &&
             this.startTime.isBefore(data.endTime)

@@ -5,36 +5,35 @@ import {
     EventColor,
 } from "@classes/calendar/calendarEventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
+import { MathUtil } from "@classes/util/mathUtil.ts";
 
 const events = ref([
     new CalendarEventData(
-        "My Event",
+        "First Event",
         new EventTime(1, 6, 15),
         new EventTime(1, 10, 30),
         EventColor.Blue,
     ),
     new CalendarEventData(
-        "My Event",
+        "Second Event",
         new EventTime(1, 7, 15),
         new EventTime(1, 9, 30),
         EventColor.Orange,
     ),
     new CalendarEventData(
-        "My Event",
-        new EventTime(2, 16, 15),
-        new EventTime(2, 20, 30),
+        "Third Event",
+        new EventTime(1, 16, 15),
+        new EventTime(1, 20, 30),
         EventColor.Orange,
     ),
 ]);
 
-const eventBisects: Map<CalendarEventData, number> = new Map<
+const eventBisects: Map<CalendarEventData, CalendarEventData[]> = new Map<
     CalendarEventData,
-    number
->();
-const timeEvents: Map<number, CalendarEventData[]> = new Map<
-    number,
     CalendarEventData[]
 >();
+
+const calculatedBisects: Set<CalendarEventData> = new Set<CalendarEventData>();
 
 onMounted(() => {
     initializeZIndices();
@@ -55,47 +54,72 @@ function onEventResized(event: CalendarEventData): void {
 
 function calculateBisects(): void {
     eventBisects.clear();
-    timeEvents.clear();
+    calculatedBisects.clear();
 
     for (let i = 0; i < events.value.length; i++) {
         const firstEvent = events.value[i];
+        let eventChain: CalendarEventData[] = [];
+        eventChain.push(firstEvent);
 
-        for (let i = 0; i < events.value.length; i++) {
-            const secondEvent = events.value[i];
-            const startTime = firstEvent.startTime.getTotalTime();
+        for (let j = 0; j < events.value.length; j++) {
+            const secondEvent = events.value[j];
 
             if (firstEvent === secondEvent) continue;
-            else if (firstEvent.isBisectable(secondEvent)) {
-                if (eventBisects.has(firstEvent))
-                    eventBisects.set(
-                        firstEvent,
-                        eventBisects.get(firstEvent) + 1,
-                    );
-                else eventBisects.set(firstEvent, 1);
+            else if (firstEvent.isBisecting(secondEvent))
+                eventChain.push(secondEvent);
+        }
 
-                if (timeEvents.has(startTime))
-                    timeEvents.get(startTime).push(firstEvent);
-                else timeEvents.set(startTime, [firstEvent]);
-            }
+        eventChain.sort((a, b) => a.zIndex - b.zIndex);
+
+        for (let j = 0; j < eventChain.length; j++) {
+            const event = eventChain[j];
+
+            if (eventBisects.has(event)) {
+                const bisectList = eventBisects.get(event);
+
+                // if it has a chain of equal length, choose the chain with the earliest start time
+                if (bisectList.length < eventChain.length)
+                    eventBisects.set(event, eventChain);
+                else if (bisectList.length == eventChain.length) {
+                    console.log(`first: ${eventChain[0].startTime.getTotalTime()}, second: ${bisectList[0].startTime.getTotalTime()}`)
+
+                    if (
+                        eventChain[0].startTime.isBefore(
+                            bisectList[0].startTime,
+                        )
+                    ) {
+                        eventBisects.set(event, eventChain);
+                        console.log("replace");
+                    } // TODO: currently we have a problem when there are two bisects of equal length to choose from
+                }
+            } else eventBisects.set(event, eventChain);
         }
     }
 
-    for (let i = 0; i < events.value.length; i++) {
-        const event = events.value[i];
-        const startTime = event.startTime.getTotalTime();
+    eventBisects.keys().forEach((key) => {
+        if (!calculatedBisects.has(key)) {
+            const bisectList = eventBisects.get(key);
 
-        if (timeEvents.has(startTime)) {
-            const timeArray = timeEvents.get(startTime);
+            if (bisectList.length > 1) {
+                for (let j = 0; j < bisectList.length; j++) {
+                    const event = bisectList[j];
+                    calculatedBisects.add(event);
 
-            if (timeArray.length > 1 && timeArray[0] === event) {
-                event.bisectIncrement = 0;
-                continue;
+                    const leftMargin = j * (100 / bisectList.length);
+                    const rightMargin =
+                        (bisectList.length - 1 - j) * (100 / bisectList.length);
+
+                    event.leftBisectMargin = leftMargin;
+                    event.rightBisectMargin = rightMargin;
+                }
+            } else {
+                const event = bisectList[0];
+
+                event.leftBisectMargin = 0;
+                event.rightBisectMargin = 0;
             }
         }
-
-        if (!eventBisects.has(event)) event.bisectIncrement = 0;
-        else event.bisectIncrement = eventBisects.get(event);
-    }
+    });
 }
 </script>
 

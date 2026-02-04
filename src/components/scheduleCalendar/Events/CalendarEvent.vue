@@ -226,7 +226,8 @@ function resizeTitle(minuteDifference: number): void {
                 'grid-area': `calc(60 * (1 + ${data.startTime.hour}) + ${data.startTime.minute}) / calc(1 + ${data.startTime.day}) / span calc(60 * (${data.endTime.hour} - ${data.startTime.hour}) + (${data.endTime.minute} - ${data.startTime.minute})) / span calc(1 + ${data.endTime.day - data.startTime.day})`,
                 'background-color': `var(${data.color})`,
                 'z-index': `${data.zIndex}`,
-                'margin-left': `${data.bisectIncrement * marginStep}%`,
+                'margin-left': `${data.leftBisectMargin}%`,
+                'margin-right': `${data.rightBisectMargin}%`,
             }"
             :ui="{
                 footer: 'mt-auto',
@@ -245,7 +246,7 @@ function resizeTitle(minuteDifference: number): void {
                     <UBadge
                         class="text-black select-none"
                         variant="ghost"
-                        label="My Event"
+                        :label="data.name"
                         style="max-width: 100%"
                         :style="{
                             fontSize: `${titleFontSize}px`,
