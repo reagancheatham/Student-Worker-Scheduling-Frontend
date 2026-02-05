@@ -3,17 +3,22 @@ import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue"
 </script>
 
 <template>
-  <div class="grid grid-cols-5 gap-4 h-screen">
+  <div class="grid grid-cols-5 gap-4 h-screen min-h-0">
     <!-- Big Side -->
-    <div class="col-span-4 grid grid-cols-2 grid-rows-5 gap-4 h-screen">
-      <UPageCard title="Schedule" class="col-span-2 row-span-3"></UPageCard>
-      <WorkingCurrently class="row-span-2"></WorkingCurrently>
-      <UPageCard title="Open Shifts" class="row-span-2"></UPageCard>
+    <div
+      class="col-span-4 grid grid-cols-7 grid-rows-[3fr_2fr] gap-4 h-full min-h-0"
+    >
+      <UPageCard title="Schedule" class="col-span-7 min-h-0 h-full"></UPageCard>
+      <WorkingCurrently class="col-span-4 min-h-0 h-full"></WorkingCurrently>
+      <UPageCard
+        title="Open Shifts"
+        class="col-span-3 min-h-0 h-full"
+      ></UPageCard>
     </div>
 
     <!-- Little Side -->
-    <div class="col-span-1">
-      <UPageCard class="h-screen"></UPageCard>
+    <div class="col-span-1 h-full">
+      <UPageCard class="h-full"></UPageCard>
     </div>
   </div>
 </template>
