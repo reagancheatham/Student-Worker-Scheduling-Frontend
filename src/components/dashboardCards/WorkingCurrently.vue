@@ -74,7 +74,7 @@ const columns: TableColumn<ShiftInfo>[] = [
 </script>
 
 <template>
-  <UCard
+  <UCard class="h-96 overflow-y-auto"
     :ui="{
       header: 'font-semibold text-black col-span-1',
       body: '!px-0 !pt-0 !pb-3',
@@ -83,6 +83,6 @@ const columns: TableColumn<ShiftInfo>[] = [
     <template #header>
       <span class="mb"> Working Currently </span>
     </template>
-    <UTable :data="data" :columns="columns"> </UTable>
+    <UTable class="overflow-x-hidden" :data="data" :columns="columns"> </UTable>
   </UCard>
 </template>

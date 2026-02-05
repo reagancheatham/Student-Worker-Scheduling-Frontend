@@ -8,9 +8,9 @@
                         <ScheduleNavbar/>
                     </template>
 
-                    <template #body>
+                    <template #body class="overflow-hidden!">
                         <!-- <ScheduleCalendar /> -->
-                        <RouterView/>
+                        <RouterView />
                     </template>
                 </UDashboardPanel>
             </UDashboardGroup>
