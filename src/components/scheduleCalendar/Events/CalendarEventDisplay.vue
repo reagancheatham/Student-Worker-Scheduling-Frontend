@@ -5,7 +5,6 @@ import {
     EventColor,
 } from "@classes/calendar/calendarEventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
-import { MathUtil } from "@classes/util/mathUtil.ts";
 
 const events = ref([
     new CalendarEventData(
@@ -22,11 +21,19 @@ const events = ref([
     ),
     new CalendarEventData(
         "Third Event",
-        new EventTime(1, 16, 15),
+        new EventTime(1, 15, 15),
         new EventTime(1, 20, 30),
-        EventColor.Orange,
+        EventColor.Yellow,
+    ),
+    new CalendarEventData(
+        "Fourth Event",
+        new EventTime(1, 16, 15),
+        new EventTime(1, 21, 30),
+        EventColor.Red,
     ),
 ]);
+
+const canHover = ref<boolean>(true);
 
 const eventBisects: Map<CalendarEventData, CalendarEventData[]> = new Map<
     CalendarEventData,
@@ -46,10 +53,18 @@ function initializeZIndices(): void {
     });
 }
 
+function onEventResizeBegan(_: CalendarEventData): void {
+    canHover.value = false;
+}
+
 function onEventResized(event: CalendarEventData): void {
     event.zIndex = event.startTime.getTotalTime();
 
     calculateBisects();
+}
+
+function onEventResizeEnded(_: CalendarEventData): void {
+    canHover.value = true;
 }
 
 function calculateBisects(): void {
@@ -69,7 +84,9 @@ function calculateBisects(): void {
                 eventChain.push(secondEvent);
         }
 
-        eventChain.sort((a, b) => a.zIndex - b.zIndex);
+        eventChain.sort(
+            (a, b) => a.startTime.getTotalTime() - b.startTime.getTotalTime(),
+        );
 
         for (let j = 0; j < eventChain.length; j++) {
             const event = eventChain[j];
@@ -81,37 +98,45 @@ function calculateBisects(): void {
                 if (bisectList.length < eventChain.length)
                     eventBisects.set(event, eventChain);
                 else if (bisectList.length == eventChain.length) {
-                    console.log(`first: ${eventChain[0].startTime.getTotalTime()}, second: ${bisectList[0].startTime.getTotalTime()}`)
-
                     if (
                         eventChain[0].startTime.isBefore(
                             bisectList[0].startTime,
                         )
-                    ) {
+                    )
                         eventBisects.set(event, eventChain);
-                        console.log("replace");
-                    } // TODO: currently we have a problem when there are two bisects of equal length to choose from
                 }
             } else eventBisects.set(event, eventChain);
         }
     }
 
-    eventBisects.keys().forEach((key) => {
-        if (!calculatedBisects.has(key)) {
-            const bisectList = eventBisects.get(key);
+    eventBisects.keys().forEach((keyEvent) => {
+        if (!calculatedBisects.has(keyEvent)) {
+            const bisectList = eventBisects.get(keyEvent);
 
             if (bisectList.length > 1) {
-                for (let j = 0; j < bisectList.length; j++) {
-                    const event = bisectList[j];
-                    calculatedBisects.add(event);
+                let index = bisectList.indexOf(keyEvent);
 
-                    const leftMargin = j * (100 / bisectList.length);
-                    const rightMargin =
-                        (bisectList.length - 1 - j) * (100 / bisectList.length);
+                for (let i = index; i >= 0; i--) {
+                    const mappedEvent = bisectList[i];
+                    const mappedList = eventBisects.get(mappedEvent);
 
-                    event.leftBisectMargin = leftMargin;
-                    event.rightBisectMargin = rightMargin;
+                    if (mappedList == bisectList) continue;
+
+                    if (!mappedEvent.startTime.isBefore(keyEvent.startTime))
+                        continue;
+
+                    // instead of just changing our index, we need to actually reconstruct the bisectList for this event
+                    if (mappedList.indexOf(mappedEvent) >= index) index--;
                 }
+
+                calculatedBisects.add(keyEvent);
+
+                const leftMargin = index * (100 / bisectList.length);
+                const rightMargin =
+                    (bisectList.length - 1 - index) * (100 / bisectList.length);
+
+                keyEvent.leftBisectMargin = leftMargin;
+                keyEvent.rightBisectMargin = rightMargin;
             } else {
                 const event = bisectList[0];
 
@@ -140,8 +165,13 @@ function calculateBisects(): void {
 
 <template>
     <div class="eventContainer">
-        <CalendarEvent v-bind:data="events[0]" @resized="onEventResized" />
-        <CalendarEvent v-bind:data="events[1]" @resized="onEventResized" />
-        <CalendarEvent v-bind:data="events[2]" @resized="onEventResized" />
+        <CalendarEvent
+            v-for="event in events"
+            v-bind:data="event"
+            v-bind:can-hover="canHover"
+            @resize-began="onEventResizeBegan"
+            @resized="onEventResized"
+            @resize-ended="onEventResizeEnded"
+        />
     </div>
 </template>

@@ -12,17 +12,16 @@ const fontRange = new Range(8, 12);
 const marginRange = new Range(-10.0, -0.1);
 const resizeStep = 5;
 const pixelResizeRatio = 3.5;
-const marginStep = 20;
 
 const props = defineProps<{
     data: CalendarEventData;
+    canHover: boolean;
 }>();
 
 const refData = toRef<CalendarEventData>(props.data);
 const titleFontSize = ref(fontRange.max);
 const titleMargin = ref(marginRange.max);
 const isOpen = ref(false);
-const canHover = ref(true);
 
 const emit = defineEmits({
     resizeBegan: (_: CalendarEventData) => true,
@@ -116,7 +115,6 @@ function startResize(
     window.addEventListener("pointermove", resizeEvent);
     window.addEventListener("pointerup", stopResizeEvent, { once: true });
 
-    canHover.value = false;
     emit("resizeBegan", props.data);
 }
 
@@ -126,7 +124,6 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
     window.removeEventListener("pointermove", resizeEvent);
     window.removeEventListener("pointerup", stopResizeEvent);
 
-    canHover.value = true;
     emit("resizeEnded", props.data);
 }
 //#endregion
@@ -153,28 +150,6 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (hour >= 24) minute = 0;
 
     return [hour, minute];
-}
-
-function getTimeText(time: EventTime): string {
-    let hour = time.hour;
-    let minute = time.minute;
-
-    let hourText = "";
-    let minuteText = "";
-    let periodText = "";
-
-    if (hour > 12) hour -= 12;
-    else if (hour == 0) hour = 12;
-
-    hourText = hour.toString();
-
-    if (minute >= 10) minuteText = `${minute}`;
-    else minuteText = `0${minute}`;
-
-    if (time.hour == 24 || time.hour < 12) periodText = "AM";
-    else periodText = "PM";
-
-    return `${hourText}:${minuteText} ${periodText}`;
 }
 
 function resizeTitle(minuteDifference: number): void {
@@ -259,7 +234,7 @@ function resizeTitle(minuteDifference: number): void {
                 <UBadge
                     class="font-normal text-gray-800 flex flex-col items-start"
                     variant="ghost"
-                    :label="`${getTimeText(data.startTime)} - ${getTimeText(data.endTime)}`"
+                    :label="`${data.startTime.getTimeString()} - ${data.endTime.getTimeString()}`"
                     :ui="{
                         label: 'text-wrap line-clamp-2 select-none',
                     }"
@@ -281,8 +256,8 @@ function resizeTitle(minuteDifference: number): void {
                 </template>
 
                 <template #body>
-                    {{ getTimeText(data.startTime) }} -
-                    {{ getTimeText(data.endTime) }}
+                    {{ data.startTime.getTimeString() }} -
+                    {{ data.endTime.getTimeString() }}
                 </template>
             </UCard>
         </template>
