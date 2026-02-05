@@ -84,6 +84,12 @@ const columns: TableColumn<ShiftInfo>[] = [
     <template #header>
       <span class="mb"> Working Currently </span>
     </template>
-    <UTable :data="data" :columns="columns"> </UTable>
+    <UTable 
+      :data="data" 
+      :columns="columns"
+      :ui="{
+        thead: 'hidden'
+      }"
+    ></UTable>
   </UCard>
 </template>

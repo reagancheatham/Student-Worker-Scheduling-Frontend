@@ -1,5 +1,6 @@
 <script>
 import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue";
+import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
 </script>
 
 <template>
@@ -10,10 +11,7 @@ import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue"
     >
       <UPageCard title="Schedule" class="col-span-7 min-h-0 h-full"></UPageCard>
       <WorkingCurrently class="col-span-4 min-h-0 h-full"></WorkingCurrently>
-      <UPageCard
-        title="Open Shifts"
-        class="col-span-3 min-h-0 h-full"
-      ></UPageCard>
+      <OpenShifts class="col-span-3 min-h-0 h-full"></OpenShifts>
     </div>
 
     <!-- Little Side -->
