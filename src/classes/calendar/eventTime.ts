@@ -6,30 +6,30 @@ export class EventTime {
     ) {}
 
     isBefore(other: EventTime): boolean {
-        return this.getTotalTime() < other.getTotalTime();
+        return this.totalTime() < other.totalTime();
     }
 
     isBeforeOrEqual(other: EventTime): boolean {
         return (
-            this.isBefore(other) || this.getTotalTime() === other.getTotalTime()
+            this.isBefore(other) || this.totalTime() === other.totalTime()
         );
     }
 
     isAfter(other: EventTime): boolean {
-        return this.getTotalTime() > other.getTotalTime();
+        return this.totalTime() > other.totalTime();
     }
 
     isAfterOrEqual(other: EventTime): boolean {
         return (
-            this.isAfter(other) || this.getTotalTime() === other.getTotalTime()
+            this.isAfter(other) || this.totalTime() === other.totalTime()
         );
     }
 
-    getTotalTime(): number {
+    totalTime(): number {
         return 24 * 60 * this.day + 60 * this.hour + this.minute;
     }
 
-    getTimeString(): string {
+    toTimeString(): string {
         let hour = this.hour;
         let minute = this.minute;
 

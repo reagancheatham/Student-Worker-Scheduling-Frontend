@@ -6,6 +6,17 @@ import {
 } from "@classes/calendar/calendarEventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 
+type EventSlot = {
+    index: number;
+    slotCount: number;
+};
+
+type BisectEvent = {
+    event: CalendarEventData;
+    start: number;
+    end: number;
+};
+
 const events = ref([
     new CalendarEventData(
         "First Event",
@@ -31,16 +42,38 @@ const events = ref([
         new EventTime(1, 21, 30),
         EventColor.Red,
     ),
+        new CalendarEventData(
+        "Fifth Event",
+        new EventTime(1, 6, 15),
+        new EventTime(1, 10, 30),
+        EventColor.Blue,
+    ),
+    new CalendarEventData(
+        "Sixth Event",
+        new EventTime(1, 7, 15),
+        new EventTime(1, 9, 30),
+        EventColor.Orange,
+    ),
+    new CalendarEventData(
+        "Seventh Event",
+        new EventTime(1, 15, 15),
+        new EventTime(1, 20, 30),
+        EventColor.Yellow,
+    ),
+    new CalendarEventData(
+        "Eight Event",
+        new EventTime(1, 16, 15),
+        new EventTime(1, 21, 30),
+        EventColor.Purple,
+    ),
 ]);
 
 const canHover = ref<boolean>(true);
 
-const eventBisects: Map<CalendarEventData, CalendarEventData[]> = new Map<
+const eventSlots: Map<CalendarEventData, EventSlot> = new Map<
     CalendarEventData,
-    CalendarEventData[]
+    EventSlot
 >();
-
-const calculatedBisects: Set<CalendarEventData> = new Set<CalendarEventData>();
 
 onMounted(() => {
     initializeZIndices();
@@ -49,7 +82,7 @@ onMounted(() => {
 
 function initializeZIndices(): void {
     events.value.forEach((element) => {
-        element.zIndex = element.startTime.getTotalTime();
+        element.zIndex = element.startTime.totalTime();
     });
 }
 
@@ -58,93 +91,117 @@ function onEventResizeBegan(_: CalendarEventData): void {
 }
 
 function onEventResized(event: CalendarEventData): void {
-    event.zIndex = event.startTime.getTotalTime();
-
-    calculateBisects();
+    event.zIndex = event.startTime.totalTime();
 }
 
 function onEventResizeEnded(_: CalendarEventData): void {
     canHover.value = true;
+
+    calculateBisects();
 }
 
 function calculateBisects(): void {
-    eventBisects.clear();
-    calculatedBisects.clear();
+    eventSlots.clear();
 
-    for (let i = 0; i < events.value.length; i++) {
-        const firstEvent = events.value[i];
-        let eventChain: CalendarEventData[] = [];
-        eventChain.push(firstEvent);
+    const sortedEvents = [...events.value].sort(
+        (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
+    );
 
-        for (let j = 0; j < events.value.length; j++) {
-            const secondEvent = events.value[j];
+    for (const event of sortedEvents) {
+        if (eventSlots.has(event)) continue;
 
-            if (firstEvent === secondEvent) continue;
-            else if (firstEvent.isBisecting(secondEvent))
-                eventChain.push(secondEvent);
-        }
+        const bisectChain = findLongestBisectChain(event);
+        for (let i = 0; i < bisectChain.length; i++) {
+            const bisectEvent = bisectChain[i];
 
-        eventChain.sort(
-            (a, b) => a.startTime.getTotalTime() - b.startTime.getTotalTime(),
-        );
+            if (eventSlots.has(bisectEvent)) continue;
 
-        for (let j = 0; j < eventChain.length; j++) {
-            const event = eventChain[j];
+            const takenSlots: number[] = [];
+            for (let j = 0; j < bisectChain.length; j++) {
+                const takenBisect = bisectChain[j];
 
-            if (eventBisects.has(event)) {
-                const bisectList = eventBisects.get(event);
-
-                // if it has a chain of equal length, choose the chain with the earliest start time
-                if (bisectList.length < eventChain.length)
-                    eventBisects.set(event, eventChain);
-                else if (bisectList.length == eventChain.length) {
-                    if (
-                        eventChain[0].startTime.isBefore(
-                            bisectList[0].startTime,
-                        )
-                    )
-                        eventBisects.set(event, eventChain);
+                if (eventSlots.has(takenBisect)) {
+                    const takenSlot = eventSlots.get(takenBisect);
+                    takenSlots.push(takenSlot.index);
                 }
-            } else eventBisects.set(event, eventChain);
+            }
+
+            takenSlots.sort((a, b) => a - b);
+            let targetSlot = 0;
+
+            for (const takenSlot of takenSlots) {
+                if (takenSlot > targetSlot) {
+                    break;
+                } else if (targetSlot == takenSlot) targetSlot++;
+            }
+
+            eventSlots.set(bisectEvent, {
+                index: targetSlot,
+                slotCount: bisectChain.length,
+            });
         }
     }
 
-    eventBisects.keys().forEach((keyEvent) => {
-        if (!calculatedBisects.has(keyEvent)) {
-            const bisectList = eventBisects.get(keyEvent);
+    for (const event of sortedEvents) {
+        if (!eventSlots.has(event)) {
+            event.leftBisectMargin = 0;
+            event.rightBisectMargin = 0;
+        } else {
+            console.log(`event: ${event.name}: slotIndex: ${eventSlots.get(event).index}, slotCount: ${eventSlots.get(event).slotCount}`)
 
-            if (bisectList.length > 1) {
-                let index = bisectList.indexOf(keyEvent);
+            const slot = eventSlots.get(event);
+            const leftMargin = slot.index * (100 / slot.slotCount);
+            const rightMargin =
+                (slot.slotCount - 1 - slot.index) * (100 / slot.slotCount);
 
-                for (let i = index; i >= 0; i--) {
-                    const mappedEvent = bisectList[i];
-                    const mappedList = eventBisects.get(mappedEvent);
-
-                    if (mappedList == bisectList) continue;
-
-                    if (!mappedEvent.startTime.isBefore(keyEvent.startTime))
-                        continue;
-
-                    // instead of just changing our index, we need to actually reconstruct the bisectList for this event
-                    if (mappedList.indexOf(mappedEvent) >= index) index--;
-                }
-
-                calculatedBisects.add(keyEvent);
-
-                const leftMargin = index * (100 / bisectList.length);
-                const rightMargin =
-                    (bisectList.length - 1 - index) * (100 / bisectList.length);
-
-                keyEvent.leftBisectMargin = leftMargin;
-                keyEvent.rightBisectMargin = rightMargin;
-            } else {
-                const event = bisectList[0];
-
-                event.leftBisectMargin = 0;
-                event.rightBisectMargin = 0;
-            }
+            event.leftBisectMargin = leftMargin;
+            event.rightBisectMargin = rightMargin;
         }
-    });
+    }
+}
+
+function findLongestBisectChain(event: CalendarEventData): CalendarEventData[] {
+    const candidates: BisectEvent[] = events.value
+        .filter((e) => e.bisects(event))
+        .map((e) => ({
+            event: e,
+            start: Math.max(
+                e.startTime.totalTime(),
+                event.startTime.totalTime(),
+            ),
+            end: Math.min(e.endTime.totalTime(), event.endTime.totalTime()),
+        }));
+
+    candidates.sort((a, b) => a.start - b.start);
+
+    let active: BisectEvent[] = [];
+    let longest: BisectEvent[] = [];
+
+    for (const candidateEvent of candidates) {
+        active = active.filter((e) => e.end >= candidateEvent.start);
+
+        active.push(candidateEvent);
+
+        const minEnd = Math.min(...active.map((e) => e.end));
+        const maxStart = Math.max(...active.map((e) => e.start));
+
+        if (maxStart < minEnd) {
+            const activeStart = maxStart;
+            const longestStart =
+                longest.length === 0
+                    ? Infinity
+                    : Math.min(...longest.map((e) => e.start));
+            if (
+                active.length > longest.length ||
+                (active.length === longest.length && activeStart < longestStart)
+            )
+                longest = [...active];
+        }
+    }
+
+    return longest
+        .map((n) => n.event)
+        .sort((a, b) => a.startTime.totalTime() - b.startTime.totalTime());
 }
 </script>
 

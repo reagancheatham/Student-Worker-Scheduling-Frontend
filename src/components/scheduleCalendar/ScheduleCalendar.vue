@@ -1,7 +1,7 @@
 <style>
 .calendarContainer {
     --min-cell-width: 50px;
-    --max-cell-width: 160px;
+    --max-cell-width: 240px;
     --min-cell-height: calc(10px / 60);
     --max-cell-height: calc(40px / 60);
 

@@ -5,6 +5,7 @@ export enum EventColor {
     Orange = "--color-orange-500",
     Red = "--color-red-400",
     Yellow = "--color-yellow-500",
+    Purple = "--color-purple-500",
 }
 
 export class CalendarEventData {
@@ -25,10 +26,12 @@ export class CalendarEventData {
         );
     }
 
-    isBisecting(data: CalendarEventData): boolean {
+    bisects(data: CalendarEventData): boolean {
         return (
-            this.startTime.isAfterOrEqual(data.startTime) &&
-            this.startTime.isBefore(data.endTime)
+            (this.startTime.isAfterOrEqual(data.startTime) &&
+                this.startTime.isBefore(data.endTime)) ||
+            (data.startTime.isAfterOrEqual(this.startTime) &&
+                data.startTime.isBefore(this.endTime))
         );
     }
 }

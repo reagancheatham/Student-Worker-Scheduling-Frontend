@@ -234,7 +234,7 @@ function resizeTitle(minuteDifference: number): void {
                 <UBadge
                     class="font-normal text-gray-800 flex flex-col items-start"
                     variant="ghost"
-                    :label="`${data.startTime.getTimeString()} - ${data.endTime.getTimeString()}`"
+                    :label="`${data.startTime.toTimeString()} - ${data.endTime.toTimeString()}`"
                     :ui="{
                         label: 'text-wrap line-clamp-2 select-none',
                     }"
@@ -256,8 +256,8 @@ function resizeTitle(minuteDifference: number): void {
                 </template>
 
                 <template #body>
-                    {{ data.startTime.getTimeString() }} -
-                    {{ data.endTime.getTimeString() }}
+                    {{ data.startTime.toTimeString() }} -
+                    {{ data.endTime.toTimeString() }}
                 </template>
             </UCard>
         </template>
