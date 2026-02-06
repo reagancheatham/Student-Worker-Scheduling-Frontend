@@ -9,6 +9,7 @@ import { EventTime } from "@classes/calendar/eventTime.ts";
 type EventSlot = {
     index: number;
     slotCount: number;
+    slotSize: number;
 };
 
 type BisectEvent = {
@@ -16,6 +17,12 @@ type BisectEvent = {
     start: number;
     end: number;
 };
+
+/*
+    TODO: could make events scale to fit as many slots as they can
+        - pass slot size alongside EventSlot object
+        - need to read all bisecting events and what slots they are in
+*/
 
 const events = ref([
     new CalendarEventData(
@@ -42,7 +49,7 @@ const events = ref([
         new EventTime(1, 21, 30),
         EventColor.Red,
     ),
-        new CalendarEventData(
+    new CalendarEventData(
         "Fifth Event",
         new EventTime(1, 6, 15),
         new EventTime(1, 10, 30),
@@ -121,7 +128,7 @@ function calculateBisects(): void {
                 const takenBisect = bisectChain[j];
 
                 if (eventSlots.has(takenBisect)) {
-                    const takenSlot = eventSlots.get(takenBisect);
+                    const takenSlot = eventSlots.get(takenBisect)!;
                     takenSlots.push(takenSlot.index);
                 }
             }
@@ -138,18 +145,19 @@ function calculateBisects(): void {
             eventSlots.set(bisectEvent, {
                 index: targetSlot,
                 slotCount: bisectChain.length,
+                slotSize: 1,
             });
         }
     }
+
+    expandSlotSizes();
 
     for (const event of sortedEvents) {
         if (!eventSlots.has(event)) {
             event.leftBisectMargin = 0;
             event.rightBisectMargin = 0;
         } else {
-            console.log(`event: ${event.name}: slotIndex: ${eventSlots.get(event).index}, slotCount: ${eventSlots.get(event).slotCount}`)
-
-            const slot = eventSlots.get(event);
+            const slot = eventSlots.get(event)!;
             const leftMargin = slot.index * (100 / slot.slotCount);
             const rightMargin =
                 (slot.slotCount - 1 - slot.index) * (100 / slot.slotCount);
@@ -161,16 +169,11 @@ function calculateBisects(): void {
 }
 
 function findLongestBisectChain(event: CalendarEventData): CalendarEventData[] {
-    const candidates: BisectEvent[] = events.value
-        .filter((e) => e.bisects(event))
-        .map((e) => ({
-            event: e,
-            start: Math.max(
-                e.startTime.totalTime(),
-                event.startTime.totalTime(),
-            ),
-            end: Math.min(e.endTime.totalTime(), event.endTime.totalTime()),
-        }));
+    const candidates: BisectEvent[] = getAllBisectingEvents(event).map((e) => ({
+        event: e,
+        start: Math.max(e.startTime.totalTime(), event.startTime.totalTime()),
+        end: Math.min(e.endTime.totalTime(), event.endTime.totalTime()),
+    }));
 
     candidates.sort((a, b) => a.start - b.start);
 
@@ -202,6 +205,23 @@ function findLongestBisectChain(event: CalendarEventData): CalendarEventData[] {
     return longest
         .map((n) => n.event)
         .sort((a, b) => a.startTime.totalTime() - b.startTime.totalTime());
+}
+
+function getAllBisectingEvents(event: CalendarEventData): CalendarEventData[] {
+    return events.value.filter((e) => e.bisects(event));
+}
+
+function expandSlotSizes() {
+    // for (const [event, slot] of eventSlots) {
+    //     const bisectingEvents = getAllBisectingEvents(event);
+
+    //     for (const bisectEvent of bisectingEvents) {
+    //         if (bisectEvent === event)
+    //             continue;
+
+            
+    //     }
+    // }
 }
 </script>
 
