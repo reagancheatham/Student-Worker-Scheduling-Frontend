@@ -36,38 +36,16 @@ let resizeEndY: number;
 //#endregion
 
 //#region Resize Callbacks
-function startStartResize(evt: PointerEvent) {
-    resizeStartTime = { ...refData.value.startTime };
-    resizeStartY = evt.clientY;
-
-    startResize(evt, onStartResize, stopStartResize);
+function startDrag(evt: DragEvent) {
+    console.log("drag start");
 }
 
-function onStartResize(evt: PointerEvent) {
-    const dy =
-        Math.round((evt.clientY - resizeStartY) / pixelResizeRatio) *
-        resizeStep;
-
-    let hour = resizeStartTime.hour;
-    let minute = resizeStartTime.minute + dy;
-    [hour, minute] = calculateTimeChange(hour, minute);
-
-    const minuteDifference =
-        60 * (refData.value.endTime.hour - hour) +
-        (refData.value.endTime.minute - minute);
-
-    if (minuteDifference < 15) return;
-
-    resizeTitle(minuteDifference);
-
-    refData.value.startTime.hour = hour;
-    refData.value.startTime.minute = minute;
-
-    emit("resized", props.data);
+function onDrag(evt: DragEvent) {
+    console.log("dragging");
 }
 
-function stopStartResize(evt: PointerEvent) {
-    stopResize(onStartResize, stopStartResize);
+function stopDrag(evt: DragEvent) {
+    console.log("drag end");
 }
 
 function startEndResize(evt: PointerEvent) {
@@ -114,6 +92,8 @@ function startResize(
     document.body.style.userSelect = "none";
     window.addEventListener("pointermove", resizeEvent);
     window.addEventListener("pointerup", stopResizeEvent, { once: true });
+
+    isOpen.value = false;
 
     emit("resizeBegan", props.data);
 }
@@ -184,7 +164,6 @@ function resizeTitle(minuteDifference: number): void {
 
 <template>
     <UPopover
-        mode="hover"
         v-model:open="isOpen"
         :content="{ side: 'right' }"
         @update:open="
@@ -207,6 +186,11 @@ function resizeTitle(minuteDifference: number): void {
             :ui="{
                 footer: 'mt-auto',
             }"
+            @mouseenter="if (canHover) isOpen = true;"
+            @mouseleave="isOpen = false;"
+            @dragstart="startDrag"
+            @drag="onDrag"
+            @dragend="stopDrag"
         >
             <template #header>
                 <div
@@ -214,10 +198,6 @@ function resizeTitle(minuteDifference: number): void {
                         marginTop: `${titleMargin}px`,
                     }"
                 >
-                    <div
-                        class="resizeHandle top-0"
-                        @pointerdown="startStartResize"
-                    />
                     <UBadge
                         class="text-black select-none"
                         variant="ghost"
