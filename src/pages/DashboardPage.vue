@@ -1,6 +1,7 @@
 <script>
 import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue";
 import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
+import NotificationCenter from "../components/dashboardCards/NotificationCenter.vue";
 </script>
 
 <template>
@@ -16,7 +17,7 @@ import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
 
     <!-- Little Side -->
     <div class="col-span-1 h-full">
-      <UPageCard class="h-full"></UPageCard>
+      <NotificationCenter class="h-full"></NotificationCenter>
     </div>
   </div>
 </template>
