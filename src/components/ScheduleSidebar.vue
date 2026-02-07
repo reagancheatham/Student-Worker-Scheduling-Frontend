@@ -9,21 +9,25 @@ const route = useRoute();
 const items = computed(() => [
     {
         label: "Dashboard",
+        icon: "i-lucide-house",
         to: Routes.Dashboard,
         active: route.path.startsWith(Routes.Dashboard),
     },
     {
         label: "Schedule",
+        icon: "i-lucide-calendar-fold",
         to: Routes.Schedule,
         active: route.path.startsWith(Routes.Schedule),
     },
     {
         label: "Open Shifts",
+        icon: "i-lucide-briefcase",
         to: Routes.OpenShifts,
         active: route.path.startsWith(Routes.OpenShifts),
     },
     {
         label: "Settings",
+        icon: "i-lucide-settings",
         to: Routes.Settings,
         active: route.path.startsWith(Routes.Settings),
     },
@@ -58,15 +62,26 @@ const searchGroups = computed(() => [
 
             <UNavigationMenu orientation="vertical" :items="items">
                 <template #item="{ item, active }">
-                    <span
-                        :class="[
-                            active
-                                ? 'text-maroon-500'
-                                : 'text-neutral-100',
-                        ]"
-                    >
-                        {{ item.label }}
-                    </span>
+                    <div class="flex items-center gap-3">
+                        <UIcon 
+                            v-if="item.icon"
+                            :name="item.icon"
+                            :class="[
+                                'w-5 h-5',
+                                active ? 'text-maroon-500' : 'text-neutral-100'
+                            ]" 
+                        />
+
+                            <span
+                                :class="[
+                                    active
+                                        ? 'text-maroon-500'
+                                        : 'text-neutral-100',
+                                ]"
+                            >
+                                {{ item.label }}
+                            </span>
+                    </div>
                 </template>
             </UNavigationMenu>
         </template>

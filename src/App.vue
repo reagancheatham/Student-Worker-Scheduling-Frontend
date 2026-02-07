@@ -5,11 +5,12 @@
                 <ScheduleSidebar />
                 <UDashboardPanel>
                     <template #header>
-                        <UDashboardNavbar />
+                        <ScheduleNavbar/>
                     </template>
 
-                    <template #body>
-                        <ScheduleCalendar />
+                    <template #body class="overflow-hidden!">
+                        <!-- <ScheduleCalendar /> -->
+                        <RouterView />
                     </template>
                 </UDashboardPanel>
             </UDashboardGroup>
