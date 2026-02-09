@@ -26,6 +26,12 @@ const items = computed(() => [
         active: route.path.startsWith(Routes.OpenShifts),
     },
     {
+        label: "Employees",
+        icon: "i-lucide-users",
+        to: Routes.Employees,
+        active: route.path.startsWith(Routes.Employees),
+    },
+    {
         label: "Settings",
         icon: "i-lucide-settings",
         to: Routes.Settings,
