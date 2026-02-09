@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute } from "vue-router";
-import { Routes } from "../routing/routes.ts";
+import { routes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
 
 const route = useRoute();
@@ -10,32 +10,32 @@ const items = computed(() => [
     {
         label: "Dashboard",
         icon: "i-lucide-house",
-        to: Routes.Dashboard,
-        active: route.path.startsWith(Routes.Dashboard),
+        to: routes.Dashboard.path,
+        active: route.path.startsWith(routes.Dashboard.path),
     },
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
-        to: Routes.Schedule,
-        active: route.path.startsWith(Routes.Schedule),
+        to: routes.Schedule.path,
+        active: route.path.startsWith(routes.Schedule.path),
     },
     {
         label: "Open Shifts",
         icon: "i-lucide-briefcase",
-        to: Routes.OpenShifts,
-        active: route.path.startsWith(Routes.OpenShifts),
+        to: routes.OpenShifts.path,
+        active: route.path.startsWith(routes.OpenShifts.path),
     },
     {
         label: "Employees",
         icon: "i-lucide-users",
-        to: Routes.Employees,
-        active: route.path.startsWith(Routes.Employees),
+        to: routes.Employees.path,
+        active: route.path.startsWith(routes.Employees.path),
     },
     {
         label: "Settings",
         icon: "i-lucide-settings",
-        to: Routes.Settings,
-        active: route.path.startsWith(Routes.Settings),
+        to: routes.Settings.path,
+        active: route.path.startsWith(routes.Settings.path),
     },
 ]);
 
