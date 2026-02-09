@@ -18,12 +18,6 @@ type BisectEvent = {
     end: number;
 };
 
-/*
-    TODO: could make events scale to fit as many slots as they can
-        - pass slot size alongside EventSlot object
-        - need to read all bisecting events and what slots they are in
-*/
-
 const events = ref([
     new CalendarEventData(
         "First Event",
@@ -93,7 +87,7 @@ function initializeZIndices(): void {
     });
 }
 
-function onEventResizeBegan(_: CalendarEventData): void {
+function onEventResizeBegan(): void {
     canHover.value = false;
 }
 
@@ -101,7 +95,17 @@ function onEventResized(event: CalendarEventData): void {
     event.zIndex = event.startTime.totalTime();
 }
 
-function onEventResizeEnded(_: CalendarEventData): void {
+function onEventResizeEnded(): void {
+    canHover.value = true;
+
+    calculateBisects();
+}
+
+function onEventDragBegan(): void {
+    canHover.value = false;
+}
+
+function onEventDragEnded(): void {
     canHover.value = true;
 
     calculateBisects();
@@ -249,6 +253,8 @@ function expandSlotSizes() {
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"
             @resize-ended="onEventResizeEnded"
+            @drag-began="onEventDragBegan"
+            @drag-ended="onEventDragEnded"
         />
     </div>
 </template>

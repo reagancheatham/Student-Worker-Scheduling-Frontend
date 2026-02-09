@@ -1,66 +1,153 @@
 <script setup lang="ts">
-import { ref, toRef } from "vue";
+import { ref, toRef, useTemplateRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
 import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
+import { Vector2 } from "@classes/util/vector.ts";
+import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
 
 //#region Variables
 type ResizeEvent = (evt: PointerEvent) => void;
-
-const fontRange = new Range(8, 12);
-const marginRange = new Range(-10.0, -0.1);
-const resizeStep = 5;
-const pixelResizeRatio = 3.5;
+enum EventState {
+    None,
+    Resizing,
+    Dragging,
+}
 
 const props = defineProps<{
     data: CalendarEventData;
     canHover: boolean;
 }>();
 
-const refData = toRef<CalendarEventData>(props.data);
-const titleFontSize = ref(fontRange.max);
-const titleMargin = ref(marginRange.max);
-const isOpen = ref(false);
-
 const emit = defineEmits({
-    resizeBegan: (_: CalendarEventData) => true,
+    resizeBegan: () => true,
     resized: (_: CalendarEventData) => true,
-    resizeEnded: (_: CalendarEventData) => true,
+    resizeEnded: () => true,
+    dragBegan: (_: CalendarEventData) => true,
+    dragEnded: (_: CalendarEventData) => true,
 });
 
-let resizeStartTime: EventTime;
-let resizeStartY: number;
+const MAX_Z_INDEX = 5000;
+const FONT_RANGE = new Range(8, 12);
+const MARGIN_RANGE = new Range(-10.0, -0.1);
+const RESIZE_STEP = 5;
+const PIXEL_RESIZE_RATIO = 3.5;
+const VERTICAL_DRAG_THRESHOLD = 0.5;
+
+const refData = toRef<CalendarEventData>(props.data);
+const titleFontSize = ref(FONT_RANGE.max);
+const titleMargin = ref(MARGIN_RANGE.max);
+const isOpen = ref(false);
+const eventElement = useTemplateRef<HTMLElement>("event");
+
+let state: EventState = EventState.None;
+let dragStart: Vector2 = Vector2.zero;
+let dragStartTime: EventTime;
+let dragEndTime: EventTime;
 let resizeEndTime: EventTime;
 let resizeEndY: number;
 //#endregion
 
 //#region Resize Callbacks
-function startDrag(evt: DragEvent) {
-    console.log("drag start");
+function onPointerDown(evt: PointerEvent) {
+    if (state == EventState.Resizing) return;
+
+    evt.preventDefault();
+
+    dragStartTime = { ...refData.value.startTime };
+    dragEndTime = { ...refData.value.endTime };
+    dragStart = new Vector2(evt.clientX, evt.clientY);
+
+    (evt.target as HTMLElement).setPointerCapture(evt.pointerId);
+
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
 }
 
-function onDrag(evt: DragEvent) {
-    console.log("dragging");
+function onPointerMove(evt: PointerEvent) {
+    if (state == EventState.Resizing) return;
+
+    const delta = new Vector2(
+        evt.clientX - dragStart.x,
+        evt.clientY - dragStart.y,
+    );
+
+    if (state == EventState.Dragging) {
+        const unwrappedElement = (eventElement.value as any)?.$el ?? eventElement.value;
+        const horizontalDragRatio = unwrappedElement.getBoundingClientRect().width;
+        const dX = Math.round(delta.x / horizontalDragRatio);
+        const dY = Math.round(delta.y / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
+
+        const hour = dragStartTime.hour;
+        const minute = dragStartTime.minute + dY;
+        const hourDifference = dragEndTime.hour - dragStartTime.hour;
+        const minuteDifference = dragEndTime.minute - dragStartTime.minute;
+        const [startHour, startMinute] = calculateTimeChange(hour, minute);
+        const [endHour, endMinute] = calculateTimeChange(
+            hour + hourDifference,
+            minute + minuteDifference,
+        );
+
+        const totalDifference =
+            60 * (endHour - startHour) + (endMinute - startMinute);
+
+        if (totalDifference >= 15) {
+            refData.value.startTime.hour = startHour;
+            refData.value.startTime.minute = startMinute;
+            refData.value.endTime.hour = endHour;
+            refData.value.endTime.minute = endMinute;
+        }
+
+        let day = dragStartTime.day + dX;
+        day = MathUtil.clamp(day, 1, 7);
+
+        refData.value.startTime.day = day;
+        refData.value.endTime.day = day;
+    } else {
+        const dragDistance = delta.magnitude();
+
+        if (dragDistance >= VERTICAL_DRAG_THRESHOLD) {
+            state = EventState.Dragging;
+            dragStartTime = { ...refData.value.startTime };
+            dragEndTime = { ...refData.value.endTime };
+            isOpen.value = false;
+            props.data.zIndex = MAX_Z_INDEX;
+
+            emit("dragBegan", props.data);
+        }
+    }
 }
 
-function stopDrag(evt: DragEvent) {
-    console.log("drag end");
+function onPointerUp(_: PointerEvent) {
+    if (state != EventState.Dragging) return;
+
+    state = EventState.None;
+
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+
+    emit("dragEnded", props.data);
 }
 
 function startEndResize(evt: PointerEvent) {
+    evt.preventDefault();
+
     resizeEndTime = { ...refData.value.endTime };
     resizeEndY = evt.clientY;
+    props.data.zIndex = MAX_Z_INDEX;
 
     startResize(evt, onEndResize, stopEndResize);
+
+    state = EventState.Resizing;
 }
 
 function onEndResize(evt: PointerEvent) {
-    const dy =
-        Math.round((evt.clientY - resizeEndY) / pixelResizeRatio) * resizeStep;
+    const dY =
+        Math.round((evt.clientY - resizeEndY) / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
 
     let hour = resizeEndTime.hour;
-    let minute = resizeEndTime.minute + dy;
+    let minute = resizeEndTime.minute + dY;
     [hour, minute] = calculateTimeChange(hour, minute);
 
     const minuteDifference =
@@ -74,6 +161,7 @@ function onEndResize(evt: PointerEvent) {
     refData.value.endTime.hour = hour;
     refData.value.endTime.minute = minute;
 
+    state = EventState.None;
     emit("resized", props.data);
 }
 
@@ -95,7 +183,7 @@ function startResize(
 
     isOpen.value = false;
 
-    emit("resizeBegan", props.data);
+    emit("resizeBegan");
 }
 
 function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
@@ -104,7 +192,7 @@ function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
     window.removeEventListener("pointermove", resizeEvent);
     window.removeEventListener("pointerup", stopResizeEvent);
 
-    emit("resizeEnded", props.data);
+    emit("resizeEnded");
 }
 //#endregion
 
@@ -134,8 +222,8 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
 
 function resizeTitle(minuteDifference: number): void {
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
-    titleFontSize.value = fontRange.lerp(t);
-    titleMargin.value = marginRange.lerp(t);
+    titleFontSize.value = FONT_RANGE.lerp(t);
+    titleMargin.value = MARGIN_RANGE.lerp(t);
 }
 </script>
 
@@ -187,10 +275,9 @@ function resizeTitle(minuteDifference: number): void {
                 footer: 'mt-auto',
             }"
             @mouseenter="if (canHover) isOpen = true;"
-            @mouseleave="isOpen = false;"
-            @dragstart="startDrag"
-            @drag="onDrag"
-            @dragend="stopDrag"
+            @mouseleave="isOpen = false"
+            @pointerdown="onPointerDown"
+            @pointerup="onPointerUp"
         >
             <template #header>
                 <div

@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const cellSize = ref(0);
+</script>
+
 <style>
 .calendarContainer {
     --min-cell-width: 50px;
@@ -40,7 +46,7 @@
             <div class="calendarGrid">
                 <CalendarWeekDayDisplay />
                 <CalendarTimeDisplay />
-                <CalendarCellDisplay />
+                <CalendarCellDisplay  />
                 <CalendarEventDisplay />
             </div>
         </div>

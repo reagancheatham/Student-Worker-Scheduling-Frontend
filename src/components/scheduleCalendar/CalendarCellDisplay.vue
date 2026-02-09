@@ -1,3 +1,31 @@
+<script setup lang="ts">
+import { onMounted, onUnmounted, useTemplateRef } from 'vue';
+
+const emit = defineEmits({
+    cellSizeChanged: (_: number) => true,
+});
+
+
+const cellElement = useTemplateRef<HTMLElement>("0");
+
+onMounted(() => {
+    const unwrappedElement = (cellElement.value as any)?.$el ?? cellElement.value;
+    const cellSize = unwrappedElement.getBoundingClientRect().width;
+
+    emit("cellSizeChanged", cellSize);
+
+    const observer = new ResizeObserver(() => {
+        const size = unwrappedElement.getBoundingClientRect().width;
+
+        emit("cellSizeChanged", size);
+    })
+
+    observer.observe(unwrappedElement);
+
+    onUnmounted(() => observer.disconnect());
+});
+</script>
+
 <style>
 .cellContainer {
     width: 100%;
@@ -20,9 +48,10 @@
 <template>
     <div class="cellContainer">
         <UCard
+            :ref="`${n}`"
             class="calendarCell rounded-none ring-gray-600"
             variant="outline"
-            v-for="_ in 7 * 24"
+            v-for="n in 7 * 24"
         />
     </div>
 </template>
