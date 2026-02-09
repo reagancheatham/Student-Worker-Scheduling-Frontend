@@ -26,8 +26,8 @@ jobs:
           touch .env
           echo VITE_APP_CLIENT_ID="$VITE_APP_CLIENT_ID" >> .env
           echo VITE_APP_API_URL="$VITE_APP_API_URL" >> .env
-          echo VITE_APP_CLIENT_URL="project3.eaglesoftwareteam.com" >> .env
-          echo VITE_APP_SITE_URL="project3.eaglesoftwareteam.com" >> .env
+          echo VITE_APP_CLIENT_URL="workerscheduling.eaglesoftwareteam.com" >> .env
+          echo VITE_APP_SITE_URL="workerscheduling.eaglesoftwareteam.com" >> .env
 
       - run: npm install
       - run: npm run build
@@ -39,6 +39,6 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "dist/"
-          REMOTE_HOST: "project3.eaglesoftwareteam.com"
+          REMOTE_HOST: "workerscheduling.eaglesoftwareteam.com"
           REMOTE_USER: ubuntu
           TARGET: "/var/www/html/sev2026/t6"
