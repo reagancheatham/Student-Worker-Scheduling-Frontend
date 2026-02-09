@@ -3,16 +3,12 @@ const users = [
   {
     name: "Davey Clonts",
     description: "Time Off Request",
-    avatar: {
-      src: "..\public\avatar.png",
-    },
+    avatar: {},
   },
   {
     name: "Max Jones",
     description: "Dropped Shift",
-    avatar: {
-      src: "..\public\avatar.png",
-    },
+    avatar: {},
   },
 ];
 </script>
