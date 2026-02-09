@@ -3,5 +3,7 @@
 </script>
 
 <template>
-    
+    <UTable>
+        
+    </UTable>
 </template>
