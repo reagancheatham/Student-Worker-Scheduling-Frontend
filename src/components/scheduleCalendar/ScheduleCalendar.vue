@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const cellSize = ref(0);
+
+function updateCellSize(size: number): void {
+    cellSize.value = size;
+}
 </script>
 
 <style>
@@ -46,8 +50,8 @@ const cellSize = ref(0);
             <div class="calendarGrid">
                 <CalendarWeekDayDisplay />
                 <CalendarTimeDisplay />
-                <CalendarCellDisplay  />
-                <CalendarEventDisplay />
+                <CalendarCellDisplay @cell-size-changed="updateCellSize" />
+                <CalendarEventDisplay v-bind:cell-size="cellSize" />
             </div>
         </div>
     </div>

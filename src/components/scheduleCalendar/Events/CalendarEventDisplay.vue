@@ -69,6 +69,10 @@ const events = ref([
     ),
 ]);
 
+const props = defineProps<{
+    cellSize: number;
+}>();
+
 const canHover = ref<boolean>(true);
 
 const eventSlots: Map<CalendarEventData, EventSlot> = new Map<
@@ -218,12 +222,9 @@ function getAllBisectingEvents(event: CalendarEventData): CalendarEventData[] {
 function expandSlotSizes() {
     // for (const [event, slot] of eventSlots) {
     //     const bisectingEvents = getAllBisectingEvents(event);
-
     //     for (const bisectEvent of bisectingEvents) {
     //         if (bisectEvent === event)
     //             continue;
-
-            
     //     }
     // }
 }
@@ -250,6 +251,7 @@ function expandSlotSizes() {
             v-for="event in events"
             v-bind:data="event"
             v-bind:can-hover="canHover"
+            v-bind:cell-size="cellSize"
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"
             @resize-ended="onEventResizeEnded"

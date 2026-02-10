@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, toRef, useTemplateRef } from "vue";
+import { ref, toRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -18,6 +18,7 @@ enum EventState {
 const props = defineProps<{
     data: CalendarEventData;
     canHover: boolean;
+    cellSize: number;
 }>();
 
 const emit = defineEmits({
@@ -39,7 +40,6 @@ const refData = toRef<CalendarEventData>(props.data);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(MARGIN_RANGE.max);
 const isOpen = ref(false);
-const eventElement = useTemplateRef<HTMLElement>("event");
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -74,8 +74,7 @@ function onPointerMove(evt: PointerEvent) {
     );
 
     if (state == EventState.Dragging) {
-        const unwrappedElement = (eventElement.value as any)?.$el ?? eventElement.value;
-        const horizontalDragRatio = unwrappedElement.getBoundingClientRect().width;
+        const horizontalDragRatio = props.cellSize;
         const dX = Math.round(delta.x / horizontalDragRatio);
         const dY = Math.round(delta.y / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
 
@@ -97,6 +96,8 @@ function onPointerMove(evt: PointerEvent) {
             refData.value.startTime.minute = startMinute;
             refData.value.endTime.hour = endHour;
             refData.value.endTime.minute = endMinute;
+
+            resizeTitle(totalDifference);
         }
 
         let day = dragStartTime.day + dX;
@@ -144,7 +145,8 @@ function startEndResize(evt: PointerEvent) {
 
 function onEndResize(evt: PointerEvent) {
     const dY =
-        Math.round((evt.clientY - resizeEndY) / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
+        Math.round((evt.clientY - resizeEndY) / PIXEL_RESIZE_RATIO) *
+        RESIZE_STEP;
 
     let hour = resizeEndTime.hour;
     let minute = resizeEndTime.minute + dY;
@@ -221,6 +223,8 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
 }
 
 function resizeTitle(minuteDifference: number): void {
+    console.log("resize: " + minuteDifference);
+
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
     titleFontSize.value = FONT_RANGE.lerp(t);
     titleMargin.value = MARGIN_RANGE.lerp(t);
@@ -261,7 +265,6 @@ function resizeTitle(minuteDifference: number): void {
         "
     >
         <UCard
-            ref="event"
             class="event"
             variant="ghost"
             :style="{

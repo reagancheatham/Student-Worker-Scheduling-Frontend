@@ -5,14 +5,10 @@ const emit = defineEmits({
     cellSizeChanged: (_: number) => true,
 });
 
-
-const cellElement = useTemplateRef<HTMLElement>("0");
+const cellElements = useTemplateRef<any[]>("cells");
 
 onMounted(() => {
-    const unwrappedElement = (cellElement.value as any)?.$el ?? cellElement.value;
-    const cellSize = unwrappedElement.getBoundingClientRect().width;
-
-    emit("cellSizeChanged", cellSize);
+    const unwrappedElement = cellElements.value?.[0]?.$el;
 
     const observer = new ResizeObserver(() => {
         const size = unwrappedElement.getBoundingClientRect().width;
@@ -48,7 +44,7 @@ onMounted(() => {
 <template>
     <div class="cellContainer">
         <UCard
-            :ref="`${n}`"
+            :ref="`cells`"
             class="calendarCell rounded-none ring-gray-600"
             variant="outline"
             v-for="n in 7 * 24"
