@@ -1,22 +1,24 @@
 <script setup lang="ts">
+import { Vector2 } from '@classes/util/vector.ts';
 import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 
 const emit = defineEmits({
-    cellSizeChanged: (_: number) => true,
+    cellSizeChanged: (_: Vector2) => true,
 });
 
 const cellElements = useTemplateRef<any[]>("cells");
 
 onMounted(() => {
-    const unwrappedElement = cellElements.value?.[0]?.$el;
+    const cell = cellElements.value?.[0]?.$el;
 
     const observer = new ResizeObserver(() => {
-        const size = unwrappedElement.getBoundingClientRect().width;
+        const rect = cell.getBoundingClientRect();
+        const size = new Vector2(rect.width, rect.height);
 
         emit("cellSizeChanged", size);
     })
 
-    observer.observe(unwrappedElement);
+    observer.observe(cell);
 
     onUnmounted(() => observer.disconnect());
 });

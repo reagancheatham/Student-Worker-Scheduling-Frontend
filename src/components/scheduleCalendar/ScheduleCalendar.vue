@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Vector2 } from "@classes/util/vector.ts";
 import { ref } from "vue";
 
-const cellSize = ref(0);
+const cellSize = ref(Vector2.zero);
 
-function updateCellSize(size: number): void {
+function updateCellSize(size: Vector2): void {
     cellSize.value = size;
 }
 </script>
@@ -51,7 +52,7 @@ function updateCellSize(size: number): void {
                 <CalendarWeekDayDisplay />
                 <CalendarTimeDisplay />
                 <CalendarCellDisplay @cell-size-changed="updateCellSize" />
-                <CalendarEventDisplay v-bind:cell-size="cellSize" />
+                <CalendarEventDisplay v-bind:cellSize="cellSize" />
             </div>
         </div>
     </div>

@@ -5,6 +5,7 @@ import {
     EventColor,
 } from "@classes/calendar/calendarEventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
+import { Vector2 } from "@classes/util/vector.ts";
 
 type EventSlot = {
     index: number;
@@ -70,7 +71,7 @@ const events = ref([
 ]);
 
 const props = defineProps<{
-    cellSize: number;
+    cellSize: Vector2;
 }>();
 
 const canHover = ref<boolean>(true);
@@ -251,7 +252,7 @@ function expandSlotSizes() {
             v-for="event in events"
             v-bind:data="event"
             v-bind:can-hover="canHover"
-            v-bind:cell-size="cellSize"
+            v-bind:cellSize="cellSize"
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"
             @resize-ended="onEventResizeEnded"

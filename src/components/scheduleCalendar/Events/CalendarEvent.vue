@@ -8,7 +8,6 @@ import { Vector2 } from "@classes/util/vector.ts";
 import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
 
 //#region Variables
-type ResizeEvent = (evt: PointerEvent) => void;
 enum EventState {
     None,
     Resizing,
@@ -18,7 +17,7 @@ enum EventState {
 const props = defineProps<{
     data: CalendarEventData;
     canHover: boolean;
-    cellSize: number;
+    cellSize: Vector2;
 }>();
 
 const emit = defineEmits({
@@ -74,7 +73,7 @@ function onPointerMove(evt: PointerEvent) {
     );
 
     if (state == EventState.Dragging) {
-        const horizontalDragRatio = props.cellSize;
+        const horizontalDragRatio = props.cellSize.x;
         const dX = Math.round(delta.x / horizontalDragRatio);
         const dY = Math.round(delta.y / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
 
@@ -131,21 +130,27 @@ function onPointerUp(_: PointerEvent) {
     emit("dragEnded", props.data);
 }
 
-function startEndResize(evt: PointerEvent) {
+function startResize(evt: PointerEvent) {
     evt.preventDefault();
 
     resizeEndTime = { ...refData.value.endTime };
     resizeEndY = evt.clientY;
     props.data.zIndex = MAX_Z_INDEX;
 
-    startResize(evt, onEndResize, stopEndResize);
+    document.body.style.cursor = "ns-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", onResize);
+    window.addEventListener("pointerup", stopResize, { once: true });
 
+    isOpen.value = false;
     state = EventState.Resizing;
+
+    emit("resizeBegan");
 }
 
-function onEndResize(evt: PointerEvent) {
+function onResize(evt: PointerEvent) {
     const dY =
-        Math.round((evt.clientY - resizeEndY) / PIXEL_RESIZE_RATIO) *
+        Math.round(12 * (evt.clientY - resizeEndY) / props.cellSize.y) *
         RESIZE_STEP;
 
     let hour = resizeEndTime.hour;
@@ -167,32 +172,11 @@ function onEndResize(evt: PointerEvent) {
     emit("resized", props.data);
 }
 
-function stopEndResize(evt: PointerEvent) {
-    stopResize(onEndResize, stopEndResize);
-}
-
-function startResize(
-    evt: PointerEvent,
-    resizeEvent: ResizeEvent,
-    stopResizeEvent: ResizeEvent,
-) {
-    evt.preventDefault();
-
-    document.body.style.cursor = "ns-resize";
-    document.body.style.userSelect = "none";
-    window.addEventListener("pointermove", resizeEvent);
-    window.addEventListener("pointerup", stopResizeEvent, { once: true });
-
-    isOpen.value = false;
-
-    emit("resizeBegan");
-}
-
-function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
+function stopResize() {
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
-    window.removeEventListener("pointermove", resizeEvent);
-    window.removeEventListener("pointerup", stopResizeEvent);
+    window.removeEventListener("pointermove", onResize);
+    window.removeEventListener("pointerup", stopResize);
 
     emit("resizeEnded");
 }
@@ -223,8 +207,6 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
 }
 
 function resizeTitle(minuteDifference: number): void {
-    console.log("resize: " + minuteDifference);
-
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
     titleFontSize.value = FONT_RANGE.lerp(t);
     titleMargin.value = MARGIN_RANGE.lerp(t);
@@ -312,10 +294,7 @@ function resizeTitle(minuteDifference: number): void {
             </template>
 
             <template #footer>
-                <div
-                    class="resizeHandle bottom-0"
-                    @pointerdown="startEndResize"
-                />
+                <div class="resizeHandle bottom-0" @pointerdown="startResize" />
             </template>
         </UCard>
 
