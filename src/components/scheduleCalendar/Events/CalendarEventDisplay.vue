@@ -110,8 +110,9 @@ function onEventDragBegan(): void {
     canHover.value = false;
 }
 
-function onEventDragEnded(): void {
+function onEventDragEnded(event: CalendarEventData): void {
     canHover.value = true;
+    event.zIndex = event.startTime.totalTime();
 
     calculateBisects();
 }

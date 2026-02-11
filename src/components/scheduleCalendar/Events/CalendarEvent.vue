@@ -81,8 +81,8 @@ function onPointerMove(evt: PointerEvent) {
         const minute = dragStartTime.minute + dY;
         const hourDifference = dragEndTime.hour - dragStartTime.hour;
         const minuteDifference = dragEndTime.minute - dragStartTime.minute;
-        const [startHour, startMinute] = calculateTimeChange(hour, minute);
-        const [endHour, endMinute] = calculateTimeChange(
+        let [startHour, startMinute] = calculateTimeChange(hour, minute);
+        let [endHour, endMinute] = calculateTimeChange(
             hour + hourDifference,
             minute + minuteDifference,
         );
@@ -150,7 +150,7 @@ function startResize(evt: PointerEvent) {
 
 function onResize(evt: PointerEvent) {
     const dY =
-        Math.round(12 * (evt.clientY - resizeEndY) / props.cellSize.y) *
+        Math.round((12 * (evt.clientY - resizeEndY)) / props.cellSize.y) *
         RESIZE_STEP;
 
     let hour = resizeEndTime.hour;
