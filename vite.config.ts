@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
     let baseURL = "";
 
     if (mode === "development") baseURL = "/";
-    else baseURL = "whatever we need here";
+    else baseURL = "/sev2026/t6";
 
     return {
         plugins: [vue(), ui()],
