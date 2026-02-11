@@ -45,8 +45,10 @@ const labelClasses = new Map<CalendarMode, string>([
 .dayLabel {
     grid-column: span 60;
     padding-bottom: 12px;
+    top: 35%;
     left: 50%;
     justify-content: center;
+    text-align: center;
 }
 
 .weekLabel {

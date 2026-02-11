@@ -19,15 +19,9 @@ function updateCellSize(size: Vector2): void {
 
 <style>
 .calendarContainer {
-    --min-cell-width: 50px;
-    --max-cell-width: 240px;
-    --min-cell-height: calc(10px / 60);
-    --max-cell-height: calc(40px / 60);
-
     width: fit-content;
     height: fit-content;
-    margin-top: 5vh;
-    margin-left: -5%;
+    margin-top: 1vh;
 }
 
 .calendarBody {
@@ -46,9 +40,9 @@ function updateCellSize(size: Vector2): void {
 .dayGrid {
     grid-template-columns: repeat(
         calc(25 * 60),
-        minmax(calc(10px / 60), calc(40px / 60))
+        minmax(calc(10px / 60), calc(80px / 60))
     );
-    grid-template-rows: repeat(8, minmax(50px, 240px));
+    grid-template-rows: repeat(8, minmax(50px, 80px));
 }
 
 .weekGrid {
@@ -62,7 +56,7 @@ function updateCellSize(size: Vector2): void {
 
 <template>
     <CalendarModeSelect v-model="selectedView" />
-    <div class="calendarContainer">
+    <div class="calendarContainer" :style="{ marginLeft: `${-0.5 * cellSize.x}px` }">
         <div class="calendarBody">
             <div :class="gridClasses.get(selectedView)!">
                 <CalendarWeekDayDisplay
