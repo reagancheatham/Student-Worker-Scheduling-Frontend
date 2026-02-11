@@ -4,5 +4,15 @@
 </script>
 
 <template>
-    <UDashboardNavbar :title="route.name" />
+    <UDashboardNavbar 
+        :title="route.name"
+    >
+        <template #right>
+            <img class="h-60 w-auto m-0" src="/OC.png" alt="OC Logo">
+        </template>
+    </UDashboardNavbar>
 </template>
+
+<style scoped>
+
+</style>
