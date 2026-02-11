@@ -6,6 +6,7 @@ import { Range } from "../../../classes/util/range.ts";
 import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 
 //#region Variables
 enum EventState {
@@ -15,6 +16,7 @@ enum EventState {
 }
 
 const props = defineProps<{
+    selectedView: CalendarMode;
     data: CalendarEventData;
     canHover: boolean;
     cellSize: Vector2;
@@ -49,7 +51,7 @@ let resizeEndY: number;
 //#endregion
 
 //#region Resize Callbacks
-function onPointerDown(evt: PointerEvent) {
+function onPointerDown(evt: PointerEvent): void {
     if (state == EventState.Resizing) return;
 
     evt.preventDefault();
@@ -64,7 +66,7 @@ function onPointerDown(evt: PointerEvent) {
     document.addEventListener("pointerup", onPointerUp);
 }
 
-function onPointerMove(evt: PointerEvent) {
+function onPointerMove(evt: PointerEvent): void {
     if (state == EventState.Resizing) return;
 
     const delta = new Vector2(
@@ -119,7 +121,7 @@ function onPointerMove(evt: PointerEvent) {
     }
 }
 
-function onPointerUp(_: PointerEvent) {
+function onPointerUp(_: PointerEvent): void {
     if (state != EventState.Dragging) return;
 
     state = EventState.None;
@@ -130,7 +132,7 @@ function onPointerUp(_: PointerEvent) {
     emit("dragEnded", props.data);
 }
 
-function startResize(evt: PointerEvent) {
+function startResize(evt: PointerEvent): void {
     evt.preventDefault();
 
     resizeEndTime = { ...refData.value.endTime };
@@ -148,7 +150,7 @@ function startResize(evt: PointerEvent) {
     emit("resizeBegan");
 }
 
-function onResize(evt: PointerEvent) {
+function onResize(evt: PointerEvent): void {
     const dY =
         Math.round((12 * (evt.clientY - resizeEndY)) / props.cellSize.y) *
         RESIZE_STEP;
@@ -172,7 +174,7 @@ function onResize(evt: PointerEvent) {
     emit("resized", props.data);
 }
 
-function stopResize() {
+function stopResize(): void {
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
     window.removeEventListener("pointermove", onResize);
@@ -210,6 +212,18 @@ function resizeTitle(minuteDifference: number): void {
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
     titleFontSize.value = FONT_RANGE.lerp(t);
     titleMargin.value = MARGIN_RANGE.lerp(t);
+}
+
+// TODO: make this work for days
+function getGridArea(): string {
+    const data = props.data;
+    const startTime = data.startTime;
+    const endTime = data.endTime;
+
+    if (props.selectedView == CalendarMode.Day)
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+    else // this hasn't been changed yet
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 </script>
 
@@ -250,7 +264,7 @@ function resizeTitle(minuteDifference: number): void {
             class="event"
             variant="ghost"
             :style="{
-                'grid-area': `calc(60 * (1 + ${data.startTime.hour}) + ${data.startTime.minute}) / calc(1 + ${data.startTime.day}) / span calc(60 * (${data.endTime.hour} - ${data.startTime.hour}) + (${data.endTime.minute} - ${data.startTime.minute})) / span calc(1 + ${data.endTime.day - data.startTime.day})`,
+                'grid-area': getGridArea(),
                 'background-color': `var(${data.color})`,
                 'z-index': `${data.zIndex}`,
                 'margin-left': `${data.leftBisectMargin}%`,

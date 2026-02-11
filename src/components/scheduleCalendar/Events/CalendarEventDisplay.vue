@@ -6,6 +6,7 @@ import {
 } from "@classes/calendar/calendarEventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { Vector2 } from "@classes/util/vector.ts";
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 
 type EventSlot = {
     index: number;
@@ -72,6 +73,7 @@ const events = ref([
 
 const props = defineProps<{
     cellSize: Vector2;
+    selectedView: CalendarMode;
 }>();
 
 const canHover = ref<boolean>(true);
@@ -80,6 +82,12 @@ const eventSlots: Map<CalendarEventData, EventSlot> = new Map<
     CalendarEventData,
     EventSlot
 >();
+
+const displayClasses = new Map<CalendarMode, string>([
+    [CalendarMode.Day, "eventContainer dayEventContainer"],
+    [CalendarMode.Week, "eventContainer weekEventContainer"],
+    [CalendarMode.Month, "eventContainer monthEventContainer"],
+]);
 
 onMounted(() => {
     initializeZIndices();
@@ -238,22 +246,31 @@ function expandSlotSizes() {
     height: 100%;
     display: grid;
     grid-area: stack-area;
-    grid-column: 1 / -1;
-    grid-row: 2 / -1;
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;
     z-index: 1;
     padding: 0;
 }
+
+.dayEventContainer {
+    grid-column: 2 / -1;
+    grid-row: 1 / -1;
+}
+
+.weekEventContainer {
+    grid-column: 1 / -1;
+    grid-row: 2 / -1;
+}
 </style>
 
 <template>
-    <div class="eventContainer">
+    <div :class="displayClasses.get(selectedView)!">
         <CalendarEvent
             v-for="event in events"
-            v-bind:data="event"
-            v-bind:can-hover="canHover"
-            v-bind:cellSize="cellSize"
+            :data="event"
+            :can-hover="canHover"
+            :cellSize="cellSize"
+            :selected-view="selectedView"
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"
             @resize-ended="onEventResizeEnded"

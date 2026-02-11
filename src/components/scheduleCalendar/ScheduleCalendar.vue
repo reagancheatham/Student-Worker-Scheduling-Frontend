@@ -56,7 +56,10 @@ function updateCellSize(size: Vector2): void {
 
 <template>
     <CalendarModeSelect v-model="selectedView" />
-    <div class="calendarContainer" :style="{ marginLeft: `${-0.5 * cellSize.x}px` }">
+    <div
+        class="calendarContainer"
+        :style="{ marginLeft: `${-0.5 * cellSize.x}px` }"
+    >
         <div class="calendarBody">
             <div :class="gridClasses.get(selectedView)!">
                 <CalendarWeekDayDisplay
@@ -67,7 +70,10 @@ function updateCellSize(size: Vector2): void {
                     :selected-view="selectedView"
                     @cell-size-changed="updateCellSize"
                 />
-                <CalendarEventDisplay :cellSize="cellSize" />
+                <CalendarEventDisplay
+                    :selected-view="selectedView"
+                    :cellSize="cellSize"
+                />
             </div>
         </div>
     </div>
