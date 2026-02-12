@@ -5,6 +5,7 @@ import { h, resolveComponent } from "vue";
 
 const UBadge = resolveComponent("UBadge");
 
+//create class for these eventually
 type OpenShifts = {
     ShiftSlot: String;
     Reason: "Dropped" | "Unscheduled";
