@@ -92,64 +92,60 @@ function onPointerMove(evt: PointerEvent): void {
 }
 
 function updateDrag(delta: Vector2): void {
+    let hour = 0;
+    let minute = 0;
+
     if (props.selectedView == CalendarMode.Day) {
         const horizontalDragRatio = props.cellSize.x / RESIZE_RATIO;
         const dX = Math.round(delta.x / horizontalDragRatio) * RESIZE_STEP;
 
-        const hour = dragStartTime.hour;
-        const minute = dragStartTime.minute + dX;
-        const hourDifference = dragEndTime.hour - dragStartTime.hour;
-        const minuteDifference = dragEndTime.minute - dragStartTime.minute;
-        let [startHour, startMinute] = calculateTimeChange(hour, minute);
-        let [endHour, endMinute] = calculateTimeChange(
-            hour + hourDifference,
-            minute + minuteDifference,
-        );
-
-        const totalDifference =
-            60 * (endHour - startHour) + (endMinute - startMinute);
-
-        if (totalDifference >= 15) {
-            refData.value.startTime.hour = startHour;
-            refData.value.startTime.minute = startMinute;
-            refData.value.endTime.hour = endHour;
-            refData.value.endTime.minute = endMinute;
-
-            resizeTitle(totalDifference);
-        }
+        hour = dragStartTime.hour;
+        minute = dragStartTime.minute + dX;
     } else {
         const horizontalDragRatio = props.cellSize.x;
         const verticalDragRatio = props.cellSize.y / RESIZE_RATIO;
         const dY = Math.round(delta.y / verticalDragRatio) * RESIZE_STEP;
         const dX = Math.round(delta.x / horizontalDragRatio);
 
-        const hour = dragStartTime.hour;
-        const minute = dragStartTime.minute + dY;
-        const hourDifference = dragEndTime.hour - dragStartTime.hour;
-        const minuteDifference = dragEndTime.minute - dragStartTime.minute;
-        let [startHour, startMinute] = calculateTimeChange(hour, minute);
-        let [endHour, endMinute] = calculateTimeChange(
-            hour + hourDifference,
-            minute + minuteDifference,
-        );
-
-        const totalDifference =
-            60 * (endHour - startHour) + (endMinute - startMinute);
-
-        if (totalDifference >= 15) {
-            refData.value.startTime.hour = startHour;
-            refData.value.startTime.minute = startMinute;
-            refData.value.endTime.hour = endHour;
-            refData.value.endTime.minute = endMinute;
-
-            resizeTitle(totalDifference);
-        }
+        hour = dragStartTime.hour;
+        minute = dragStartTime.minute + dY;
 
         let day = dragStartTime.day + dX;
         day = MathUtil.clamp(day, 1, 7);
 
         refData.value.startTime.day = day;
         refData.value.endTime.day = day;
+    }
+
+    const hourDifference = dragEndTime.hour - dragStartTime.hour;
+    const minuteDifference = dragEndTime.minute - dragStartTime.minute;
+    let [startHour, startMinute] = calculateTimeChange(hour, minute);
+    const [endHour, endMinute] = calculateTimeChange(
+        startHour + hourDifference,
+        startMinute + minuteDifference,
+    );
+
+    const targetDifference = 60 * hourDifference + minuteDifference;
+
+    let totalDifference =
+        60 * (endHour - startHour) + (endMinute - startMinute);
+
+    if (totalDifference < targetDifference) {
+        [startHour, startMinute] = calculateTimeChange(
+            endHour - hourDifference,
+            endMinute - minuteDifference,
+        );
+
+        totalDifference = targetDifference;
+    }
+
+    if (totalDifference >= 15) {
+        refData.value.startTime.hour = startHour;
+        refData.value.startTime.minute = startMinute;
+        refData.value.endTime.hour = endHour;
+        refData.value.endTime.minute = endMinute;
+
+        resizeTitle(totalDifference);
     }
 }
 
@@ -290,8 +286,10 @@ function getStyle() {
     if (props.selectedView == CalendarMode.Day) {
         console.log("cell size: " + props.cellSize.y);
         console.log("left margin: " + props.data.leftBisectMargin);
-        style["margin-top"] = `${props.data.leftBisectMargin / 100 * props.cellSize.y}px`;
-        style["margin-bottom"] = `${props.data.rightBisectMargin / 100 * props.cellSize.y}px`;
+        style["margin-top"] =
+            `${(props.data.leftBisectMargin / 100) * props.cellSize.y}px`;
+        style["margin-bottom"] =
+            `${(props.data.rightBisectMargin / 100) * props.cellSize.y}px`;
     } else {
         style["margin-left"] = `${props.data.leftBisectMargin}%`;
         style["margin-right"] = `${props.data.rightBisectMargin}%`;
