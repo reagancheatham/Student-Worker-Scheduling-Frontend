@@ -5,13 +5,18 @@
         "noEmit": true,
         "target": "esnext",
         "module": "esnext",
-        "types": ["vite/client"]
+        "types": ["vite/client"],
+        "paths": {
+            "@components/*": ["./src/components/*"],
+            "@classes/*": ["./src/classes/*"]
+        }
     },
     "include": [
         "src/**/*.ts",
         "src/**/*.tsx",
         "src/**/*.vue",
         "auto-imports.d.ts",
-        "components.d.ts"
-, "tailwind.config.ts"    ]
+        "components.d.ts",
+        "tailwind.config.ts"
+    ]
 }

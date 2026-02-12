@@ -1,156 +1,301 @@
 <script setup lang="ts">
 import { ref, toRef } from "vue";
-import { EventTime, TimePeriod } from "../../../classes/calendar/eventTime.ts";
+import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
+import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
+import { Vector2 } from "@classes/util/vector.ts";
+import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 
-type ResizeEvent = (evt: PointerEvent) => void;
-
-const fontRange = new Range(8, 12);
-const marginRange = new Range(-10.0, -0.1);
+//#region Variables
+enum EventState {
+    None,
+    Resizing,
+    Dragging,
+}
 
 const props = defineProps<{
-    color: string;
-    startTime: EventTime;
-    endTime: EventTime;
+    selectedView: CalendarMode;
+    data: CalendarEventData;
+    canHover: boolean;
+    cellSize: Vector2;
 }>();
 
-const refStartTime = toRef<EventTime>(props.startTime);
-const refEndTime = toRef<EventTime>(props.endTime);
-const titleFontSize = ref(fontRange.max);
-const titleMargin = ref(marginRange.max);
+const emit = defineEmits({
+    resizeBegan: () => true,
+    resized: (_: CalendarEventData) => true,
+    resizeEnded: () => true,
+    dragBegan: (_: CalendarEventData) => true,
+    dragEnded: (_: CalendarEventData) => true,
+});
 
-let resizeStartTime: EventTime;
-let resizeStartY: number;
-let resizeEndTime: EventTime;
-let resizeEndY: number;
+const MAX_Z_INDEX = 5000;
+const FONT_RANGE = new Range(8, 12);
+const TITLE_MARGIN_RANGE = new Range(-10.0, -0.1);
+const RESIZE_STEP = 5;
+const RESIZE_RATIO = 60 / RESIZE_STEP;
+const DRAG_THRESHOLD = 0.5;
 
-function startStartResize(evt: PointerEvent) {
-    resizeStartTime = { ...refStartTime.value };
-    resizeStartY = evt.clientY;
+const refData = toRef<CalendarEventData>(props.data);
+const titleFontSize = ref(FONT_RANGE.max);
+const titleMargin = ref(TITLE_MARGIN_RANGE.max);
+const isOpen = ref(false);
 
-    startResize(evt, onStartResize, stopStartResize);
-}
+let state: EventState = EventState.None;
+let dragStart: Vector2 = Vector2.zero;
+let dragStartTime: EventTime;
+let dragEndTime: EventTime;
+let resizeTime: EventTime;
+let resizePointerStart: number;
+//#endregion
 
-function onStartResize(evt: PointerEvent) {
-    const dy = Math.round((evt.clientY - resizeStartY) / 3.5) * 5;
+//#region Resize Callbacks
+function onPointerDown(evt: PointerEvent): void {
+    if (state == EventState.Resizing) return;
 
-    let hour = resizeStartTime.hour;
-    let minute = resizeStartTime.minute + dy;
-    [hour, minute] = calculateTimeChange(hour, minute);
-
-    const minuteDifference =
-        60 * (refEndTime.value.hour - hour) +
-        (refEndTime.value.minute - minute);
-
-    if (minuteDifference < 15) return;
-
-    resizeTitle(minuteDifference);
-
-    refStartTime.value.hour = hour;
-    refStartTime.value.minute = minute;
-}
-
-function stopStartResize(evt: PointerEvent) {
-    stopResize(onStartResize, stopStartResize);
-}
-
-function startEndResize(evt: PointerEvent) {
-    resizeEndTime = { ...refEndTime.value };
-    resizeEndY = evt.clientY;
-
-    startResize(evt, onEndResize, stopEndResize);
-}
-
-function onEndResize(evt: PointerEvent) {
-    const dy = Math.round((evt.clientY - resizeEndY) / 3.5) * 5;
-
-    let hour = resizeEndTime.hour;
-    let minute = resizeEndTime.minute + dy;
-    [hour, minute] = calculateTimeChange(hour, minute);
-
-    const minuteDifference =
-        60 * (hour - refStartTime.value.hour) +
-        (minute - refStartTime.value.minute);
-
-    if (minuteDifference < 15) return;
-
-    resizeTitle(minuteDifference);
-
-    refEndTime.value.hour = hour;
-    refEndTime.value.minute = minute;
-}
-
-function stopEndResize(evt: PointerEvent) {
-    stopResize(onEndResize, stopEndResize);
-}
-
-function startResize(
-    evt: PointerEvent,
-    resizeEvent: ResizeEvent,
-    stopResizeEvent: ResizeEvent,
-) {
     evt.preventDefault();
+
+    dragStartTime = { ...refData.value.startTime };
+    dragEndTime = { ...refData.value.endTime };
+    dragStart = new Vector2(evt.clientX, evt.clientY);
+
+    (evt.target as HTMLElement).setPointerCapture(evt.pointerId);
+
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+}
+
+function onPointerMove(evt: PointerEvent): void {
+    if (state == EventState.Resizing) return;
+
+    let delta = new Vector2(
+        evt.clientX - dragStart.x,
+        evt.clientY - dragStart.y,
+    );
+
+    if (state == EventState.Dragging) {
+        updateDrag(delta);
+    } else {
+        const dragDistance = delta.magnitude();
+
+        if (dragDistance >= DRAG_THRESHOLD) {
+            state = EventState.Dragging;
+            dragStartTime = { ...refData.value.startTime };
+            dragEndTime = { ...refData.value.endTime };
+            isOpen.value = false;
+            props.data.zIndex = MAX_Z_INDEX;
+
+            emit("dragBegan", props.data);
+        }
+    }
+}
+
+function updateDrag(delta: Vector2): void {
+    let hour = 0;
+    let minute = 0;
+
+    if (props.selectedView == CalendarMode.Day) {
+        const horizontalDragRatio = props.cellSize.x / RESIZE_RATIO;
+        const dX = Math.round(delta.x / horizontalDragRatio) * RESIZE_STEP;
+
+        hour = dragStartTime.hour;
+        minute = dragStartTime.minute + dX;
+    } else {
+        const horizontalDragRatio = props.cellSize.x;
+        const verticalDragRatio = props.cellSize.y / RESIZE_RATIO;
+        const dY = Math.round(delta.y / verticalDragRatio) * RESIZE_STEP;
+        const dX = Math.round(delta.x / horizontalDragRatio);
+
+        hour = dragStartTime.hour;
+        minute = dragStartTime.minute + dY;
+
+        let day = dragStartTime.day + dX;
+        day = MathUtil.clamp(day, 1, 7);
+
+        refData.value.startTime.day = day;
+        refData.value.endTime.day = day;
+    }
+
+    const hourDifference = dragEndTime.hour - dragStartTime.hour;
+    const minuteDifference = dragEndTime.minute - dragStartTime.minute;
+    let [startHour, startMinute] = calculateTimeChange(hour, minute);
+    const [endHour, endMinute] = calculateTimeChange(
+        startHour + hourDifference,
+        startMinute + minuteDifference,
+    );
+
+    const targetDifference = 60 * hourDifference + minuteDifference;
+
+    let totalDifference =
+        60 * (endHour - startHour) + (endMinute - startMinute);
+
+    if (totalDifference < targetDifference) {
+        [startHour, startMinute] = calculateTimeChange(
+            endHour - hourDifference,
+            endMinute - minuteDifference,
+        );
+
+        totalDifference = targetDifference;
+    }
+
+    if (totalDifference >= 15) {
+        refData.value.startTime.hour = startHour;
+        refData.value.startTime.minute = startMinute;
+        refData.value.endTime.hour = endHour;
+        refData.value.endTime.minute = endMinute;
+
+        resizeTitle(totalDifference);
+    }
+}
+
+function onPointerUp(_: PointerEvent): void {
+    if (state != EventState.Dragging) return;
+
+    state = EventState.None;
+
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+
+    emit("dragEnded", props.data);
+}
+
+function startResize(evt: PointerEvent): void {
+    evt.preventDefault();
+
+    resizeTime = { ...refData.value.endTime };
+    resizePointerStart =
+        props.selectedView === CalendarMode.Day ? evt.clientX : evt.clientY;
+    props.data.zIndex = MAX_Z_INDEX;
 
     document.body.style.cursor = "ns-resize";
     document.body.style.userSelect = "none";
-    window.addEventListener("pointermove", resizeEvent);
-    window.addEventListener("pointerup", stopResizeEvent, { once: true });
+    window.addEventListener("pointermove", onResize);
+    window.addEventListener("pointerup", stopResize, { once: true });
+
+    isOpen.value = false;
+    state = EventState.Resizing;
+
+    emit("resizeBegan");
 }
 
-function stopResize(resizeEvent: ResizeEvent, stopResizeEvent: ResizeEvent) {
+function onResize(evt: PointerEvent): void {
+    let hour = 0;
+    let minute = 0;
+    let minuteDifference = 0;
+
+    if (props.selectedView === CalendarMode.Day) {
+        const dX =
+            Math.round(
+                (RESIZE_RATIO * (evt.clientX - resizePointerStart)) /
+                    props.cellSize.x,
+            ) * RESIZE_STEP;
+
+        hour = resizeTime.hour;
+        minute = resizeTime.minute + dX;
+    } else {
+        const dY =
+            Math.round(
+                (RESIZE_RATIO * (evt.clientY - resizePointerStart)) /
+                    props.cellSize.y,
+            ) * RESIZE_STEP;
+
+        hour = resizeTime.hour;
+        minute = resizeTime.minute + dY;
+    }
+
+    [hour, minute] = calculateTimeChange(hour, minute);
+
+    minuteDifference =
+        60 * (hour - refData.value.startTime.hour) +
+        (minute - refData.value.startTime.minute);
+
+    if (minuteDifference < 15) return;
+
+    resizeTitle(minuteDifference);
+
+    refData.value.endTime.hour = hour;
+    refData.value.endTime.minute = minute;
+
+    state = EventState.None;
+    emit("resized", props.data);
+}
+
+function stopResize(): void {
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
-    window.removeEventListener("pointermove", resizeEvent);
-    window.removeEventListener("pointerup", stopResizeEvent);
+    window.removeEventListener("pointermove", onResize);
+    window.removeEventListener("pointerup", stopResize);
+
+    emit("resizeEnded");
 }
+//#endregion
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (minute < 0) {
         hour -= 1 - Math.ceil(minute / 60);
-        minute = 60 + (minute % 60);
 
-        if (minute == 60) {
-            hour++;
-            minute = 0;
+        if (hour < 0) minute = 0;
+        else {
+            minute = 60 + (minute % 60);
+
+            if (minute == 60) {
+                hour++;
+                minute = 0;
+            }
         }
     } else if (minute > 59) {
         hour += Math.floor(minute / 60);
         minute %= 60;
     }
 
+    hour = MathUtil.clamp(hour, 0, 24);
+    if (hour >= 24) minute = 0;
+
     return [hour, minute];
-}
-
-function getStartHour(): number {
-    let hour = refStartTime.value.hour;
-
-    if (refStartTime.value.period == TimePeriod.PM) hour += 12;
-
-    return hour;
-}
-
-function getEndHour(): number {
-    let hour = refEndTime.value.hour;
-
-    if (refEndTime.value.period == TimePeriod.PM) hour += 12;
-
-    return hour;
-}
-
-function getMinuteText(minute: number): string {
-    let text = "";
-
-    if (minute >= 10) text = `${minute}`;
-    else text = `0${minute}`;
-
-    return text;
 }
 
 function resizeTitle(minuteDifference: number): void {
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
-    titleFontSize.value = fontRange.lerp(t);
-    titleMargin.value = marginRange.lerp(t);
+    titleFontSize.value = FONT_RANGE.lerp(t);
+    titleMargin.value = TITLE_MARGIN_RANGE.lerp(t);
+}
+
+function getGridArea(): string {
+    const data = refData.value;
+    const startTime = data.startTime;
+    const endTime = data.endTime;
+
+    if (props.selectedView == CalendarMode.Day)
+        return `${1 + startTime.day} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    else
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+}
+
+function getStyle() {
+    let style = {
+        "grid-area": getGridArea(),
+        "background-color": `var(${props.data.color})`,
+        "z-index": `${props.data.zIndex}`,
+        "margin-top": `0`,
+        "margin-bottom": `0`,
+        "margin-left": `0`,
+        "margin-right": `0`,
+    };
+
+    if (props.selectedView == CalendarMode.Day) {
+        console.log("cell size: " + props.cellSize.y);
+        console.log("left margin: " + props.data.leftBisectMargin);
+        style["margin-top"] =
+            `${(props.data.leftBisectMargin / 100) * props.cellSize.y}px`;
+        style["margin-bottom"] =
+            `${(props.data.rightBisectMargin / 100) * props.cellSize.y}px`;
+    } else {
+        style["margin-left"] = `${props.data.leftBisectMargin}%`;
+        style["margin-right"] = `${props.data.rightBisectMargin}%`;
+    }
+
+    return style;
 }
 </script>
 
@@ -169,58 +314,87 @@ function resizeTitle(minuteDifference: number): void {
 }
 
 .resizeHandle {
-    height: 8px;
-    cursor: ns-resize;
     position: absolute;
-    left: 0px;
-    right: 0px;
 }
 </style>
 
 <template>
-    <UCard
-        ref="event"
-        class="event"
-        variant="ghost"
-        :style="{
-            'grid-area': `calc(60 * (1 + ${getStartHour()}) + ${refStartTime.minute}) / calc(1 + ${refStartTime.day}) / span calc(60 * (${getEndHour()} - ${getStartHour()}) + (${refEndTime.minute} - ${refStartTime.minute})) / span calc(1 + ${refEndTime.day - refStartTime.day})`,
-            'background-color': `var(${color})`,
-        }"
-        :ui="{
-            footer: 'mt-auto',
-        }"
+    <UPopover
+        v-model:open="isOpen"
+        :content="{ side: 'right' }"
+        @update:open="
+            () => {
+                if (!canHover) isOpen = false;
+            }
+        "
     >
-        <template #header>
-            <div
-            :style="{
-                marginTop: `${titleMargin}px`,
-            }">
-            <div class="resizeHandle top-0" @pointerdown="startStartResize" />
-            <UBadge
-                class="text-black select-none"
-                variant="ghost"
-                label="My Event"
-                style="max-width: 100%"
-                :style="{
-                    fontSize: `${titleFontSize}px`,
-                }"
-            />
-            </div>
-        </template>
+        <UCard
+            class="event"
+            variant="ghost"
+            :style="getStyle()"
+            :ui="{
+                footer: 'mt-auto',
+            }"
+            @mouseenter="if (canHover) isOpen = true;"
+            @mouseleave="isOpen = false"
+            @pointerdown="onPointerDown"
+            @pointerup="onPointerUp"
+        >
+            <template #header>
+                <div
+                    :style="{
+                        marginTop: `${titleMargin}px`,
+                    }"
+                >
+                    <UBadge
+                        class="text-black select-none"
+                        variant="ghost"
+                        :label="data.name"
+                        style="max-width: 100%"
+                        :style="{
+                            fontSize: `${titleFontSize}px`,
+                        }"
+                    />
+                </div>
+            </template>
 
-        <template #default>
-            <UBadge
-                class="font-normal text-gray-800 flex flex-col items-start"
-                variant="ghost"
-                :label="`${refStartTime.hour}:${getMinuteText(refStartTime.minute)} ${refStartTime.period} - ${refEndTime.hour}:${getMinuteText(refEndTime.minute)} ${refEndTime.period}`"
-                :ui="{
-                    label: 'text-wrap line-clamp-2 select-none',
-                }"
-            />
-        </template>
+            <template #default>
+                <UBadge
+                    class="font-normal text-gray-800 flex flex-col items-start"
+                    variant="ghost"
+                    :label="`${data.startTime.toTimeString()} - ${data.endTime.toTimeString()}`"
+                    :ui="{
+                        label: 'text-wrap line-clamp-2 select-none',
+                    }"
+                />
+                <div
+                    v-if="selectedView === CalendarMode.Day"
+                    class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
+                    style="width: 8px"
+                    @pointerdown="startResize"
+                />
+            </template>
 
-        <template #footer>
-            <div class="resizeHandle bottom-0" @pointerdown="startEndResize" />
+            <template #footer v-if="selectedView === CalendarMode.Week">
+                <div
+                    class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
+                    style="height: 8px"
+                    @pointerdown="startResize"
+                />
+            </template>
+        </UCard>
+
+        <template #content>
+            <UCard class="size-48 m-4 inline-flex" variant="ghost">
+                <template #header>
+                    {{ data.name }}
+                </template>
+
+                <template #body>
+                    {{ data.startTime.toTimeString() }} -
+                    {{ data.endTime.toTimeString() }}
+                </template>
+            </UCard>
         </template>
-    </UCard>
+    </UPopover>
 </template>

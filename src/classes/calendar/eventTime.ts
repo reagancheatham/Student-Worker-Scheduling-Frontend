@@ -1,32 +1,53 @@
-export const enum TimePeriod {
-    AM = "AM",
-    PM = "PM",
-}
-
 export class EventTime {
     constructor(
         public day: number,
         public hour: number,
         public minute: number,
-        public period: TimePeriod,
     ) {}
 
-    isBefore(other: EventTime) {
-        if (this.day < other.day)
-            return true;
-        else if (other.day < this.day)
-            return false;
-        else if (this.period === TimePeriod.AM && other.period === TimePeriod.PM)
-            return true;
-        else if (this.period === TimePeriod.PM && other.period === TimePeriod.PM)
-            return false;
-        else if (this.hour < other.hour)
-            return true;
-        else if (other.hour < this.hour)
-            return false;
-        else if (this.minute < other.minute)
-            return true;
-        else
-            return false;
+    isBefore(other: EventTime): boolean {
+        return this.totalTime() < other.totalTime();
+    }
+
+    isBeforeOrEqual(other: EventTime): boolean {
+        return (
+            this.isBefore(other) || this.totalTime() === other.totalTime()
+        );
+    }
+
+    isAfter(other: EventTime): boolean {
+        return this.totalTime() > other.totalTime();
+    }
+
+    isAfterOrEqual(other: EventTime): boolean {
+        return (
+            this.isAfter(other) || this.totalTime() === other.totalTime()
+        );
+    }
+
+    totalTime(): number {
+        return 24 * 60 * this.day + 60 * this.hour + this.minute;
+    }
+
+    toTimeString(): string {
+        let hour = this.hour;
+        let minute = this.minute;
+
+        let hourText = "";
+        let minuteText = "";
+        let periodText = "";
+
+        if (hour > 12) hour -= 12;
+        else if (hour == 0) hour = 12;
+
+        hourText = hour.toString();
+
+        if (minute >= 10) minuteText = `${minute}`;
+        else minuteText = `0${minute}`;
+
+        if (this.hour == 24 || this.hour < 12) periodText = "AM";
+        else periodText = "PM";
+
+        return `${hourText}:${minuteText} ${periodText}`;
     }
 }
