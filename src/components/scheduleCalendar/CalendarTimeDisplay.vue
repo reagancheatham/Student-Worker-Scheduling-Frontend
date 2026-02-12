@@ -40,12 +40,12 @@ const labelClasses = new Map<CalendarMode, string>([
     width: 100%;
     color: var(--color-gray-500);
     position: relative;
+    font-size: clamp(0.6rem, 0.8vw, 0.8vw);
 }
 
 .dayLabel {
     grid-column: span 60;
     padding-bottom: 12px;
-    top: 35%;
     left: 50%;
     justify-content: center;
     text-align: center;

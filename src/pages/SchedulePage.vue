@@ -1,3 +1,5 @@
 <script></script>
 
-<template></template>
+<template>
+    <ScheduleCalendar view-selector />
+</template>
