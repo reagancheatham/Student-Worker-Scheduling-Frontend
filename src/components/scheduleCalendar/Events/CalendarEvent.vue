@@ -32,22 +32,22 @@ const emit = defineEmits({
 
 const MAX_Z_INDEX = 5000;
 const FONT_RANGE = new Range(8, 12);
-const MARGIN_RANGE = new Range(-10.0, -0.1);
+const TITLE_MARGIN_RANGE = new Range(-10.0, -0.1);
 const RESIZE_STEP = 5;
-const PIXEL_RESIZE_RATIO = 3.5;
-const VERTICAL_DRAG_THRESHOLD = 0.5;
+const RESIZE_RATIO = 60 / RESIZE_STEP;
+const DRAG_THRESHOLD = 0.5;
 
 const refData = toRef<CalendarEventData>(props.data);
 const titleFontSize = ref(FONT_RANGE.max);
-const titleMargin = ref(MARGIN_RANGE.max);
+const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isOpen = ref(false);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
 let dragStartTime: EventTime;
 let dragEndTime: EventTime;
-let resizeEndTime: EventTime;
-let resizeEndY: number;
+let resizeTime: EventTime;
+let resizePointerStart: number;
 //#endregion
 
 //#region Resize Callbacks
@@ -69,15 +69,59 @@ function onPointerDown(evt: PointerEvent): void {
 function onPointerMove(evt: PointerEvent): void {
     if (state == EventState.Resizing) return;
 
-    const delta = new Vector2(
+    let delta = new Vector2(
         evt.clientX - dragStart.x,
         evt.clientY - dragStart.y,
     );
 
     if (state == EventState.Dragging) {
+        updateDrag(delta);
+    } else {
+        const dragDistance = delta.magnitude();
+
+        if (dragDistance >= DRAG_THRESHOLD) {
+            state = EventState.Dragging;
+            dragStartTime = { ...refData.value.startTime };
+            dragEndTime = { ...refData.value.endTime };
+            isOpen.value = false;
+            props.data.zIndex = MAX_Z_INDEX;
+
+            emit("dragBegan", props.data);
+        }
+    }
+}
+
+function updateDrag(delta: Vector2): void {
+    if (props.selectedView == CalendarMode.Day) {
+        const horizontalDragRatio = props.cellSize.x / RESIZE_RATIO;
+        const dX = Math.round(delta.x / horizontalDragRatio) * RESIZE_STEP;
+
+        const hour = dragStartTime.hour;
+        const minute = dragStartTime.minute + dX;
+        const hourDifference = dragEndTime.hour - dragStartTime.hour;
+        const minuteDifference = dragEndTime.minute - dragStartTime.minute;
+        let [startHour, startMinute] = calculateTimeChange(hour, minute);
+        let [endHour, endMinute] = calculateTimeChange(
+            hour + hourDifference,
+            minute + minuteDifference,
+        );
+
+        const totalDifference =
+            60 * (endHour - startHour) + (endMinute - startMinute);
+
+        if (totalDifference >= 15) {
+            refData.value.startTime.hour = startHour;
+            refData.value.startTime.minute = startMinute;
+            refData.value.endTime.hour = endHour;
+            refData.value.endTime.minute = endMinute;
+
+            resizeTitle(totalDifference);
+        }
+    } else {
         const horizontalDragRatio = props.cellSize.x;
+        const verticalDragRatio = props.cellSize.y / RESIZE_RATIO;
+        const dY = Math.round(delta.y / verticalDragRatio) * RESIZE_STEP;
         const dX = Math.round(delta.x / horizontalDragRatio);
-        const dY = Math.round(delta.y / PIXEL_RESIZE_RATIO) * RESIZE_STEP;
 
         const hour = dragStartTime.hour;
         const minute = dragStartTime.minute + dY;
@@ -106,18 +150,6 @@ function onPointerMove(evt: PointerEvent): void {
 
         refData.value.startTime.day = day;
         refData.value.endTime.day = day;
-    } else {
-        const dragDistance = delta.magnitude();
-
-        if (dragDistance >= VERTICAL_DRAG_THRESHOLD) {
-            state = EventState.Dragging;
-            dragStartTime = { ...refData.value.startTime };
-            dragEndTime = { ...refData.value.endTime };
-            isOpen.value = false;
-            props.data.zIndex = MAX_Z_INDEX;
-
-            emit("dragBegan", props.data);
-        }
     }
 }
 
@@ -135,8 +167,9 @@ function onPointerUp(_: PointerEvent): void {
 function startResize(evt: PointerEvent): void {
     evt.preventDefault();
 
-    resizeEndTime = { ...refData.value.endTime };
-    resizeEndY = evt.clientY;
+    resizeTime = { ...refData.value.endTime };
+    resizePointerStart =
+        props.selectedView === CalendarMode.Day ? evt.clientX : evt.clientY;
     props.data.zIndex = MAX_Z_INDEX;
 
     document.body.style.cursor = "ns-resize";
@@ -151,15 +184,33 @@ function startResize(evt: PointerEvent): void {
 }
 
 function onResize(evt: PointerEvent): void {
-    const dY =
-        Math.round((12 * (evt.clientY - resizeEndY)) / props.cellSize.y) *
-        RESIZE_STEP;
+    let hour = 0;
+    let minute = 0;
+    let minuteDifference = 0;
 
-    let hour = resizeEndTime.hour;
-    let minute = resizeEndTime.minute + dY;
+    if (props.selectedView === CalendarMode.Day) {
+        const dX =
+            Math.round(
+                (RESIZE_RATIO * (evt.clientX - resizePointerStart)) /
+                    props.cellSize.x,
+            ) * RESIZE_STEP;
+
+        hour = resizeTime.hour;
+        minute = resizeTime.minute + dX;
+    } else {
+        const dY =
+            Math.round(
+                (RESIZE_RATIO * (evt.clientY - resizePointerStart)) /
+                    props.cellSize.y,
+            ) * RESIZE_STEP;
+
+        hour = resizeTime.hour;
+        minute = resizeTime.minute + dY;
+    }
+
     [hour, minute] = calculateTimeChange(hour, minute);
 
-    const minuteDifference =
+    minuteDifference =
         60 * (hour - refData.value.startTime.hour) +
         (minute - refData.value.startTime.minute);
 
@@ -211,19 +262,42 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
 function resizeTitle(minuteDifference: number): void {
     const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
     titleFontSize.value = FONT_RANGE.lerp(t);
-    titleMargin.value = MARGIN_RANGE.lerp(t);
+    titleMargin.value = TITLE_MARGIN_RANGE.lerp(t);
 }
 
-// TODO: make this work for days
 function getGridArea(): string {
-    const data = props.data;
+    const data = refData.value;
     const startTime = data.startTime;
     const endTime = data.endTime;
 
     if (props.selectedView == CalendarMode.Day)
+        return `${1 + startTime.day} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    else
         return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
-    else // this hasn't been changed yet
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+}
+
+function getStyle() {
+    let style = {
+        "grid-area": getGridArea(),
+        "background-color": `var(${props.data.color})`,
+        "z-index": `${props.data.zIndex}`,
+        "margin-top": `0`,
+        "margin-bottom": `0`,
+        "margin-left": `0`,
+        "margin-right": `0`,
+    };
+
+    if (props.selectedView == CalendarMode.Day) {
+        console.log("cell size: " + props.cellSize.y);
+        console.log("left margin: " + props.data.leftBisectMargin);
+        style["margin-top"] = `${props.data.leftBisectMargin / 100 * props.cellSize.y}px`;
+        style["margin-bottom"] = `${props.data.rightBisectMargin / 100 * props.cellSize.y}px`;
+    } else {
+        style["margin-left"] = `${props.data.leftBisectMargin}%`;
+        style["margin-right"] = `${props.data.rightBisectMargin}%`;
+    }
+
+    return style;
 }
 </script>
 
@@ -242,11 +316,7 @@ function getGridArea(): string {
 }
 
 .resizeHandle {
-    height: 8px;
-    cursor: ns-resize;
     position: absolute;
-    left: 0px;
-    right: 0px;
 }
 </style>
 
@@ -263,13 +333,7 @@ function getGridArea(): string {
         <UCard
             class="event"
             variant="ghost"
-            :style="{
-                'grid-area': getGridArea(),
-                'background-color': `var(${data.color})`,
-                'z-index': `${data.zIndex}`,
-                'margin-left': `${data.leftBisectMargin}%`,
-                'margin-right': `${data.rightBisectMargin}%`,
-            }"
+            :style="getStyle()"
             :ui="{
                 footer: 'mt-auto',
             }"
@@ -305,10 +369,20 @@ function getGridArea(): string {
                         label: 'text-wrap line-clamp-2 select-none',
                     }"
                 />
+                <div
+                    v-if="selectedView === CalendarMode.Day"
+                    class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
+                    style="width: 8px"
+                    @pointerdown="startResize"
+                />
             </template>
 
-            <template #footer>
-                <div class="resizeHandle bottom-0" @pointerdown="startResize" />
+            <template #footer v-if="selectedView === CalendarMode.Week">
+                <div
+                    class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
+                    style="height: 8px"
+                    @pointerdown="startResize"
+                />
             </template>
         </UCard>
 

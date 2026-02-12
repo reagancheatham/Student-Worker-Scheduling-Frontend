@@ -33,42 +33,42 @@ const events = ref([
         new EventTime(1, 9, 30),
         EventColor.Orange,
     ),
-    new CalendarEventData(
-        "Third Event",
-        new EventTime(1, 15, 15),
-        new EventTime(1, 20, 30),
-        EventColor.Yellow,
-    ),
-    new CalendarEventData(
-        "Fourth Event",
-        new EventTime(1, 16, 15),
-        new EventTime(1, 21, 30),
-        EventColor.Red,
-    ),
-    new CalendarEventData(
-        "Fifth Event",
-        new EventTime(1, 6, 15),
-        new EventTime(1, 10, 30),
-        EventColor.Blue,
-    ),
-    new CalendarEventData(
-        "Sixth Event",
-        new EventTime(1, 7, 15),
-        new EventTime(1, 9, 30),
-        EventColor.Orange,
-    ),
-    new CalendarEventData(
-        "Seventh Event",
-        new EventTime(1, 15, 15),
-        new EventTime(1, 20, 30),
-        EventColor.Yellow,
-    ),
-    new CalendarEventData(
-        "Eight Event",
-        new EventTime(1, 16, 15),
-        new EventTime(1, 21, 30),
-        EventColor.Purple,
-    ),
+    // new CalendarEventData(
+    //     "Third Event",
+    //     new EventTime(1, 15, 15),
+    //     new EventTime(1, 20, 30),
+    //     EventColor.Yellow,
+    // ),
+    // new CalendarEventData(
+    //     "Fourth Event",
+    //     new EventTime(1, 16, 15),
+    //     new EventTime(1, 21, 30),
+    //     EventColor.Red,
+    // ),
+    // new CalendarEventData(
+    //     "Fifth Event",
+    //     new EventTime(1, 6, 15),
+    //     new EventTime(1, 10, 30),
+    //     EventColor.Blue,
+    // ),
+    // new CalendarEventData(
+    //     "Sixth Event",
+    //     new EventTime(1, 7, 15),
+    //     new EventTime(1, 9, 30),
+    //     EventColor.Orange,
+    // ),
+    // new CalendarEventData(
+    //     "Seventh Event",
+    //     new EventTime(1, 15, 15),
+    //     new EventTime(1, 20, 30),
+    //     EventColor.Yellow,
+    // ),
+    // new CalendarEventData(
+    //     "Eighth Event",
+    //     new EventTime(1, 16, 15),
+    //     new EventTime(1, 21, 30),
+    //     EventColor.Purple,
+    // ),
 ]);
 
 const props = defineProps<{
