@@ -1,4 +1,6 @@
 <script setup lang="ts">
+
+//create class for these eventually
 const users = [
   {
     name: "Davey Clonts",
