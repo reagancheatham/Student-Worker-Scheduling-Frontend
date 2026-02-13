@@ -4,14 +4,28 @@ import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
 import NotificationCenter from "../components/dashboardCards/NotificationCenter.vue";
 </script>
 
+<style></style>
+
 <template>
     <div class="grid grid-cols-5 gap-4 h-screen min-h-0">
         <!-- Big Side -->
         <div
             class="col-span-4 grid grid-cols-7 grid-rows-[3fr_2fr] gap-4 h-full min-h-0"
         >
-            <UPageCard title="Schedule" class="col-span-7 min-h-0 h-full">
-                <ScheduleCalendar class="flex-1 min-h-0" default-view="Day" />
+            <UPageCard
+                class="col-span-7 min-h-0 h-full"
+                :ui="{
+                    wrapper: 'flex flex-col items-start min-h-0 flex-none',
+                    header: 'mb-0'
+                }"
+            >
+                <template #header>
+                    <div class="text-base font-semibold">Schedule</div>
+                </template>
+                <ScheduleCalendar
+                    class="h-full min-h-0 min-w-0"
+                    default-view="Day"
+                />
             </UPageCard>
             <WorkingCurrently
                 class="col-span-4 min-h-0 h-full"

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, toRef } from "vue";
+import { onBeforeUnmount, onMounted, ref, toRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
 import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
-import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 
 //#region Variables
@@ -37,6 +36,8 @@ const RESIZE_STEP = 5;
 const RESIZE_RATIO = 60 / RESIZE_STEP;
 const DRAG_THRESHOLD = 0.5;
 
+const element = ref<any>(null);
+const elementHeight = ref(0);
 const refData = toRef<CalendarEventData>(props.data);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
@@ -47,8 +48,26 @@ let dragStart: Vector2 = Vector2.zero;
 let dragStartTime: EventTime;
 let dragEndTime: EventTime;
 let resizeTime: EventTime;
+let observer: ResizeObserver | null = null;
 let resizePointerStart: number;
 //#endregion
+
+onMounted(() => {
+    const elementValue = element.value.$el;
+
+    if (!elementValue) return;
+
+    observer = new ResizeObserver((entries) => {
+        elementHeight.value = entries[0].contentRect.height;
+        resizeTitle();
+    });
+
+    observer.observe(elementValue);
+});
+
+onBeforeUnmount(() => {
+    observer?.disconnect();
+});
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
@@ -144,8 +163,6 @@ function updateDrag(delta: Vector2): void {
         refData.value.startTime.minute = startMinute;
         refData.value.endTime.hour = endHour;
         refData.value.endTime.minute = endMinute;
-
-        resizeTitle(totalDifference);
     }
 }
 
@@ -212,8 +229,6 @@ function onResize(evt: PointerEvent): void {
 
     if (minuteDifference < 15) return;
 
-    resizeTitle(minuteDifference);
-
     refData.value.endTime.hour = hour;
     refData.value.endTime.minute = minute;
 
@@ -255,8 +270,8 @@ function calculateTimeChange(hour: number, minute: number): [number, number] {
     return [hour, minute];
 }
 
-function resizeTitle(minuteDifference: number): void {
-    const t = Math.min((minuteDifference - 15) / 30.0, 1.0);
+function resizeTitle(): void {
+    const t = Math.min(elementHeight.value / 50, 1.0);
     titleFontSize.value = FONT_RANGE.lerp(t);
     titleMargin.value = TITLE_MARGIN_RANGE.lerp(t);
 }
@@ -329,6 +344,7 @@ function getStyle() {
         "
     >
         <UCard
+            ref="element"
             class="event"
             variant="ghost"
             :style="getStyle()"
