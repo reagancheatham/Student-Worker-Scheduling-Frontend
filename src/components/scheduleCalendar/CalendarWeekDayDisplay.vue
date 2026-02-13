@@ -49,7 +49,6 @@ const weekDays = [
     align-items: center;
     color: var(--color-gray-500);
     position: relative;
-    margin-top: -2vh;
 }
 </style>
 

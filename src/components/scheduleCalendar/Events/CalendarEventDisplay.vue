@@ -74,6 +74,7 @@ const events = ref([
 const props = defineProps<{
     cellSize: Vector2;
     selectedView: CalendarMode;
+    editable?: boolean;
 }>();
 
 const canHover = ref<boolean>(true);
@@ -271,6 +272,7 @@ function expandSlotSizes() {
             :can-hover="canHover"
             :cellSize="cellSize"
             :selected-view="selectedView"
+            :editable="editable"
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"
             @resize-ended="onEventResizeEnded"

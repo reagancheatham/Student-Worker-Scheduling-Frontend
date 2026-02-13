@@ -13,7 +13,7 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
             class="col-span-4 grid grid-cols-7 grid-rows-[3fr_2fr] gap-4 h-full min-h-0"
         >
             <UPageCard
-                class="col-span-7 min-h-0 h-full"
+                class="col-span-7 min-h-0 h-full overflow-clip"
                 :ui="{
                     wrapper: 'flex flex-col items-start min-h-0 flex-none',
                     header: 'mb-0'
@@ -23,7 +23,6 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
                     <div class="text-base font-semibold">Schedule</div>
                 </template>
                 <ScheduleCalendar
-                    class="h-full min-h-0 min-w-0"
                     default-view="Day"
                 />
             </UPageCard>

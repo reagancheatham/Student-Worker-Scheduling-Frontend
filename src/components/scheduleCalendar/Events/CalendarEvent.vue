@@ -18,6 +18,7 @@ const props = defineProps<{
     selectedView: CalendarMode;
     data: CalendarEventData;
     canHover: boolean;
+    editable?: boolean;
     cellSize: Vector2;
 }>();
 
@@ -71,7 +72,7 @@ onBeforeUnmount(() => {
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
-    if (state == EventState.Resizing) return;
+    if (state == EventState.Resizing || !props.editable) return;
 
     evt.preventDefault();
 
@@ -299,8 +300,6 @@ function getStyle() {
     };
 
     if (props.selectedView == CalendarMode.Day) {
-        console.log("cell size: " + props.cellSize.y);
-        console.log("left margin: " + props.data.leftBisectMargin);
         style["margin-top"] =
             `${(props.data.leftBisectMargin / 100) * props.cellSize.y}px`;
         style["margin-bottom"] =
@@ -339,7 +338,7 @@ function getStyle() {
         :content="{ side: 'right' }"
         @update:open="
             () => {
-                if (!canHover) isOpen = false;
+                if (!canHover || !editable) isOpen = false;
             }
         "
     >
@@ -351,7 +350,7 @@ function getStyle() {
             :ui="{
                 footer: 'mt-auto',
             }"
-            @mouseenter="if (canHover) isOpen = true;"
+            @mouseenter="if (canHover && editable) isOpen = true;"
             @mouseleave="isOpen = false"
             @pointerdown="onPointerDown"
             @pointerup="onPointerUp"
@@ -384,14 +383,14 @@ function getStyle() {
                     }"
                 />
                 <div
-                    v-if="selectedView === CalendarMode.Day"
+                    v-if="selectedView === CalendarMode.Day && editable"
                     class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
                     style="width: 8px"
                     @pointerdown="startResize"
                 />
             </template>
 
-            <template #footer v-if="selectedView === CalendarMode.Week">
+            <template #footer v-if="selectedView === CalendarMode.Week && editable">
                 <div
                     class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
                     style="height: 8px"

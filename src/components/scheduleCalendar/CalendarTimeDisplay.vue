@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { Vector2 } from "@classes/util/vector.ts";
 
-const { selectedView } = defineProps<{
+const { selectedView, cellSize } = defineProps<{
     selectedView: CalendarMode;
+    cellSize: Vector2;
 }>();
 
 const containerClasses = new Map<CalendarMode, string>([
@@ -16,6 +18,18 @@ const labelClasses = new Map<CalendarMode, string>([
     [CalendarMode.Week, "timeLabel weekLabel"],
     [CalendarMode.Month, "timeLabel monthLabel"],
 ]);
+
+function getStyle() {
+    if (selectedView === CalendarMode.Day) {
+        return {
+            marginTop: `${0.25 * cellSize.y}px`,
+        };
+    } else {
+        return {
+            marginLeft: `0px`,
+        };
+    }
+}
 </script>
 
 <style>
@@ -61,12 +75,29 @@ const labelClasses = new Map<CalendarMode, string>([
 
 <template>
     <div :class="containerClasses.get(selectedView)!">
-        <UBadge color="clear" :class="labelClasses.get(selectedView)"></UBadge>
-        <UBadge color="clear" :class="labelClasses.get(selectedView)" v-for="n in 11"
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(selectedView)"
+            :style="getStyle()"
+        ></UBadge>
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(selectedView)"
+            :style="getStyle()"
+            v-for="n in 11"
             >{{ n }} AM</UBadge
         >
-        <UBadge color="clear" :class="labelClasses.get(selectedView)">12 PM</UBadge>
-        <UBadge color="clear" :class="labelClasses.get(selectedView)" v-for="n in 11"
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(selectedView)"
+            :style="getStyle()"
+            >12 PM</UBadge
+        >
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(selectedView)"
+            :style="getStyle()"
+            v-for="n in 11"
             >{{ n }} PM</UBadge
         >
     </div>

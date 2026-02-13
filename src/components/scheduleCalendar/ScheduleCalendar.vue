@@ -3,8 +3,9 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { ref } from "vue";
 
-const {viewSelector, defaultView = CalendarMode.Week} = defineProps<{
+const {viewSelector, editable = false, defaultView = CalendarMode.Week} = defineProps<{
     viewSelector?: boolean;
+    editable?: boolean;
     defaultView?: CalendarMode;
 }>();
 
@@ -57,7 +58,7 @@ function updateCellSize(size: Vector2): void {
         minmax(var(--day-cell-min-width), var(--day-cell-max-width))
     );
     grid-template-rows: repeat(
-        8,
+        5,
         minmax(var(--day-cell-min-height), var(--day-cell-max-height))
     );
 }
@@ -74,7 +75,8 @@ function updateCellSize(size: Vector2): void {
 }
 </style>
 
-<template>
+<template> 
+    <!-- FIX MODE SELECT MARGIN -->
     <CalendarModeSelect v-if="viewSelector" v-model="selectedView" />
     <div
         class="calendarContainer"
@@ -85,7 +87,7 @@ function updateCellSize(size: Vector2): void {
                 <CalendarWeekDayDisplay
                     v-if="selectedView === CalendarMode.Week"
                 />
-                <CalendarTimeDisplay :selected-view="selectedView" />
+                <CalendarTimeDisplay :selected-view="selectedView" :cell-size="cellSize" />
                 <CalendarCellDisplay
                     :selected-view="selectedView"
                     @cell-size-changed="updateCellSize"
@@ -93,6 +95,7 @@ function updateCellSize(size: Vector2): void {
                 <CalendarEventDisplay
                     :selected-view="selectedView"
                     :cellSize="cellSize"
+                    :editable="editable"
                 />
             </div>
         </div>
