@@ -1,5 +1,5 @@
 <script></script>
 
 <template>
-    <ScheduleCalendar view-selector editable />
+    <ScheduleCalendar header editable />
 </template>

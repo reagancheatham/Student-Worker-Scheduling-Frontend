@@ -3,8 +3,12 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { ref } from "vue";
 
-const {viewSelector, editable = false, defaultView = CalendarMode.Week} = defineProps<{
-    viewSelector?: boolean;
+const {
+    header,
+    editable = false,
+    defaultView = CalendarMode.Week,
+} = defineProps<{
+    header?: boolean;
     editable?: boolean;
     defaultView?: CalendarMode;
 }>();
@@ -20,6 +24,14 @@ const gridClasses = new Map<CalendarMode, string>([
 
 function updateCellSize(size: Vector2): void {
     cellSize.value = size;
+}
+
+function getBodyStyle() {
+    if (selectedView.value === CalendarMode.Week)
+        return {
+            marginTop: "8vh",
+        };
+    else return {};
 }
 </script>
 
@@ -75,19 +87,24 @@ function updateCellSize(size: Vector2): void {
 }
 </style>
 
-<template> 
+<template>
     <!-- FIX MODE SELECT MARGIN -->
-    <CalendarModeSelect v-if="viewSelector" v-model="selectedView" />
     <div
         class="calendarContainer"
-        :style="{ marginLeft: `${-0.5 * cellSize.x}px` }"
+        :style="{
+            marginLeft: `${-0.5 * cellSize.x}px`,
+        }"
     >
-        <div class="calendarBody">
+        <CalendarHeader :header="header" v-model="selectedView" />
+        <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="selectedView === CalendarMode.Week"
                 />
-                <CalendarTimeDisplay :selected-view="selectedView" :cell-size="cellSize" />
+                <CalendarTimeDisplay
+                    :selected-view="selectedView"
+                    :cell-size="cellSize"
+                />
                 <CalendarCellDisplay
                     :selected-view="selectedView"
                     @cell-size-changed="updateCellSize"
