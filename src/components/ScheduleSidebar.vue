@@ -61,6 +61,7 @@ const searchGroups = computed(() => [
         </template>
 
         <template #default="{ collapsed }">
+            <UDashboardSidebarCollapse />
             <UDashboardSearchButton
                 :collapsed="collapsed"
                 class="bg-transparent ring-default text-neutral-200 hover:text-black"
