@@ -7,7 +7,6 @@ const selectedView = defineModel<CalendarMode>();
 
 <style>
 .selectMenuContainer {
-    margin-left: auto;
     width: fit-content;
 }
 

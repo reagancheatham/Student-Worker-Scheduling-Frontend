@@ -60,8 +60,6 @@ function getBorderStyle(cellIndex: number) {
     const cellsInRow = selectedView === CalendarMode.Day ? 24 : 7;
     const rows = selectedView === CalendarMode.Day ? 4 : 24;
 
-    console.log("index: " + cellIndex);
-
     if (cellIndex > cellsInRow) borderTopWidth = "0px";
 
     if (cellIndex % cellsInRow === 1) borderLeftWidth = "1px";
@@ -81,8 +79,6 @@ function getBorderStyle(cellIndex: number) {
         borderBottomLeftRadius,
         borderBottomRightRadius,
     };
-
-    console.log("style: " + JSON.stringify(style));
 
     return style;
 }

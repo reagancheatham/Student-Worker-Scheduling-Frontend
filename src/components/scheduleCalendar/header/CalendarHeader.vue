@@ -12,6 +12,9 @@ const selectedView = defineModel<CalendarMode>();
 .headerContainer {
     display: flex;
     flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 12px;
 }
 </style>
 
