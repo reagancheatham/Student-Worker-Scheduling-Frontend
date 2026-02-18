@@ -5,6 +5,6 @@ import { routes } from "./routes.ts";
 const unwrappedRoutes = Object.entries(routes).map((r) => r[1].unwrap());
 
 export const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(import.meta.env.BASE_URL),
     routes: unwrappedRoutes,
 });

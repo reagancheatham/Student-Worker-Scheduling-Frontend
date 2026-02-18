@@ -12,8 +12,8 @@
     "type": "module",
     "main": "index.ts",
     "scripts": {
-        "dev": "cross-env VITE_APP_MODE=development vite",
-        "build": "cross-env VITE_APP_MODE=production vite build",
+        "dev": "vite",
+        "build": "vite build",
         "preview": "vite preview",
         "bundle": "mv .env dist"
     },
