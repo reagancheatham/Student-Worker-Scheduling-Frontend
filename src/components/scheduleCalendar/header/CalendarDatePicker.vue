@@ -1,36 +1,76 @@
 <script setup lang="ts">
+import { CalendarUtil } from "@classes/calendar/calendarUtil.ts";
 import {
     CalendarDate,
     DateFormatter,
-    getLocalTimeZone,
+    DateValue,
+    startOfWeek,
 } from "@internationalized/date";
-import { shallowRef } from "vue";
+import { ref } from "vue";
 
-const today = new Date();
-const formatter = new DateFormatter("end-US", {
+type CalendarRange = {
+    start: CalendarDate;
+    end: CalendarDate;
+};
+
+const locale = CalendarUtil.locale;
+const timeZone = CalendarUtil.timeZone;
+const formatter = new DateFormatter(locale, {
     dateStyle: "medium",
 });
 
-const selectedDate = shallowRef(
-    new CalendarDate(today.getFullYear(), today.getMonth(), today.getDay()),
-);
+const selectedWeek = ref<CalendarRange>();
+const isOpen = ref(false);
+
+selectWeek(CalendarUtil.selectedDate);
+
+function selectWeek(date: any): void {
+    if (!date) return;
+
+    const startDay = "start" in date ? date.start : date;
+
+    const start = startOfWeek(startDay as CalendarDate, locale, "mon");
+    const end = start.add({ days: 4 });
+
+    selectedWeek.value = { start, end };
+    isOpen.value = false;
+
+    CalendarUtil.selectedDate = startDay;
+}
+
+function isUnavailable(date: DateValue): boolean {
+    return false;
+}
+
+function isHighlightable(date: DateValue): boolean {
+    return !isUnavailable(date);
+}
 </script>
 
-<style>
-</style>
-
 <template>
-    <UPopover>
-        <UButton class="h-1/2" color="neutral" variant="subtle" icon="i-lucide-calendar">
+    <UPopover v-model:open="isOpen">
+        <UButton
+            class="h-1/2"
+            color="neutral"
+            variant="subtle"
+            icon="i-lucide-calendar"
+        >
             {{
-                selectedDate
-                    ? formatter.format(selectedDate.toDate(getLocalTimeZone()))
+                selectedWeek
+                    ? formatter.format(selectedWeek.start.toDate(timeZone))
                     : "Select a date"
             }}
         </UButton>
 
         <template #content>
-            <UCalendar v-model="selectedDate" />
+            <UCalendar
+                range
+                prevent-deselect
+                :model-value="selectedWeek"
+                :is-date-disabled="isUnavailable"
+                :is-date-highlightable="isHighlightable"
+                @update:model-value="selectWeek"
+            />
         </template>
     </UPopover>
 </template>

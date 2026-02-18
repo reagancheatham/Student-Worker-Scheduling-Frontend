@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { CalendarUtil } from "@classes/calendar/calendarUtil.ts";
 import { Vector2 } from "@classes/util/vector.ts";
+import { CalendarDate, today } from "@internationalized/date";
 import { ref } from "vue";
 
 const {
@@ -88,7 +90,6 @@ function getBodyStyle() {
 </style>
 
 <template>
-    <!-- FIX MODE SELECT MARGIN -->
     <div
         class="calendarContainer"
         :style="{

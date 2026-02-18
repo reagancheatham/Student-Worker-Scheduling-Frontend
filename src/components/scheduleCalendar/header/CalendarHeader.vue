@@ -19,8 +19,8 @@ const selectedView = defineModel<CalendarMode>();
 </style>
 
 <template>
-    <div class="headerContainer">
+    <div class="headerContainer" v-if="header">
         <CalendarDatePicker />
-        <CalendarModeSelect v-if="header" v-model="selectedView" />
+        <CalendarModeSelect v-model="selectedView" />
     </div>
 </template>
