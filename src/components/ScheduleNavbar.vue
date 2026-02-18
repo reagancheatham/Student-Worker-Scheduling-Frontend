@@ -7,7 +7,8 @@
     <UDashboardNavbar 
         :title="route.name"
         :ui = "{
-            root: 'px-0!'
+            root: 'px-0!',
+            title: 'px-5!'
         }"
     >
         <template #right>

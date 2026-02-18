@@ -55,13 +55,15 @@ const searchGroups = computed(() => [
 </style>
 
 <template>
-    <UDashboardSidebar class="sidebar" resizable collapsible>
+    <UDashboardSidebar class="sidebar" resizable collapsible 
+    :ui="{
+        body: 'bg-maroon-500'
+    }">
         <template #header="{ collapsed }">
             <AvatarMenu />
         </template>
 
         <template #default="{ collapsed }">
-            <UDashboardSidebarCollapse />
             <UDashboardSearchButton
                 :collapsed="collapsed"
                 class="bg-transparent ring-default text-neutral-200 hover:text-black"
