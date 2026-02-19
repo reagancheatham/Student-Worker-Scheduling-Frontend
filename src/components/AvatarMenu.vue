@@ -63,7 +63,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
             text-neutral-100
             hover:text-black"
             :ui="{
-                trailingIcon: 'text-dimmed',
+                trailingIcon: 'text-neutral',
             }"
         />
     </UDropdownMenu>
