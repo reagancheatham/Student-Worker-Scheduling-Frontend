@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CalendarData } from "@classes/calendar/calendarData.ts";
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 
 const { data, cellSize } = defineProps<{
@@ -8,9 +9,15 @@ const { data, cellSize } = defineProps<{
 }>();
 
 function getStyle() {
-    return {
-        marginLeft: `${cellSize.x}px`,
-    };
+    if (data.selectedView === CalendarMode.Day)
+        return {
+            marginBottom: `${-0.4 * cellSize.y}px`,
+            marginLeft: `${cellSize.x}px`,
+        };
+    else
+        return {
+            marginLeft: `${cellSize.x}px`,
+        };
 }
 </script>
 

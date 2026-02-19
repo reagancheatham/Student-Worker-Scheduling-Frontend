@@ -325,6 +325,7 @@ function getStyle() {
 
 <style>
 .event {
+    pointer-events: all;
     border-left-width: 4px;
     border-color: var(--color-sky-600);
     display: flex;
