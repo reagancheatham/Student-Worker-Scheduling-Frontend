@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 
-const { selectedView, cellSize } = defineProps<{
-    selectedView: CalendarMode;
+const { data, cellSize } = defineProps<{
+    data: CalendarData;
     cellSize: Vector2;
 }>();
 
@@ -20,7 +21,7 @@ const labelClasses = new Map<CalendarMode, string>([
 ]);
 
 function getStyle() {
-    if (selectedView === CalendarMode.Day) {
+    if (data.selectedView === CalendarMode.Day) {
         return {
             marginTop: `${0.35 * cellSize.y}px`,
         };
@@ -74,28 +75,28 @@ function getStyle() {
 </style>
 
 <template>
-    <div :class="containerClasses.get(selectedView)!">
+    <div :class="containerClasses.get(data.selectedView)!">
         <UBadge
             color="clear"
-            :class="labelClasses.get(selectedView)"
+            :class="labelClasses.get(data.selectedView)"
             :style="getStyle()"
         ></UBadge>
         <UBadge
             color="clear"
-            :class="labelClasses.get(selectedView)"
+            :class="labelClasses.get(data.selectedView)"
             :style="getStyle()"
             v-for="n in 11"
             >{{ n }} AM</UBadge
         >
         <UBadge
             color="clear"
-            :class="labelClasses.get(selectedView)"
+            :class="labelClasses.get(data.selectedView)"
             :style="getStyle()"
             >12 PM</UBadge
         >
         <UBadge
             color="clear"
-            :class="labelClasses.get(selectedView)"
+            :class="labelClasses.get(data.selectedView)"
             :style="getStyle()"
             v-for="n in 11"
             >{{ n }} PM</UBadge

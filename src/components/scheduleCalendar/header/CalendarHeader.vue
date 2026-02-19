@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { CalendarMode } from "@classes/calendar/calendarMode.ts";
-const selectedView = defineModel<CalendarMode>();
+import { CalendarData } from "@classes/calendar/calendarData.ts";
+
+const { data } = defineProps<{
+    data: CalendarData;
+}>();
 </script>
 
 <style>
@@ -15,7 +18,7 @@ const selectedView = defineModel<CalendarMode>();
 
 <template>
     <div class="headerContainer">
-        <CalendarDatePicker :selected-view="selectedView" />
-        <CalendarModeSelect v-model="selectedView" />
+        <CalendarDatePicker :data="data" />
+        <CalendarModeSelect v-model="data.selectedView" />
     </div>
 </template>

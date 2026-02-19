@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
+import { today } from "@internationalized/date";
 import { ref } from "vue";
 
 const {
@@ -13,8 +15,8 @@ const {
     defaultView?: CalendarMode;
 }>();
 
+const data = new CalendarData(defaultView, today(CalendarData.timeZone));
 const cellSize = ref(Vector2.zero);
-const selectedView = ref(defaultView);
 
 const gridClasses = new Map<CalendarMode, string>([
     [CalendarMode.Day, "calendarGrid dayGrid"],
@@ -27,7 +29,7 @@ function updateCellSize(size: Vector2): void {
 }
 
 function getBodyStyle() {
-    if (selectedView.value === CalendarMode.Week)
+    if (data.selectedView === CalendarMode.Week)
         return {
             marginTop: "8vh",
         };
@@ -101,22 +103,23 @@ function getBodyStyle() {
             marginLeft: `${-0.5 * cellSize.x}px`,
         }"
     >
-        <CalendarHeader v-if="header" v-model="selectedView" />
+        <CalendarHeader v-if="header" :data="data" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div :class="gridClasses.get(selectedView)!">
+            <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
-                    v-if="selectedView === CalendarMode.Week"
+                    v-if="data.selectedView === CalendarMode.Week"
+                    :data="data"
                 />
                 <CalendarTimeDisplay
-                    :selected-view="selectedView"
+                    :data="data"
                     :cell-size="cellSize"
                 />
                 <CalendarCellDisplay
-                    :selected-view="selectedView"
+                    :data="data"
                     @cell-size-changed="updateCellSize"
                 />
                 <CalendarEventDisplay
-                    :selected-view="selectedView"
+                    :calendar-data="data"
                     :cellSize="cellSize"
                     :editable="editable"
                 />

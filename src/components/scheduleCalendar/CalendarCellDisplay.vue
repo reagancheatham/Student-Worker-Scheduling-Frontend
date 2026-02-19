@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { onMounted, onUnmounted, useTemplateRef } from "vue";
@@ -7,8 +8,8 @@ const emit = defineEmits({
     cellSizeChanged: (_: Vector2) => true,
 });
 
-const { selectedView } = defineProps<{
-    selectedView: CalendarMode;
+const { data } = defineProps<{
+    data: CalendarData;
 }>();
 
 const cellElements = useTemplateRef<any[]>("cells");
@@ -41,7 +42,7 @@ onMounted(() => {
 });
 
 function getLanes(): number {
-    if (selectedView == CalendarMode.Day)
+    if (data.selectedView == CalendarMode.Day)
         return 4; // number of users
     else return 7;
 }
@@ -57,8 +58,8 @@ function getBorderStyle(cellIndex: number) {
         borderBottomLeftRadius = "0px",
         borderBottomRightRadius = "0px";
 
-    const cellsInRow = selectedView === CalendarMode.Day ? 24 : 7;
-    const rows = selectedView === CalendarMode.Day ? 4 : 24;
+    const cellsInRow = data.selectedView === CalendarMode.Day ? 24 : 7;
+    const rows = data.selectedView === CalendarMode.Day ? 4 : 24;
 
     if (cellIndex > cellsInRow) borderTopWidth = "0px";
 
@@ -117,11 +118,11 @@ function getBorderStyle(cellIndex: number) {
 </style>
 
 <template>
-    <div :class="containerClasses.get(selectedView)!">
+    <div :class="containerClasses.get(data.selectedView)!">
         <UCard
             v-for="cellIndex in getLanes() * 24"
             :ref="`cells`"
-            :class="`${cellClasses.get(selectedView)!} rounded-none`"
+            :class="`${cellClasses.get(data.selectedView)!} rounded-none`"
             :style="getBorderStyle(cellIndex)"
             variant="ghost"
         />

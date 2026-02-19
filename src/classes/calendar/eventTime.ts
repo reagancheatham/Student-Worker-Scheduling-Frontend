@@ -59,4 +59,8 @@ export class EventTime {
 
         return `${hourText}:${minuteText} ${periodText}`;
     }
+
+    calendarDate(): CalendarDate {
+        return new CalendarDate(this.year, this.month, this.day);
+    }
 }

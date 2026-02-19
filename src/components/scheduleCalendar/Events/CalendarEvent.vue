@@ -3,10 +3,10 @@ import { onBeforeUnmount, onMounted, ref, toRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
-import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
+import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
-import { CalendarStore } from "@classes/calendar/calendarUtil.ts";
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 
 //#region Variables
 enum EventState {
@@ -16,8 +16,8 @@ enum EventState {
 }
 
 const props = defineProps<{
-    selectedView: CalendarMode;
-    data: CalendarEventData;
+    calendarData: CalendarData;
+    data: EventData;
     canHover: boolean;
     editable?: boolean;
     cellSize: Vector2;
@@ -25,10 +25,10 @@ const props = defineProps<{
 
 const emit = defineEmits({
     resizeBegan: () => true,
-    resized: (_: CalendarEventData) => true,
+    resized: (_: EventData) => true,
     resizeEnded: () => true,
-    dragBegan: (_: CalendarEventData) => true,
-    dragEnded: (_: CalendarEventData) => true,
+    dragBegan: (_: EventData) => true,
+    dragEnded: (_: EventData) => true,
 });
 
 const MAX_Z_INDEX = 5000;
@@ -40,7 +40,7 @@ const DRAG_THRESHOLD = 0.5;
 
 const element = ref<any>(null);
 const elementHeight = ref(0);
-const refData = toRef<CalendarEventData>(props.data);
+const refData = toRef<EventData>(props.data);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isOpen = ref(false);
@@ -116,7 +116,7 @@ function updateDrag(delta: Vector2): void {
     let hour = 0;
     let minute = 0;
 
-    if (props.selectedView == CalendarMode.Day) {
+    if (props.calendarData.selectedView == CalendarMode.Day) {
         const horizontalDragRatio = props.cellSize.x / RESIZE_RATIO;
         const dX = Math.round(delta.x / horizontalDragRatio) * RESIZE_STEP;
 
@@ -184,7 +184,7 @@ function startResize(evt: PointerEvent): void {
 
     resizeTime = { ...refData.value.endTime };
     resizePointerStart =
-        props.selectedView === CalendarMode.Day ? evt.clientX : evt.clientY;
+        props.calendarData.selectedView === CalendarMode.Day ? evt.clientX : evt.clientY;
     props.data.zIndex = MAX_Z_INDEX;
 
     document.body.style.cursor = "ns-resize";
@@ -203,7 +203,7 @@ function onResize(evt: PointerEvent): void {
     let minute = 0;
     let minuteDifference = 0;
 
-    if (props.selectedView === CalendarMode.Day) {
+    if (props.calendarData.selectedView === CalendarMode.Day) {
         const dX =
             Math.round(
                 (RESIZE_RATIO * (evt.clientX - resizePointerStart)) /
@@ -283,12 +283,10 @@ function getGridArea(): string {
     const startTime = data.startTime;
     const endTime = data.endTime;
 
-    console.log(CalendarStore.selectedDate.day);
-
-    if (props.selectedView == CalendarMode.Day)
+    if (props.calendarData.selectedView == CalendarMode.Day)
         return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - CalendarStore.selectedWeek.start.day } / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day } / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {
@@ -302,7 +300,7 @@ function getStyle() {
         "margin-right": `0`,
     };
 
-    if (props.selectedView == CalendarMode.Day) {
+    if (props.calendarData.selectedView == CalendarMode.Day) {
         style["margin-top"] =
             `${(props.data.leftBisectMargin / 100) * props.cellSize.y}px`;
         style["margin-bottom"] =
@@ -386,14 +384,14 @@ function getStyle() {
                     }"
                 />
                 <div
-                    v-if="selectedView === CalendarMode.Day && editable"
+                    v-if="props.calendarData.selectedView === CalendarMode.Day && editable"
                     class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
                     style="width: 8px"
                     @pointerdown="startResize"
                 />
             </template>
 
-            <template #footer v-if="selectedView === CalendarMode.Week && editable">
+            <template #footer v-if="props.calendarData.selectedView === CalendarMode.Week && editable">
                 <div
                     class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
                     style="height: 8px"

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
-import { CalendarStore } from "@classes/calendar/calendarUtil.ts";
+import { CalendarData } from "@classes/calendar/calendarData";
 import { DateFormatter } from "@internationalized/date";
 import { ref } from "vue";
 
-const { selectedView } = defineProps<{
-    selectedView: CalendarMode;
+const { data } = defineProps<{
+    data: CalendarData;
 }>();
 
-const locale = CalendarStore.locale;
-const timeZone = CalendarStore.timeZone;
+const locale = CalendarData.locale;
+const timeZone = CalendarData.timeZone;
 const formatter = new DateFormatter(locale, {
     dateStyle: "medium",
 });
@@ -19,7 +19,7 @@ function selectDate(date: any): void {
     if (!date) return;
 
     const startDay = "start" in date ? date.start : date;
-    CalendarStore.selectedDate = startDay;
+    data.selectedDay = startDay;
 
     isOpen.value = false;
 }
@@ -34,9 +34,9 @@ function selectDate(date: any): void {
             icon="i-lucide-calendar"
         >
             {{
-                CalendarStore.selectedDate
+                data.selectedDay
                     ? formatter.format(
-                          CalendarStore.selectedDate.toDate(timeZone),
+                          data.selectedDay.toDate(timeZone),
                       )
                     : "Select a date"
             }}
@@ -44,16 +44,16 @@ function selectDate(date: any): void {
 
         <template #content>
             <UCalendar
-                v-if="selectedView === CalendarMode.Day"
+                v-if="data.selectedView === CalendarMode.Day"
                 prevent-deselect
-                :model-value="CalendarStore.selectedDate"
+                :model-value="data.selectedDay"
                 @update:model-value="selectDate"
             />
             <UCalendar
-                v-if="selectedView === CalendarMode.Week"
+                v-if="data.selectedView === CalendarMode.Week"
                 range
                 prevent-deselect
-                :model-value="CalendarStore.selectedWeek"
+                :model-value="data.selectedWeek"
                 @update:model-value="selectDate"
             />
         </template>

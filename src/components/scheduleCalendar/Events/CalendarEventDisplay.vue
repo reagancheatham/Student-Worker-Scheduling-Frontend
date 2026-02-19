@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import {
-    CalendarEventData,
-    EventColor,
-} from "@classes/calendar/calendarEventData.ts";
-import { EventTime } from "@classes/calendar/eventTime.ts";
+import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { CalendarData } from "@classes/calendar/calendarData";
 
 type EventSlot = {
     index: number;
@@ -15,38 +12,20 @@ type EventSlot = {
 };
 
 type BisectEvent = {
-    event: CalendarEventData;
+    event: EventData;
     start: number;
     end: number;
 };
 
-const props = defineProps<{
+const { calendarData, cellSize, editable } = defineProps<{
+    calendarData: CalendarData;
     cellSize: Vector2;
-    selectedView: CalendarMode;
     editable?: boolean;
 }>();
 
-const events = ref<CalendarEventData[]>([
-    new CalendarEventData(
-        "First Event",
-        new EventTime(2026, 2, 19, 9, 0),
-        new EventTime(2026, 2, 19, 17, 30),
-        EventColor.Blue,
-    ),
-    new CalendarEventData(
-        "Second Event",
-        new EventTime(2026, 2, 20, 7, 0),
-        new EventTime(2026, 2, 20, 15, 30),
-        EventColor.Orange,
-    ),
-]);
-
 const canHover = ref<boolean>(true);
 
-const eventSlots: Map<CalendarEventData, EventSlot> = new Map<
-    CalendarEventData,
-    EventSlot
->();
+const eventSlots: Map<EventData, EventSlot> = new Map<EventData, EventSlot>();
 
 const displayClasses = new Map<CalendarMode, string>([
     [CalendarMode.Day, "eventContainer dayEventContainer"],
@@ -60,7 +39,7 @@ onMounted(() => {
 });
 
 function initializeZIndices(): void {
-    events.value.forEach((element) => {
+    calendarData.relevantEvents.value.forEach((element) => {
         element.zIndex = element.startTime.totalTime();
     });
 }
@@ -69,7 +48,7 @@ function onEventResizeBegan(): void {
     canHover.value = false;
 }
 
-function onEventResized(event: CalendarEventData): void {
+function onEventResized(event: EventData): void {
     event.zIndex = event.startTime.totalTime();
 }
 
@@ -83,7 +62,7 @@ function onEventDragBegan(): void {
     canHover.value = false;
 }
 
-function onEventDragEnded(event: CalendarEventData): void {
+function onEventDragEnded(event: EventData): void {
     canHover.value = true;
     event.zIndex = event.startTime.totalTime();
 
@@ -93,7 +72,7 @@ function onEventDragEnded(event: CalendarEventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents: CalendarEventData[] = [...events.value].sort(
+    const sortedEvents: EventData[] = [...calendarData.relevantEvents.value].sort(
         (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
     );
 
@@ -151,7 +130,7 @@ function calculateBisects(): void {
     }
 }
 
-function findLongestBisectChain(event: CalendarEventData): CalendarEventData[] {
+function findLongestBisectChain(event: EventData): EventData[] {
     const candidates: BisectEvent[] = getAllBisectingEvents(event).map((e) => ({
         event: e,
         start: Math.max(e.startTime.totalTime(), event.startTime.totalTime()),
@@ -190,8 +169,8 @@ function findLongestBisectChain(event: CalendarEventData): CalendarEventData[] {
         .sort((a, b) => a.startTime.totalTime() - b.startTime.totalTime());
 }
 
-function getAllBisectingEvents(event: CalendarEventData): CalendarEventData[] {
-    return events.value.filter((e) => e.bisects(event));
+function getAllBisectingEvents(event: EventData): EventData[] {
+    return calendarData.relevantEvents.value.filter((e) => e.bisects(event));
 }
 
 function expandSlotSizes() {
@@ -229,13 +208,13 @@ function expandSlotSizes() {
 </style>
 
 <template>
-    <div :class="displayClasses.get(selectedView)!">
+    <div :class="displayClasses.get(calendarData.selectedView)!">
         <CalendarEvent
-            v-for="event in events"
+            v-for="event in calendarData.relevantEvents.value"
+            :calendar-data="calendarData"
             :data="event"
             :can-hover="canHover"
             :cellSize="cellSize"
-            :selected-view="selectedView"
             :editable="editable"
             @resize-began="onEventResizeBegan"
             @resized="onEventResized"

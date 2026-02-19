@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { CalendarStore } from "@classes/calendar/calendarUtil.ts";
+import { CalendarData } from "@classes/calendar/calendarData";
 import { DateFormatter } from "@internationalized/date";
 
-const weekFormatter = new DateFormatter(CalendarStore.locale, {
+const { data } = defineProps<{
+    data: CalendarData;
+}>();
+
+const weekFormatter = new DateFormatter(CalendarData.locale, {
     weekday: "short",
 });
 
 function getDayName(index: number): string {
-    const dateString = CalendarStore.selectedWeek.start
+    const dateString = data.selectedWeek.start
         .add({ days: index - 1 })
-        .toDate(CalendarStore.timeZone);
+        .toDate(CalendarData.timeZone);
 
     return weekFormatter.format(dateString).toUpperCase();
 }
 
 function getDayNumber(index: number): string {
-    const dateString = CalendarStore.selectedWeek.start
+    const dateString = data.selectedWeek.start
         .add({ days: index - 1 })
         .day.toString();
 
