@@ -15,9 +15,10 @@ enum EventState {
     Dragging,
 }
 
+const refData = defineModel<EventData>({ required: true });
+
 const props = defineProps<{
     calendarData: CalendarData;
-    data: EventData;
     canHover: boolean;
     editable?: boolean;
     cellSize: Vector2;
@@ -31,7 +32,7 @@ const emit = defineEmits({
     dragEnded: (_: EventData) => true,
 });
 
-const MAX_Z_INDEX = 5000;
+const MAX_Z_INDEX = Infinity;
 const FONT_RANGE = new Range(6, 12);
 const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
 const RESIZE_STEP = 5;
@@ -40,7 +41,6 @@ const DRAG_THRESHOLD = 0.5;
 
 const element = ref<any>(null);
 const elementHeight = ref(0);
-const refData = toRef<EventData>(props.data);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isOpen = ref(false);
@@ -77,8 +77,6 @@ function onPointerDown(evt: PointerEvent): void {
 
     evt.preventDefault();
 
-    dragStartTime = { ...refData.value.startTime };
-    dragEndTime = { ...refData.value.endTime };
     dragStart = new Vector2(evt.clientX, evt.clientY);
 
     (evt.target as HTMLElement).setPointerCapture(evt.pointerId);
@@ -102,12 +100,13 @@ function onPointerMove(evt: PointerEvent): void {
 
         if (dragDistance >= DRAG_THRESHOLD) {
             state = EventState.Dragging;
-            dragStartTime = { ...refData.value.startTime };
-            dragEndTime = { ...refData.value.endTime };
+            dragStartTime = refData.value.startTime.clone();
+            dragEndTime = refData.value.endTime.clone();
             isOpen.value = false;
-            props.data.zIndex = MAX_Z_INDEX;
+            refData.value.zIndex = MAX_Z_INDEX;
+            console.log("z index: " + refData.value.zIndex);
 
-            emit("dragBegan", props.data);
+            emit("dragBegan", refData.value);
         }
     }
 }
@@ -131,8 +130,16 @@ function updateDrag(delta: Vector2): void {
         hour = dragStartTime.hour;
         minute = dragStartTime.minute + dY;
 
-        let day = dragStartTime.day + dX;
-        day = MathUtil.clamp(day, 1, 7);
+        const weekStart = props.calendarData.selectedWeek.start;
+        const weekEnd = props.calendarData.selectedWeek.end;
+
+        let weekDate = dragStartTime.calendarDate();
+        weekDate = weekDate.add({ days: dX });
+
+        if (weekDate < weekStart) weekDate = weekStart;
+        else if (weekDate > weekEnd) weekDate = weekEnd;
+
+        const day = weekDate.day;
 
         refData.value.startTime.day = day;
         refData.value.endTime.day = day;
@@ -176,16 +183,18 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointermove", onPointerMove);
     document.removeEventListener("pointerup", onPointerUp);
 
-    emit("dragEnded", props.data);
+    emit("dragEnded", refData.value);
 }
 
 function startResize(evt: PointerEvent): void {
     evt.preventDefault();
 
-    resizeTime = { ...refData.value.endTime };
+    resizeTime = refData.value.endTime.clone();
     resizePointerStart =
-        props.calendarData.selectedView === CalendarMode.Day ? evt.clientX : evt.clientY;
-    props.data.zIndex = MAX_Z_INDEX;
+        props.calendarData.selectedView === CalendarMode.Day
+            ? evt.clientX
+            : evt.clientY;
+    refData.value.zIndex = MAX_Z_INDEX;
 
     document.body.style.cursor = "ns-resize";
     document.body.style.userSelect = "none";
@@ -235,7 +244,7 @@ function onResize(evt: PointerEvent): void {
     refData.value.endTime.minute = minute;
 
     state = EventState.None;
-    emit("resized", props.data);
+    emit("resized", refData.value);
 }
 
 function stopResize(): void {
@@ -286,14 +295,14 @@ function getGridArea(): string {
     if (props.calendarData.selectedView == CalendarMode.Day)
         return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day } / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${2 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {
     let style = {
         "grid-area": getGridArea(),
-        "background-color": `var(${props.data.color})`,
-        "z-index": `${props.data.zIndex}`,
+        "background-color": `var(${refData.value.color})`,
+        "z-index": `${refData.value.zIndex}`,
         "margin-top": `0`,
         "margin-bottom": `0`,
         "margin-left": `0`,
@@ -302,12 +311,12 @@ function getStyle() {
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
         style["margin-top"] =
-            `${(props.data.leftBisectMargin / 100) * props.cellSize.y}px`;
+            `${(refData.value.leftBisectMargin / 100) * props.cellSize.y}px`;
         style["margin-bottom"] =
-            `${(props.data.rightBisectMargin / 100) * props.cellSize.y}px`;
+            `${(refData.value.rightBisectMargin / 100) * props.cellSize.y}px`;
     } else {
-        style["margin-left"] = `${props.data.leftBisectMargin}%`;
-        style["margin-right"] = `${props.data.rightBisectMargin}%`;
+        style["margin-left"] = `${refData.value.leftBisectMargin}%`;
+        style["margin-right"] = `${refData.value.rightBisectMargin}%`;
     }
 
     return style;
@@ -365,7 +374,7 @@ function getStyle() {
                     <UBadge
                         class="text-black select-none"
                         variant="ghost"
-                        :label="data.name"
+                        :label="refData.name"
                         style="max-width: 100%"
                         :style="{
                             fontSize: `${titleFontSize}px`,
@@ -378,20 +387,29 @@ function getStyle() {
                 <UBadge
                     class="font-normal text-gray-800 flex flex-col items-start"
                     variant="ghost"
-                    :label="`${data.startTime.toTimeString()} - ${data.endTime.toTimeString()}`"
+                    :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
                     :ui="{
                         label: 'text-wrap line-clamp-2 select-none',
                     }"
                 />
                 <div
-                    v-if="props.calendarData.selectedView === CalendarMode.Day && editable"
+                    v-if="
+                        props.calendarData.selectedView === CalendarMode.Day &&
+                        editable
+                    "
                     class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
                     style="width: 8px"
                     @pointerdown="startResize"
                 />
             </template>
 
-            <template #footer v-if="props.calendarData.selectedView === CalendarMode.Week && editable">
+            <template
+                #footer
+                v-if="
+                    props.calendarData.selectedView === CalendarMode.Week &&
+                    editable
+                "
+            >
                 <div
                     class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
                     style="height: 8px"
@@ -403,12 +421,12 @@ function getStyle() {
         <template #content>
             <UCard class="size-48 m-4 inline-flex" variant="ghost">
                 <template #header>
-                    {{ data.name }}
+                    {{ refData.name }}
                 </template>
 
                 <template #body>
-                    {{ data.startTime.toTimeString() }} -
-                    {{ data.endTime.toTimeString() }}
+                    {{ refData.startTime.toTimeString() }} -
+                    {{ refData.endTime.toTimeString() }}
                 </template>
             </UCard>
         </template>

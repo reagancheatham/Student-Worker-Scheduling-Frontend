@@ -23,7 +23,7 @@ const labelClasses = new Map<CalendarMode, string>([
 function getStyle() {
     if (data.selectedView === CalendarMode.Day) {
         return {
-            marginTop: `${0.35 * cellSize.y}px`,
+            marginTop: `${0.03 * cellSize.y}vh`,
         };
     } else {
         return {

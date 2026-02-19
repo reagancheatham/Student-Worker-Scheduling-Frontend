@@ -103,7 +103,7 @@ function getBodyStyle() {
             marginLeft: `${-0.5 * cellSize.x}px`,
         }"
     >
-        <CalendarHeader v-if="header" :data="data" />
+        <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay

@@ -63,4 +63,8 @@ export class EventTime {
     calendarDate(): CalendarDate {
         return new CalendarDate(this.year, this.month, this.day);
     }
+
+    clone(): EventTime {
+        return new EventTime(this.year, this.month, this.day, this.hour, this.minute);
+    }
 }
