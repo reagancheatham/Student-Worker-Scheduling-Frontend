@@ -1,16 +1,33 @@
-import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { CalendarDate, getLocalTimeZone, startOfWeek, today } from "@internationalized/date";
 import { ref } from "vue";
 
-export class CalendarUtil {
+type CalendarRange = {
+    start: CalendarDate;
+    end: CalendarDate;
+};
+
+export class CalendarStore {
     public static readonly locale = "en-US";
     public static readonly timeZone = getLocalTimeZone();
-    private static _selectedDate = ref<CalendarDate>(today(CalendarUtil.timeZone));
+    public static refSelectedDate = ref<CalendarDate>();
+    public static refSelectedWeek = ref<CalendarRange>();
 
     public static get selectedDate(): CalendarDate {
-        return CalendarUtil._selectedDate.value as CalendarDate;
+        return CalendarStore.refSelectedDate.value as CalendarDate;
     }
 
     public static set selectedDate(date: CalendarDate) {
-        CalendarUtil._selectedDate.value = date;
+        CalendarStore.refSelectedDate.value = date;
+
+        const start = startOfWeek(date, CalendarStore.locale);
+        const end = start.add({ days: 6 });
+
+        CalendarStore.refSelectedWeek.value = { start, end };
+    }
+
+    public static get selectedWeek(): CalendarRange {
+        return CalendarStore.refSelectedWeek.value;
     }
 }
+
+CalendarStore.selectedDate = today(CalendarStore.timeZone);

@@ -1,49 +1,27 @@
 <script setup lang="ts">
-import { CalendarUtil } from "@classes/calendar/calendarUtil.ts";
-import {
-    CalendarDate,
-    DateFormatter,
-    DateValue,
-    startOfWeek,
-} from "@internationalized/date";
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { CalendarStore } from "@classes/calendar/calendarUtil.ts";
+import { DateFormatter } from "@internationalized/date";
 import { ref } from "vue";
 
-type CalendarRange = {
-    start: CalendarDate;
-    end: CalendarDate;
-};
+const { selectedView } = defineProps<{
+    selectedView: CalendarMode;
+}>();
 
-const locale = CalendarUtil.locale;
-const timeZone = CalendarUtil.timeZone;
+const locale = CalendarStore.locale;
+const timeZone = CalendarStore.timeZone;
 const formatter = new DateFormatter(locale, {
     dateStyle: "medium",
 });
-
-const selectedWeek = ref<CalendarRange>();
 const isOpen = ref(false);
 
-selectWeek(CalendarUtil.selectedDate);
-
-function selectWeek(date: any): void {
+function selectDate(date: any): void {
     if (!date) return;
 
     const startDay = "start" in date ? date.start : date;
+    CalendarStore.selectedDate = startDay;
 
-    const start = startOfWeek(startDay as CalendarDate, locale, "mon");
-    const end = start.add({ days: 4 });
-
-    selectedWeek.value = { start, end };
     isOpen.value = false;
-
-    CalendarUtil.selectedDate = startDay;
-}
-
-function isUnavailable(date: DateValue): boolean {
-    return false;
-}
-
-function isHighlightable(date: DateValue): boolean {
-    return !isUnavailable(date);
 }
 </script>
 
@@ -56,20 +34,27 @@ function isHighlightable(date: DateValue): boolean {
             icon="i-lucide-calendar"
         >
             {{
-                selectedWeek
-                    ? formatter.format(selectedWeek.start.toDate(timeZone))
+                CalendarStore.selectedDate
+                    ? formatter.format(
+                          CalendarStore.selectedDate.toDate(timeZone),
+                      )
                     : "Select a date"
             }}
         </UButton>
 
         <template #content>
             <UCalendar
+                v-if="selectedView === CalendarMode.Day"
+                prevent-deselect
+                :model-value="CalendarStore.selectedDate"
+                @update:model-value="selectDate"
+            />
+            <UCalendar
+                v-if="selectedView === CalendarMode.Week"
                 range
                 prevent-deselect
-                :model-value="selectedWeek"
-                :is-date-disabled="isUnavailable"
-                :is-date-highlightable="isHighlightable"
-                @update:model-value="selectWeek"
+                :model-value="CalendarStore.selectedWeek"
+                @update:model-value="selectDate"
             />
         </template>
     </UPopover>

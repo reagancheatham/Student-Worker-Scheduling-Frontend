@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
-import { CalendarUtil } from "@classes/calendar/calendarUtil.ts";
 import { Vector2 } from "@classes/util/vector.ts";
-import { CalendarDate, today } from "@internationalized/date";
 import { ref } from "vue";
 
 const {
@@ -33,7 +31,14 @@ function getBodyStyle() {
         return {
             marginTop: "8vh",
         };
-    else return {};
+    else if (!header) {
+        return {
+            marginTop: "-4vh",
+        };
+    } else
+        return {
+            marginTop: "0px",
+        };
 }
 </script>
 
@@ -42,11 +47,11 @@ function getBodyStyle() {
     --day-cell-min-width: calc(10px / 60);
     --day-cell-max-width: calc(80px / 60);
     --day-cell-min-height: 10px;
-    --day-cell-max-height: 80px;
+    --day-cell-max-height: 120px;
     --week-cell-min-width: 50px;
     --week-cell-max-width: 240px;
     --week-cell-min-height: calc(10px / 60);
-    --week-cell-max-height: calc(40px / 60);
+    --week-cell-max-height: calc(30px / 60);
 
     flex: 1;
     min-height: 10px;
@@ -96,7 +101,7 @@ function getBodyStyle() {
             marginLeft: `${-0.5 * cellSize.x}px`,
         }"
     >
-        <CalendarHeader :header="header" v-model="selectedView" />
+        <CalendarHeader v-if="header" v-model="selectedView" />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(selectedView)!">
                 <CalendarWeekDayDisplay

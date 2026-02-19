@@ -1,5 +1,9 @@
+import { CalendarDate } from "@internationalized/date";
+
 export class EventTime {
     constructor(
+        public year: number,
+        public month: number,
         public day: number,
         public hour: number,
         public minute: number,
@@ -26,7 +30,12 @@ export class EventTime {
     }
 
     totalTime(): number {
-        return 24 * 60 * this.day + 60 * this.hour + this.minute;
+        const day = new CalendarDate(this.year, this.month, this.day);
+        const julianStart = day.calendar.toJulianDay(new CalendarDate(day.year, 1, 1));
+        const julianEnd = day.calendar.toJulianDay(day);
+        const dayValue = 24 * 60 * (julianEnd - julianStart);
+        
+        return dayValue + 60 * this.hour + this.minute;
     }
 
     toTimeString(): string {

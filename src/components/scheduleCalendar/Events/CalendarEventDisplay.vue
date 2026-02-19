@@ -20,62 +20,26 @@ type BisectEvent = {
     end: number;
 };
 
-const events = ref([
-    new CalendarEventData(
-        "First Event",
-        new EventTime(1, 6, 15),
-        new EventTime(1, 10, 30),
-        EventColor.Blue,
-    ),
-    new CalendarEventData(
-        "Second Event",
-        new EventTime(1, 7, 15),
-        new EventTime(1, 9, 30),
-        EventColor.Orange,
-    ),
-    // new CalendarEventData(
-    //     "Third Event",
-    //     new EventTime(1, 15, 15),
-    //     new EventTime(1, 20, 30),
-    //     EventColor.Yellow,
-    // ),
-    // new CalendarEventData(
-    //     "Fourth Event",
-    //     new EventTime(1, 16, 15),
-    //     new EventTime(1, 21, 30),
-    //     EventColor.Red,
-    // ),
-    // new CalendarEventData(
-    //     "Fifth Event",
-    //     new EventTime(1, 6, 15),
-    //     new EventTime(1, 10, 30),
-    //     EventColor.Blue,
-    // ),
-    // new CalendarEventData(
-    //     "Sixth Event",
-    //     new EventTime(1, 7, 15),
-    //     new EventTime(1, 9, 30),
-    //     EventColor.Orange,
-    // ),
-    // new CalendarEventData(
-    //     "Seventh Event",
-    //     new EventTime(1, 15, 15),
-    //     new EventTime(1, 20, 30),
-    //     EventColor.Yellow,
-    // ),
-    // new CalendarEventData(
-    //     "Eighth Event",
-    //     new EventTime(1, 16, 15),
-    //     new EventTime(1, 21, 30),
-    //     EventColor.Purple,
-    // ),
-]);
-
 const props = defineProps<{
     cellSize: Vector2;
     selectedView: CalendarMode;
     editable?: boolean;
 }>();
+
+const events = ref<CalendarEventData[]>([
+    new CalendarEventData(
+        "First Event",
+        new EventTime(2026, 2, 19, 9, 0),
+        new EventTime(2026, 2, 19, 17, 30),
+        EventColor.Blue,
+    ),
+    new CalendarEventData(
+        "Second Event",
+        new EventTime(2026, 2, 20, 7, 0),
+        new EventTime(2026, 2, 20, 15, 30),
+        EventColor.Orange,
+    ),
+]);
 
 const canHover = ref<boolean>(true);
 
@@ -129,7 +93,7 @@ function onEventDragEnded(event: CalendarEventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents = [...events.value].sort(
+    const sortedEvents: CalendarEventData[] = [...events.value].sort(
         (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
     );
 

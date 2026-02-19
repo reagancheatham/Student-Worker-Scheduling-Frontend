@@ -6,6 +6,7 @@ import { Range } from "../../../classes/util/range.ts";
 import { CalendarEventData } from "../../../classes/calendar/calendarEventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { CalendarStore } from "@classes/calendar/calendarUtil.ts";
 
 //#region Variables
 enum EventState {
@@ -31,8 +32,8 @@ const emit = defineEmits({
 });
 
 const MAX_Z_INDEX = 5000;
-const FONT_RANGE = new Range(8, 12);
-const TITLE_MARGIN_RANGE = new Range(-10.0, -0.1);
+const FONT_RANGE = new Range(6, 12);
+const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
 const RESIZE_STEP = 5;
 const RESIZE_RATIO = 60 / RESIZE_STEP;
 const DRAG_THRESHOLD = 0.5;
@@ -282,10 +283,12 @@ function getGridArea(): string {
     const startTime = data.startTime;
     const endTime = data.endTime;
 
+    console.log(CalendarStore.selectedDate.day);
+
     if (props.selectedView == CalendarMode.Day)
-        return `${1 + startTime.day} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+        return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - CalendarStore.selectedWeek.start.day } / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {

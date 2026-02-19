@@ -1,10 +1,5 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
-
-const { header } = defineProps<{
-    header: boolean;
-}>();
-
 const selectedView = defineModel<CalendarMode>();
 </script>
 
@@ -19,8 +14,8 @@ const selectedView = defineModel<CalendarMode>();
 </style>
 
 <template>
-    <div class="headerContainer" v-if="header">
-        <CalendarDatePicker />
+    <div class="headerContainer">
+        <CalendarDatePicker :selected-view="selectedView" />
         <CalendarModeSelect v-model="selectedView" />
     </div>
 </template>
