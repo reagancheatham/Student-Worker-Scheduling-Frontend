@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { onMounted, onUnmounted, useTemplateRef } from "vue";
@@ -7,8 +8,8 @@ const emit = defineEmits({
     cellSizeChanged: (_: Vector2) => true,
 });
 
-const { selectedView } = defineProps<{
-    selectedView: CalendarMode;
+const { data } = defineProps<{
+    data: CalendarData;
 }>();
 
 const cellElements = useTemplateRef<any[]>("cells");
@@ -39,6 +40,49 @@ onMounted(() => {
 
     onUnmounted(() => observer.disconnect());
 });
+
+function getLanes(): number {
+    if (data.selectedView == CalendarMode.Day)
+        return 4; // number of users
+    else return 7;
+}
+
+function getBorderStyle(cellIndex: number) {
+    let borderTopWidth = "1px",
+        borderRightWidth = "1px",
+        borderBottomWidth = "1px",
+        borderLeftWidth = "0px";
+
+    let borderTopLeftRadius = "0px",
+        borderTopRightRadius = "0px",
+        borderBottomLeftRadius = "0px",
+        borderBottomRightRadius = "0px";
+
+    const cellsInRow = data.selectedView === CalendarMode.Day ? 24 : 7;
+    const rows = data.selectedView === CalendarMode.Day ? 4 : 24;
+
+    if (cellIndex > cellsInRow) borderTopWidth = "0px";
+
+    if (cellIndex % cellsInRow === 1) borderLeftWidth = "1px";
+
+    if (cellIndex === 1) borderTopLeftRadius = "8px";
+    else if (cellIndex === cellsInRow) borderTopRightRadius = "8px";
+    else if (cellIndex === ((cellsInRow) * (rows - 1)) + 1) borderBottomLeftRadius = "8px";
+    else if (cellIndex === (cellsInRow * rows)) borderBottomRightRadius = "8px";
+
+    const style = {
+        borderTopWidth,
+        borderRightWidth,
+        borderBottomWidth,
+        borderLeftWidth,
+        borderTopLeftRadius,
+        borderTopRightRadius,
+        borderBottomLeftRadius,
+        borderBottomRightRadius,
+    };
+
+    return style;
+}
 </script>
 
 <style>
@@ -63,21 +107,24 @@ onMounted(() => {
 .dayCell {
     grid-column: span 60;
     grid-row: span 1;
+    border-color: var(--color-gray-400);
 }
 
 .weekCell {
     grid-column: span 1;
     grid-row: span 60;
+    border-color: var(--color-gray-400);
 }
 </style>
 
 <template>
-    <div :class="containerClasses.get(selectedView)!">
+    <div :class="containerClasses.get(data.selectedView)!">
         <UCard
+            v-for="cellIndex in getLanes() * 24"
             :ref="`cells`"
-            :class="`${cellClasses.get(selectedView)!} rounded-none ring-gray-600`"
-            variant="outline"
-            v-for="_ in 7 * 24"
+            :class="`${cellClasses.get(data.selectedView)!} rounded-none`"
+            :style="getBorderStyle(cellIndex)"
+            variant="ghost"
         />
     </div>
 </template>
