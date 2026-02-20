@@ -1,5 +1,11 @@
 <script></script>
 
+<style>
+.scheduleContainer {
+    height: 70vh;
+}
+</style>
+
 <template>
-    <ScheduleCalendar header editable />
+    <div class="scheduleContainer"><ScheduleCalendar header editable /></div>
 </template>

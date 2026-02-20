@@ -57,7 +57,12 @@ function getDayNumber(index: number): string {
                 size="xl"
                 :label="getDayName(n)"
             />
-            <UBadge class="text-dimmed" color="clear" size="xl" :label="getDayNumber(n)" />
+            <UBadge
+                class="text-dimmed"
+                color="clear"
+                size="xl"
+                :label="getDayNumber(n)"
+            />
         </div>
     </div>
 </template>

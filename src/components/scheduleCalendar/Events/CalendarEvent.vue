@@ -104,8 +104,7 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
-            console.log("z index: " + refData.value.zIndex);
-
+            
             emit("dragBegan", refData.value);
         }
     }

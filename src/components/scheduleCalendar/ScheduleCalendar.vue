@@ -31,7 +31,7 @@ function updateCellSize(size: Vector2): void {
 function getBodyStyle() {
     if (data.selectedView === CalendarMode.Week)
         return {
-            marginTop: "8vh",
+            marginTop: "2vh",
         };
     else if (!header) {
         return {
@@ -39,7 +39,22 @@ function getBodyStyle() {
         };
     } else
         return {
-            marginTop: "0px",
+            marginTop: "10vh",
+        };
+}
+
+function getGridStyle() {
+    if (data.selectedView === CalendarMode.Week)
+        return {
+            marginTop: "5cqh",
+        };
+    else if (!header)
+        return {
+            marginTop: "0cqh",
+        };
+    else
+        return {
+            marginTop: "-7cqh",
         };
 }
 </script>
@@ -52,26 +67,28 @@ function getBodyStyle() {
     --day-cell-max-height: 120px;
     --week-cell-min-width: 50px;
     --week-cell-max-width: 240px;
-    --week-cell-min-height: calc(10px / 60);
-    --week-cell-max-height: calc(30px / 60);
+    --week-cell-min-height: calc(30px / 60);
+    --week-cell-max-height: calc(35px / 60);
 
     flex: 1;
     min-height: 10px;
     min-width: 100px;
+    height: 100%;
 }
 
 .calendarBody {
-    pointer-events: none;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: row;
+    overflow-y: auto;
 }
 
 .calendarGrid {
     width: 100%;
     height: 100%;
     display: grid;
+    min-height: 0;
 }
 
 .dayGrid {
@@ -106,15 +123,12 @@ function getBodyStyle() {
     >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div :class="gridClasses.get(data.selectedView)!">
+            <div :class="gridClasses.get(data.selectedView)!" :style="getGridStyle()">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
                 />
-                <CalendarTimeDisplay
-                    :data="data"
-                    :cell-size="cellSize"
-                />
+                <CalendarTimeDisplay :data="data" :cell-size="cellSize" />
                 <CalendarCellDisplay
                     :data="data"
                     @cell-size-changed="updateCellSize"

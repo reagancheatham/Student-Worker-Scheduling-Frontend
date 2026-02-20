@@ -102,10 +102,5 @@ export class CalendarData {
                 this.selectedWeek.start,
                 this.selectedWeek.end,
             );
-
-        console.log(
-            "updated relevant events: " +
-                JSON.stringify(this.relevantEvents.value),
-        );
     }
 }
