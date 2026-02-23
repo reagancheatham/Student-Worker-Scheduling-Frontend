@@ -8,7 +8,7 @@ export enum EventColor {
     Purple = "--color-purple-500",
 }
 
-export class CalendarEventData {
+export class EventData {
     constructor(
         public name: string,
         public startTime: EventTime,
@@ -19,14 +19,14 @@ export class CalendarEventData {
         public rightBisectMargin: number = 0,
     ) {}
 
-    isBetween(data: CalendarEventData): boolean {
+    isBetween(data: EventData): boolean {
         return (
             this.startTime.isAfterOrEqual(data.startTime) &&
             this.endTime.isBeforeOrEqual(data.endTime)
         );
     }
 
-    bisects(data: CalendarEventData): boolean {
+    bisects(data: EventData): boolean {
         return (
             (this.startTime.isAfterOrEqual(data.startTime) &&
                 this.startTime.isBefore(data.endTime)) ||

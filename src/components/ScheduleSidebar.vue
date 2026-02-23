@@ -55,7 +55,12 @@ const searchGroups = computed(() => [
 </style>
 
 <template>
-    <UDashboardSidebar class="sidebar" resizable collapsible>
+    <UDashboardSidebar class="sidebar" resizable collapsible 
+    :ui="{
+        header: 'bg-maroon-500 border-0',
+        body: 'bg-maroon-500',
+        toggle: 'text-neutral-100 hover:text-primary'
+    }">
         <template #header="{ collapsed }">
             <AvatarMenu />
         </template>

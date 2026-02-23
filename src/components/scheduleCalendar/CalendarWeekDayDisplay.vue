@@ -1,34 +1,30 @@
 <script setup lang="ts">
-const weekDays = [
-    {
-        name: "Sunday",
-        abbreviation: "SUN",
-    },
-    {
-        name: "Monday",
-        abbreviation: "MON",
-    },
-    {
-        name: "Tuesday",
-        abbreviation: "TUE",
-    },
-    {
-        name: "Wednesday",
-        abbreviation: "WED",
-    },
-    {
-        name: "Thursday",
-        abbreviation: "THU",
-    },
-    {
-        name: "Friday",
-        abbreviation: "FRI",
-    },
-    {
-        name: "Saturday",
-        abbreviation: "SAT",
-    },
-];
+import { CalendarData } from "@classes/calendar/calendarData";
+import { DateFormatter } from "@internationalized/date";
+
+const { data } = defineProps<{
+    data: CalendarData;
+}>();
+
+const weekFormatter = new DateFormatter(CalendarData.locale, {
+    weekday: "short",
+});
+
+function getDayName(index: number): string {
+    const dateString = data.selectedWeek.start
+        .add({ days: index - 1 })
+        .toDate(CalendarData.timeZone);
+
+    return weekFormatter.format(dateString).toUpperCase();
+}
+
+function getDayNumber(index: number): string {
+    const dateString = data.selectedWeek.start
+        .add({ days: index - 1 })
+        .day.toString();
+
+    return dateString;
+}
 </script>
 
 <style>
@@ -49,7 +45,6 @@ const weekDays = [
     align-items: center;
     color: var(--color-gray-500);
     position: relative;
-    margin-top: -2vh;
 }
 </style>
 
@@ -60,9 +55,14 @@ const weekDays = [
                 class="text-primary"
                 color="clear"
                 size="xl"
-                :label="weekDays[n - 1].abbreviation"
+                :label="getDayName(n)"
             />
-            <UBadge class="text-dimmed" color="clear" size="xl" :label="n" />
+            <UBadge
+                class="text-dimmed"
+                color="clear"
+                size="xl"
+                :label="getDayNumber(n)"
+            />
         </div>
     </div>
 </template>

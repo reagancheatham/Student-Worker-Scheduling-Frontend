@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { Vector2 } from "@classes/util/vector.ts";
 
-const { selectedView } = defineProps<{
-    selectedView: CalendarMode;
+const { data, cellSize } = defineProps<{
+    data: CalendarData;
+    cellSize: Vector2;
 }>();
 
 const containerClasses = new Map<CalendarMode, string>([
@@ -16,6 +19,18 @@ const labelClasses = new Map<CalendarMode, string>([
     [CalendarMode.Week, "timeLabel weekLabel"],
     [CalendarMode.Month, "timeLabel monthLabel"],
 ]);
+
+function getStyle() {
+    if (data.selectedView === CalendarMode.Day) {
+        return {
+            marginTop: `${0.3 * cellSize.y}px`,
+        };
+    } else {
+        return {
+            marginLeft: `0px`,
+        };
+    }
+}
 </script>
 
 <style>
@@ -40,12 +55,12 @@ const labelClasses = new Map<CalendarMode, string>([
     width: 100%;
     color: var(--color-gray-500);
     position: relative;
+    font-size: clamp(0.7rem, 0.6vw, 0.6vw);
 }
 
 .dayLabel {
     grid-column: span 60;
     padding-bottom: 12px;
-    top: 35%;
     left: 50%;
     justify-content: center;
     text-align: center;
@@ -60,13 +75,30 @@ const labelClasses = new Map<CalendarMode, string>([
 </style>
 
 <template>
-    <div :class="containerClasses.get(selectedView)!">
-        <UBadge color="clear" :class="labelClasses.get(selectedView)"></UBadge>
-        <UBadge color="clear" :class="labelClasses.get(selectedView)" v-for="n in 11"
+    <div :class="containerClasses.get(data.selectedView)!">
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(data.selectedView)"
+            :style="getStyle()"
+        ></UBadge>
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(data.selectedView)"
+            :style="getStyle()"
+            v-for="n in 11"
             >{{ n }} AM</UBadge
         >
-        <UBadge color="clear" :class="labelClasses.get(selectedView)">12 PM</UBadge>
-        <UBadge color="clear" :class="labelClasses.get(selectedView)" v-for="n in 11"
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(data.selectedView)"
+            :style="getStyle()"
+            >12 PM</UBadge
+        >
+        <UBadge
+            color="clear"
+            :class="labelClasses.get(data.selectedView)"
+            :style="getStyle()"
+            v-for="n in 11"
             >{{ n }} PM</UBadge
         >
     </div>
