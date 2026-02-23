@@ -11,7 +11,7 @@ type Employee = {
     Id: number;
     Name: String;
     Email: String;
-    Role: "Manager" | "Barista" | "Register"; // will need to be set by manager
+    Role: "Manager" | "Barista" | "Register"; // will need to be grabbed from role table
 };
 
 //TODO: NEED TO IMPLEMENT INFINITE SCROLL WHEN WE START GETTING DATA FROM BACKEND
