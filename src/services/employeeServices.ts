@@ -1,5 +1,5 @@
 import { Employee } from "@classes/Employee";
-import { servicesUtil } from "@classes/util/servicesUtil";
+import { DatabaseServices } from "@classes/util/servicesUtil";
 import { apiClient } from "./services";
 
 const API_ROOT: string = "employee";
@@ -8,15 +8,15 @@ const API_ROOT: string = "employee";
 export class EmployeeServices {
 
     static async create(employee: Employee) {
-        await servicesUtil.create(API_ROOT, employee);
+        await DatabaseServices.create(API_ROOT, employee);
     };
 
     static async update(employee: Employee) {
-        await servicesUtil.update(API_ROOT, employee);
+        await DatabaseServices.update(API_ROOT, employee);
     };
 
     static async delete(employee: Employee) {
-        await servicesUtil.delete(`${API_ROOT}/:${employee.id}`);
+        await DatabaseServices.delete(`${API_ROOT}/:${employee.id}`);
     };
 
     static async get(id: number) {

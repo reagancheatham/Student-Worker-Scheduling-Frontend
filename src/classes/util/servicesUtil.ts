@@ -1,7 +1,6 @@
 import { apiClient } from "../../services/services";
 
-export class servicesUtil {
-
+export class DatabaseServices {
     static async create(path: string, object: any) {
         await apiClient
             .post(path, object)
@@ -9,7 +8,7 @@ export class servicesUtil {
                 console.log(`${path} created successfully`);
             })
             .catch((err) => {
-                console.log(`Error creating ${path}: ` + err);
+                console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
             });
     };
 
@@ -20,7 +19,7 @@ export class servicesUtil {
                 console.log(`${path} updated successfully`);
             })
             .catch((err) => {
-                console.log(`Error updating ${path}: ` + err);
+                console.error(`Error updating ${path}: ${JSON.stringify(err)}`);
             });
     };
 
@@ -31,7 +30,24 @@ export class servicesUtil {
                 console.log(`${path} deleted successfully`);
             })
             .catch((err) => {
-                console.log(`Error deleting ${path}: ` + err);
+                console.error(`Error deleting ${path}: ${JSON.stringify(err)}`);
             });
     };
+
+    static async get<T>(path: string) {
+        let finalResult: T;
+
+        await apiClient
+            .get(path)
+            .then((result) => {
+                finalResult = result as T;
+                console.log(`${path} found successfully`);
+            })
+            .catch((err) => {
+                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
+                throw err;
+            })
+
+        return finalResult;
+    }
 }
