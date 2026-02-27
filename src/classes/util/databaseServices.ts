@@ -10,7 +10,7 @@ export class DatabaseServices {
             .catch((err) => {
                 console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
             });
-    };
+    }
 
     static async update(path: string, object: any) {
         await apiClient
@@ -21,7 +21,7 @@ export class DatabaseServices {
             .catch((err) => {
                 console.error(`Error updating ${path}: ${JSON.stringify(err)}`);
             });
-    };
+    }
 
     static async delete(path: string) {
         await apiClient
@@ -32,10 +32,10 @@ export class DatabaseServices {
             .catch((err) => {
                 console.error(`Error deleting ${path}: ${JSON.stringify(err)}`);
             });
-    };
+    }
 
-    static async get<T>(path: string) {
-        let finalResult: T;
+    static async get<T>(path: string): Promise<T> {
+        let finalResult: T | null = null;
 
         await apiClient
             .get(path)
@@ -46,8 +46,10 @@ export class DatabaseServices {
             .catch((err) => {
                 console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
                 throw err;
-            })
+            });
 
-        return finalResult;
+        if (finalResult === null)
+            throw Error(`Error finding ${path}: invalid result!`);
+        else return finalResult;
     }
 }
