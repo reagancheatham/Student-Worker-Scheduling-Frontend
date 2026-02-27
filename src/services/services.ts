@@ -3,8 +3,8 @@ import axios from "axios";
 var baseURL: string = "";
 
 if (import.meta.env.MODE === "development")
-  baseURL = "http://localhost/tracker-t6/";
-else baseURL = "/tracker-t6/";
+  baseURL = "http://localhost/workerscheduling-t6/";
+else baseURL = "/workerscheduling-t6/";
 
 export const apiClient = axios.create({
   baseURL,

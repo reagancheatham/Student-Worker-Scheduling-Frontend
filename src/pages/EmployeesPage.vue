@@ -2,142 +2,29 @@
 import { ref } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { useTemplateRef } from "vue";
+import { Employee } from "@classes/Employee";
+import { EmployeeServices } from "../services/employeeServices";
 
 const table = useTemplateRef("table");
 const globalFilter = ref("");
 
-//create class
-type Employee = {
-    Id: number;
-    Name: String;
-    Email: String;
-    Role: "Manager" | "Barista" | "Register"; // will need to be grabbed from role table
-};
+let data: Employee[];
+
+console.log('test');
+
+EmployeeServices.getAllForBusiness(1)
+    .then((result) => {
+        data = result;
+        console.log(data);
+    }).catch((err) => {
+        console.error(err);
+    })
+
+//const test: Employee = await EmployeeServices.get(1);
+
+//console.log(test);
 
 //TODO: NEED TO IMPLEMENT INFINITE SCROLL WHEN WE START GETTING DATA FROM BACKEND
-
-const data = ref<Employee[]>([
-    {
-        Id: 1588221,
-        Name: "David Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1668221,
-        Name: "Roger Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1583321,
-        Name: "John Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1587721,
-        Name: "Bob Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1588221,
-        Name: "David Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1668221,
-        Name: "Roger Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1583321,
-        Name: "John Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1587721,
-        Name: "Bob Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1588221,
-        Name: "David Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1668221,
-        Name: "Roger Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1583321,
-        Name: "John Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1587721,
-        Name: "Bob Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1588221,
-        Name: "David Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1668221,
-        Name: "Roger Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1583321,
-        Name: "John Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1587721,
-        Name: "Bob Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1588221,
-        Name: "David Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1668221,
-        Name: "Roger Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1583321,
-        Name: "John Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-    {
-        Id: 1587721,
-        Name: "Bob Clonts",
-        Email: "David.Clonts@eagles.oc.edu",
-        Role: "Manager",
-    },
-]);
 
 const columns: TableColumn<Employee>[] = [
     {
