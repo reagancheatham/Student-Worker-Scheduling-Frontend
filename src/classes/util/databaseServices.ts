@@ -40,6 +40,7 @@ export class DatabaseServices {
         await apiClient
             .get(path)
             .then((result) => {
+                console.log('get');
                 finalResult = result as T;
                 console.log(`${path} found successfully`);
             })
