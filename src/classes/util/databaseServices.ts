@@ -1,3 +1,7 @@
+import {
+    DatabaseModel,
+    DatabaseModelStatic,
+} from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
 
 export class DatabaseServices {
@@ -34,14 +38,16 @@ export class DatabaseServices {
             });
     }
 
-    static async get<T>(path: string): Promise<T> {
+    static async get<T>(
+        model: DatabaseModelStatic<T>,
+        path: string,
+    ): Promise<T> {
         let finalResult: T | null = null;
 
         await apiClient
             .get(path)
             .then((result) => {
-                console.log('get');
-                finalResult = result as T;
+                finalResult = model.create(result);
                 console.log(`${path} found successfully`);
             })
             .catch((err) => {
@@ -52,5 +58,30 @@ export class DatabaseServices {
         if (finalResult === null)
             throw Error(`Error finding ${path}: invalid result!`);
         else return finalResult;
+    }
+
+    static async getAll<T>(
+        model: DatabaseModelStatic<T>,
+        path: string,
+    ): Promise<T[]> {
+        let finalResult: T[] = [];
+
+        await apiClient
+            .get(path)
+            .then((results) => {
+                const data = results.data as object[];
+
+                data.forEach((element) => {
+                    finalResult.push(model.create(element));
+                });
+
+                console.log(`${path} found successfully`);
+            })
+            .catch((err) => {
+                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
+                throw err;
+            });
+
+        return finalResult;
     }
 }

@@ -55,12 +55,16 @@ const searchGroups = computed(() => [
 </style>
 
 <template>
-    <UDashboardSidebar class="sidebar" resizable collapsible 
-    :ui="{
-        header: 'bg-maroon-500 border-0',
-        body: 'bg-maroon-500',
-        toggle: 'text-neutral-100 hover:text-primary'
-    }">
+    <UDashboardSidebar
+        class="sidebar"
+        resizable
+        collapsible
+        :ui="{
+            header: 'bg-maroon-500 border-0',
+            body: 'bg-maroon-500',
+            toggle: 'text-neutral-100 hover:text-primary',
+        }"
+    >
         <template #header="{ collapsed }">
             <AvatarMenu />
         </template>
@@ -73,25 +77,29 @@ const searchGroups = computed(() => [
 
             <UNavigationMenu orientation="vertical" :items="items">
                 <template #item="{ item, active }">
-                    <div class="flex items-center gap-3">
-                        <UIcon 
+                    <div
+                        :class="[
+                            'flex items-center gap-3 w-full',
+                            collapsed ? 'justify-center' : 'justify-start',
+                        ]"
+                    >
+                        <UIcon
                             v-if="item.icon"
                             :name="item.icon"
                             :class="[
-                                'w-5 h-5',
-                                active ? 'text-maroon-500' : 'text-neutral-100'
-                            ]" 
+                                'w-5 h-5 shrink-0',
+                                active ? 'text-maroon-500' : 'text-neutral-100',
+                            ]"
                         />
 
-                            <span
-                                :class="[
-                                    active
-                                        ? 'text-maroon-500'
-                                        : 'text-neutral-100',
-                                ]"
-                            >
-                                {{ item.label }}
-                            </span>
+                        <span
+                            v-if="!collapsed"
+                            :class="[
+                                active ? 'text-maroon-500' : 'text-neutral-100',
+                            ]"
+                        >
+                            {{ item.label }}
+                        </span>
                     </div>
                 </template>
             </UNavigationMenu>

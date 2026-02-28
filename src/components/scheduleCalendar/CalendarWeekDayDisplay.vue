@@ -28,7 +28,7 @@ function getDayNumber(index: number): string {
 </script>
 
 <style>
-.dayContainer {
+.weekDayContainer {
     display: grid;
     grid-column: 2 / -1;
     grid-row: 1 / 60;
@@ -36,7 +36,7 @@ function getDayNumber(index: number): string {
     grid-template-rows: subgrid;
 }
 
-.dayDisplay {
+.weekDayDisplay {
     display: flex;
     flex-direction: column;
     grid-column: span 1;
@@ -49,8 +49,8 @@ function getDayNumber(index: number): string {
 </style>
 
 <template>
-    <div class="dayContainer">
-        <div class="dayDisplay" v-for="n in 7">
+    <div class="weekDayContainer">
+        <div class="weekDayDisplay" v-for="n in 7">
             <UBadge
                 class="text-primary"
                 color="clear"

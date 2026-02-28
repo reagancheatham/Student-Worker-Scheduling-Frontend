@@ -123,12 +123,20 @@ function getGridStyle() {
     >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div :class="gridClasses.get(data.selectedView)!" :style="getGridStyle()">
+            <div
+                :class="gridClasses.get(data.selectedView)!"
+                :style="getGridStyle()"
+            >
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
                 />
                 <CalendarTimeDisplay :data="data" :cell-size="cellSize" />
+                <CalendarEmployeeDisplay
+                    v-if="data.selectedView === CalendarMode.Day"
+                    :data="data"
+                    :cell-size="cellSize"
+                />
                 <CalendarCellDisplay
                     :data="data"
                     @cell-size-changed="updateCellSize"
