@@ -41,7 +41,7 @@ export class CalendarData {
         ),
     ]);
     public readonly relevantEvents = ref<EventData[]>([]);
-
+    
     constructor(selectedView: CalendarMode, selectedDay: CalendarDate) {
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;

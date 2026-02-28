@@ -209,7 +209,7 @@ function expandSlotSizes() {
 
 <template>
     <div :class="displayClasses.get(calendarData.selectedView)!">
-        <CalendarEvent
+        <EventData
             v-for="event in calendarData.relevantEvents.value"
             :model-value="event"
             :calendar-data="calendarData"

@@ -9,14 +9,22 @@ export class EventTime {
         public minute: number,
     ) {}
 
+    static fromDate(date: Date): EventTime {
+        return new EventTime(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDay(),
+            date.getHours(),
+            date.getMinutes(),
+        );
+    }
+
     isBefore(other: EventTime): boolean {
         return this.totalTime() < other.totalTime();
     }
 
     isBeforeOrEqual(other: EventTime): boolean {
-        return (
-            this.isBefore(other) || this.totalTime() === other.totalTime()
-        );
+        return this.isBefore(other) || this.totalTime() === other.totalTime();
     }
 
     isAfter(other: EventTime): boolean {
@@ -24,17 +32,17 @@ export class EventTime {
     }
 
     isAfterOrEqual(other: EventTime): boolean {
-        return (
-            this.isAfter(other) || this.totalTime() === other.totalTime()
-        );
+        return this.isAfter(other) || this.totalTime() === other.totalTime();
     }
 
     totalTime(): number {
         const day = new CalendarDate(this.year, this.month, this.day);
-        const julianStart = day.calendar.toJulianDay(new CalendarDate(day.year, 1, 1));
+        const julianStart = day.calendar.toJulianDay(
+            new CalendarDate(day.year, 1, 1),
+        );
         const julianEnd = day.calendar.toJulianDay(day);
         const dayValue = 24 * 60 * (julianEnd - julianStart);
-        
+
         return dayValue + 60 * this.hour + this.minute;
     }
 
@@ -65,6 +73,12 @@ export class EventTime {
     }
 
     clone(): EventTime {
-        return new EventTime(this.year, this.month, this.day, this.hour, this.minute);
+        return new EventTime(
+            this.year,
+            this.month,
+            this.day,
+            this.hour,
+            this.minute,
+        );
     }
 }
