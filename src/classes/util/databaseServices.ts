@@ -1,5 +1,4 @@
 import {
-    DatabaseModel,
     DatabaseModelStatic,
 } from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
@@ -47,7 +46,7 @@ export class DatabaseServices {
         await apiClient
             .get(path)
             .then((result) => {
-                finalResult = model.create(result);
+                finalResult = model.create(result.data);
                 console.log(`${path} found successfully`);
             })
             .catch((err) => {

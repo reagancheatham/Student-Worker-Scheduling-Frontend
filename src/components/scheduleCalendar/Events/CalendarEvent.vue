@@ -301,7 +301,7 @@ function getGridArea(): string {
     if (props.calendarData.selectedView == CalendarMode.Day)
         return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${2 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {

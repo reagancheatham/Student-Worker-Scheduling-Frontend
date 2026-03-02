@@ -35,6 +35,7 @@ function getStyle() {
 
 <style>
 .timeContainer {
+    pointer-events: none;
     display: grid;
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;

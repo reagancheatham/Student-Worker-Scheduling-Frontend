@@ -39,7 +39,7 @@ onMounted(() => {
 });
 
 function initializeZIndices(): void {
-    calendarData.relevantEvents.value.forEach((element) => {
+    calendarData.refRelevantEvents.value.forEach((element) => {
         element.zIndex = element.startTime.totalTime();
     });
 }
@@ -72,7 +72,7 @@ function onEventDragEnded(event: EventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents: EventData[] = [...calendarData.relevantEvents.value].sort(
+    const sortedEvents: EventData[] = [...calendarData.refRelevantEvents.value].sort(
         (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
     );
 
@@ -170,7 +170,7 @@ function findLongestBisectChain(event: EventData): EventData[] {
 }
 
 function getAllBisectingEvents(event: EventData): EventData[] {
-    return calendarData.relevantEvents.value.filter((e) => e.bisects(event));
+    return calendarData.refRelevantEvents.value.filter((e) => e.bisects(event));
 }
 
 function expandSlotSizes() {
@@ -208,7 +208,7 @@ function expandSlotSizes() {
 <template>
     <div :class="displayClasses.get(calendarData.selectedView)!">
         <CalendarEvent
-            v-for="event in calendarData.relevantEvents.value"
+            v-for="event in calendarData.refRelevantEvents.value"
             :model-value="event"
             :calendar-data="calendarData"
             :can-hover="canHover"

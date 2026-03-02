@@ -9,6 +9,8 @@ import { EventData, EventColor } from "./eventData.ts";
 import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
+import { Employee } from "@classes/database/employee.ts";
+import { EmployeeServices } from "../../services/employeeServices.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -26,7 +28,8 @@ export class CalendarData {
         start: today(CalendarData.timeZone),
         end: today(CalendarData.timeZone).add({ days: 6 }),
     });
-    public readonly relevantEvents = ref<EventData[]>([]);
+    public readonly refRelevantEmployees = ref<Employee[]>([]);
+    public readonly refRelevantEvents = ref<EventData[]>([]);
 
     constructor(selectedView: CalendarMode, selectedDay: CalendarDate) {
         this.refSelectedView.value = selectedView;
@@ -52,7 +55,7 @@ export class CalendarData {
 
         const start = startOfWeek(date, CalendarData.locale);
         const end = start.add({ days: 6 });
-        
+
         this.refSelectedWeek.value = { start, end };
 
         this.updateRelevantEvents();
@@ -60,6 +63,10 @@ export class CalendarData {
 
     public get selectedWeek(): CalendarRange {
         return this.refSelectedWeek.value;
+    }
+
+    public get relevantEmployees(): Employee[] {
+        return this.refRelevantEmployees.value;
     }
 
     public async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
@@ -104,8 +111,8 @@ export class CalendarData {
     }
 
     private async updateRelevantEvents() {
-        this.relevantEvents.value = [];
-        
+        this.refRelevantEvents.value = [];
+
         if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
                 CalendarData.timeZone,
@@ -114,14 +121,39 @@ export class CalendarData {
             beginningOfDay.setHours(0, 0, 0, 0);
             endOfDay.setHours(24, 59, 59, 99);
 
-            this.relevantEvents.value = await this.getEventsForDate(
+            this.refRelevantEvents.value = await this.getEventsForDate(
                 this.selectedDay,
             );
         } else {
-            this.relevantEvents.value = await this.getEventsInDateRange(
+            this.refRelevantEvents.value = await this.getEventsInDateRange(
                 this.selectedWeek.start,
                 this.selectedWeek.end,
             );
+        }
+
+        this.updateRelevantEmployees();
+    }
+
+    private async updateRelevantEmployees() {
+        this.refRelevantEmployees.value = [];
+
+        for (const event of this.refRelevantEvents.value) {
+            if (!(event instanceof ShiftEvent)) continue;
+
+            const storedEmployee = this.refRelevantEmployees.value.find(
+                (employee) => employee.id === event.shift.employeeID,
+            );
+
+            if (storedEmployee !== undefined) continue;
+
+            const employee = await EmployeeServices.get(event.shift.employeeID);
+
+            if (employee !== undefined)
+                this.refRelevantEmployees.value.push(employee);
+            else
+                console.error(
+                    `Could not find employee for event: ${JSON.stringify(event)}!`,
+                );
         }
     }
 }

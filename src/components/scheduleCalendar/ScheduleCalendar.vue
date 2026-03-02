@@ -79,6 +79,7 @@ function getGridStyle() {
     height: 100%;
     display: grid;
     min-height: 0;
+    pointer-events: none;
 }
 
 .dayGrid {
