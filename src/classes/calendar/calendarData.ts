@@ -52,7 +52,7 @@ export class CalendarData {
 
         const start = startOfWeek(date, CalendarData.locale);
         const end = start.add({ days: 6 });
-
+        
         this.refSelectedWeek.value = { start, end };
 
         this.updateRelevantEvents();
@@ -88,6 +88,8 @@ export class CalendarData {
         const startDate = start.toDate(CalendarData.timeZone);
         const endDate = end.toDate(CalendarData.timeZone);
 
+        endDate.setHours(23, 59, 59, 99);
+
         let events: EventData[] = [];
 
         await ShiftServices.getAllInRange(1, startDate, endDate).then(
@@ -103,7 +105,7 @@ export class CalendarData {
 
     private async updateRelevantEvents() {
         this.relevantEvents.value = [];
-
+        
         if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
                 CalendarData.timeZone,
@@ -116,10 +118,6 @@ export class CalendarData {
                 this.selectedDay,
             );
         } else {
-            console.log(
-                "update from week: " +
-                    this.selectedWeek.start.toDate(CalendarData.timeZone),
-            );
             this.relevantEvents.value = await this.getEventsInDateRange(
                 this.selectedWeek.start,
                 this.selectedWeek.end,

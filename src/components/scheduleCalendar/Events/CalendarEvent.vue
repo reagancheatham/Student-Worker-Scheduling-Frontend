@@ -177,12 +177,12 @@ function updateDrag(delta: Vector2): void {
 }
 
 function onPointerUp(_: PointerEvent): void {
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+
     if (state != EventState.Dragging) return;
 
     state = EventState.None;
-
-    document.removeEventListener("pointermove", onPointerMove);
-    document.removeEventListener("pointerup", onPointerUp);
 
     emit("dragEnded", refData.value);
 

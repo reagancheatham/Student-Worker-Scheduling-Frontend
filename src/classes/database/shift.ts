@@ -13,26 +13,11 @@ export class Shift extends DatabaseModel {
     }
 
     protected static createFromData(data: any): Shift {
-        console.log("start data: " + data["startTime"]);
-        const dataStartTime: Date | undefined = data["startTime"];
-        const dataEndTime: Date | undefined = data["endTime"];
-        const startTime = dataStartTime
-            ? new Date(
-                  dataStartTime.getFullYear(),
-                  dataStartTime.getMonth(),
-                  dataStartTime.getDate(),
-                  dataStartTime.getHours(),
-                  dataStartTime.getMinutes(),
-              )
+        const startTime = data["startTime"]
+            ? new Date(data["startTime"])
             : new Date();
-        const endTime = dataEndTime
-            ? new Date(
-                  dataEndTime.getFullYear(),
-                  dataEndTime.getMonth(),
-                  dataEndTime.getDate(),
-                  dataEndTime.getHours(),
-                  dataEndTime.getMinutes(),
-              )
+        const endTime = data["endTime"]
+            ? new Date(data["endTime"])
             : new Date();
 
         return new Shift(
