@@ -16,15 +16,15 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
                 class="col-span-7 min-h-0 h-full overflow-clip"
                 :ui="{
                     wrapper: 'flex flex-col items-start min-h-0 flex-none',
-                    header: 'mb-0'
+                    header: 'mb-0',
                 }"
             >
                 <template #header>
                     <div class="text-base font-semibold">Schedule</div>
                 </template>
-                <ScheduleCalendar
-                    default-view="Day"
-                />
+                <div class="w-full h-full min-h-0 mt-5">
+                    <ScheduleCalendar default-view="Day" />
+                </div>
             </UPageCard>
             <WorkingCurrently
                 class="col-span-4 min-h-0 h-full"

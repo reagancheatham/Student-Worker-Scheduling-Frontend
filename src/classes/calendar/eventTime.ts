@@ -12,8 +12,8 @@ export class EventTime {
     static fromDate(date: Date): EventTime {
         return new EventTime(
             date.getFullYear(),
-            date.getMonth(),
-            date.getDay(),
+            date.getMonth() + 1,
+            date.getDate(),
             date.getHours(),
             date.getMinutes(),
         );
@@ -66,6 +66,18 @@ export class EventTime {
         else periodText = "PM";
 
         return `${hourText}:${minuteText} ${periodText}`;
+    }
+
+    toDate(): Date {
+        const date = new Date(
+            this.year,
+            this.month - 1,
+            this.day,
+            this.hour,
+            this.minute,
+        );
+
+        return date;
     }
 
     calendarDate(): CalendarDate {

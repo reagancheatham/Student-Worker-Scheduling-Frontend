@@ -1,19 +1,19 @@
 import { Shift } from "@classes/database/shift.ts";
 import { DatabaseServices } from "@classes/util/databaseServices";
 
-const API_ROOT: string = "employees";
+const API_ROOT: string = "shifts";
 
 export class ShiftServices {
-    static async create(employee: Shift) {
-        await DatabaseServices.create(API_ROOT, employee);
+    static async create(shift: Shift) {
+        await DatabaseServices.create(API_ROOT, shift);
     }
 
-    static async update(employee: Shift) {
-        await DatabaseServices.update(API_ROOT, employee);
+    static async update(shift: Shift) {
+        await DatabaseServices.update(API_ROOT, shift);
     }
 
-    static async delete(employee: Shift) {
-        await DatabaseServices.delete(`${API_ROOT}/${employee.id}`);
+    static async delete(shift: Shift) {
+        await DatabaseServices.delete(`${API_ROOT}/${shift.id}`);
     }
 
     static async get(id: number) {
@@ -32,9 +32,12 @@ export class ShiftServices {
         startTime: Date,
         endTime: Date,
     ) {
+        const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
+        const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
+
         return await DatabaseServices.getAll<Shift>(
             Shift,
-            `${API_ROOT}/${businessID}/startTime>=${startTime}/endTime<=${endTime}`,
+            `${API_ROOT}/${businessID}/startTime=${startString}/endTime=${endString}`,
         );
     }
 }

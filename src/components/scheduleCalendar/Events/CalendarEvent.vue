@@ -7,6 +7,8 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
+import { ShiftServices } from "../../../services/shiftServices.ts";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 
 //#region Variables
 enum EventState {
@@ -104,7 +106,7 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
-            
+
             emit("dragBegan", refData.value);
         }
     }
@@ -183,6 +185,11 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointerup", onPointerUp);
 
     emit("dragEnded", refData.value);
+
+    if (refData.value instanceof ShiftEvent) {
+        refData.value.updateData();
+        ShiftServices.update(refData.value.shift);
+    }
 }
 
 function startResize(evt: PointerEvent): void {

@@ -9,7 +9,7 @@ const { data, cellSize } = defineProps<{
 
 function getStyle() {
     return {
-        marginRight: `${0.15 * cellSize.x}px`,
+        marginRight: `${0.1 * cellSize.x}px`,
     };
 }
 </script>
@@ -21,13 +21,14 @@ function getStyle() {
     grid-template-rows: subgrid;
     grid-column: 1 / 61;
     grid-row: 2 / -1;
+
 }
 
 .employeeAvatar {
     grid-row: span 1;
     grid-column: 1 / -1;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 .employeePicture {
@@ -40,8 +41,8 @@ function getStyle() {
 </style>
 
 <template>
-    <div class="employeeContainer">
-        <div class="employeeAvatar" :style="getStyle()">
+    <div class="employeeContainer" :style="getStyle()">
+        <div class="employeeAvatar">
             <UAvatar class="employeePicture" src="avatar.png" />
         </div>
     </div>

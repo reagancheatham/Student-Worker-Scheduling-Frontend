@@ -14,4 +14,9 @@ export class ShiftEvent extends EventData {
             color,
         );
     }
+
+    public updateData(): void {
+        this.shift.startTime = this.startTime.toDate();
+        this.shift.endTime = this.endTime.toDate();
+    }
 }

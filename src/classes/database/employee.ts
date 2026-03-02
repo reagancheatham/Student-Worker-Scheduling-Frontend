@@ -11,7 +11,7 @@ export class Employee extends DatabaseModel {
         super();
     }
 
-    protected static createFromData(data: object): Employee {
+    protected static createFromData(data: any): Employee {
         let user = data["User"];
         let firstName = user ? user.firstName : "" as string;
         let lastName = user ? user.lastName : "" as string;

@@ -118,7 +118,7 @@ function getGridStyle() {
     <div
         class="calendarContainer"
         :style="{
-            marginLeft: `${-0.5 * cellSize.x}px`,
+            marginLeft: `${-0.2 * cellSize.x}px`,
         }"
     >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />

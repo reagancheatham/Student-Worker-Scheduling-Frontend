@@ -1,13 +1,11 @@
 import {
     CalendarDate,
     getLocalTimeZone,
-    isSameDay,
     startOfWeek,
     today,
 } from "@internationalized/date";
 import { ref, shallowRef } from "vue";
 import { EventData, EventColor } from "./eventData.ts";
-import { EventTime } from "./eventTime.ts";
 import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
@@ -68,7 +66,7 @@ export class CalendarData {
         const beginningOfDay = date.toDate(CalendarData.timeZone);
         const endOfDay = date.toDate(CalendarData.timeZone);
         beginningOfDay.setHours(0, 0, 0, 0);
-        endOfDay.setHours(24, 59, 59, 99);
+        endOfDay.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
 
@@ -114,11 +112,18 @@ export class CalendarData {
             beginningOfDay.setHours(0, 0, 0, 0);
             endOfDay.setHours(24, 59, 59, 99);
 
-            this.relevantEvents.value = await this.getEventsForDate(this.selectedDay);
-        } else
+            this.relevantEvents.value = await this.getEventsForDate(
+                this.selectedDay,
+            );
+        } else {
+            console.log(
+                "update from week: " +
+                    this.selectedWeek.start.toDate(CalendarData.timeZone),
+            );
             this.relevantEvents.value = await this.getEventsInDateRange(
                 this.selectedWeek.start,
                 this.selectedWeek.end,
             );
+        }
     }
 }
