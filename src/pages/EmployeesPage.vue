@@ -10,19 +10,13 @@ const globalFilter = ref("");
 
 let data: Employee[];
 
-console.log('test');
-
 EmployeeServices.getAllForBusiness(1)
     .then((result) => {
         data = result;
         console.log(data);
     }).catch((err) => {
         console.error(err);
-    })
-
-//const test: Employee = await EmployeeServices.get(1);
-
-//console.log(test);
+    });
 
 //TODO: NEED TO IMPLEMENT INFINITE SCROLL WHEN WE START GETTING DATA FROM BACKEND
 
