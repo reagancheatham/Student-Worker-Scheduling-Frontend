@@ -186,8 +186,6 @@ function expandSlotSizes() {
 
 <style>
 .eventContainer {
-    width: 100%;
-    height: 100%;
     display: grid;
     grid-area: stack-area;
     grid-template-columns: subgrid;
@@ -197,13 +195,13 @@ function expandSlotSizes() {
 }
 
 .dayEventContainer {
-    grid-column: 2 / -1;
-    grid-row: 1 / -1;
+    grid-column: 61 / -1;
+    grid-row: 2 / -1;
 }
 
 .weekEventContainer {
-    grid-column: 1 / -1;
-    grid-row: 2 / -1;
+    grid-column: 2 / -1;
+    grid-row: 61 / -1;
 }
 </style>
 

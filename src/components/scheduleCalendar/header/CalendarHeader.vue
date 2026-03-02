@@ -11,11 +11,11 @@ const { data, cellSize } = defineProps<{
 function getStyle() {
     if (data.selectedView === CalendarMode.Day)
         return {
-            marginBottom: `${-0.4 * cellSize.y}px`,
             marginLeft: `${cellSize.x}px`,
         };
     else
         return {
+            marginBottom: `12px`,
             marginLeft: `${cellSize.x}px`,
         };
 }
@@ -26,6 +26,7 @@ function getStyle() {
     display: flex;
     flex-direction: row;
     align-items: flex-end;
+    height: 10%;
 }
 
 .headerSegment {

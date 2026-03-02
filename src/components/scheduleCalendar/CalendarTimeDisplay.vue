@@ -23,7 +23,7 @@ const labelClasses = new Map<CalendarMode, string>([
 function getStyle() {
     if (data.selectedView === CalendarMode.Day) {
         return {
-            marginTop: `${0.2 * cellSize.y}px`,
+            marginBottom: `${0.2 * cellSize.y}px`,
         };
     } else {
         return {
@@ -63,6 +63,7 @@ function getStyle() {
     left: -50%;
     justify-content: center;
     text-align: center;
+    align-items: end;
 }
 
 .weekLabel {

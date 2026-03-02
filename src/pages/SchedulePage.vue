@@ -2,7 +2,7 @@
 
 <style>
 .scheduleContainer {
-    height: 70vh;
+    height: 85vh;
 }
 </style>
 

@@ -28,34 +28,24 @@ function updateCellSize(size: Vector2): void {
     cellSize.value = size;
 }
 
-function getBodyStyle() {
+function getContainerStyle() {
     if (data.selectedView === CalendarMode.Week)
         return {
-            marginTop: "2vh",
+            marginLeft: `${-0.65 * cellSize.value.x}px`,
         };
-    else if (!header) {
+    else return {};
+}
+
+function getBodyStyle() {
+    if (data.selectedView === CalendarMode.Day)
         return {
-            marginTop: "-4vh",
+            marginTop: `${-0.5 * cellSize.value.y}px`,
         };
-    } else
-        return {
-            marginTop: "10vh",
-        };
+    else return {};
 }
 
 function getGridStyle() {
-    if (data.selectedView === CalendarMode.Week)
-        return {
-            marginTop: "5cqh",
-        };
-    else if (!header)
-        return {
-            marginTop: "0cqh",
-        };
-    else
-        return {
-            marginTop: "-7cqh",
-        };
+    return {};
 }
 </script>
 
@@ -63,7 +53,7 @@ function getGridStyle() {
 .calendarContainer {
     --day-cell-min-width: calc(10px / 60);
     --day-cell-max-width: calc(80px / 60);
-    --day-cell-min-height: 10px;
+    --day-cell-min-height: 40px;
     --day-cell-max-height: 120px;
     --week-cell-min-width: 50px;
     --week-cell-max-width: 240px;
@@ -78,7 +68,7 @@ function getGridStyle() {
 
 .calendarBody {
     width: 100%;
-    height: 100%;
+    height: 90%;
     display: flex;
     flex-direction: row;
     overflow-y: auto;
@@ -115,12 +105,7 @@ function getGridStyle() {
 </style>
 
 <template>
-    <div
-        class="calendarContainer"
-        :style="{
-            marginLeft: `${-0.2 * cellSize.x}px`,
-        }"
-    >
+    <div class="calendarContainer" :style="getContainerStyle()">
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
             <div
