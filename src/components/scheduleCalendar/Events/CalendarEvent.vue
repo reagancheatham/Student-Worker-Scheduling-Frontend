@@ -9,7 +9,13 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftServices } from "../../../services/shiftServices.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import { Time } from "@internationalized/date";
+import {
+    CalendarDate,
+    DateFormatter,
+    isSameDay,
+    startOfWeek,
+    Time,
+} from "@internationalized/date";
 
 //#region Variables
 enum EventState {
@@ -48,12 +54,6 @@ const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
-const modalStartTime = shallowRef(
-    refData.value.startTime.toTime()
-);
-const modalEndTime = shallowRef(
-    refData.value.endTime.toTime()
-);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -80,6 +80,21 @@ onMounted(() => {
 onBeforeUnmount(() => {
     observer?.disconnect();
 });
+
+// This prevents events from flickering when loading data from backend
+function shouldRender(): boolean {
+    const calendarData = props.calendarData;
+    const startTime = refData.value.startTime.calendarDate();
+
+    if (calendarData.selectedView === CalendarMode.Day)
+        return isSameDay(startTime, calendarData.selectedDay);
+    else {
+        return isSameDay(
+            startOfWeek(startTime, CalendarData.locale),
+            startOfWeek(calendarData.selectedDay, CalendarData.locale),
+        );
+    }
+}
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
@@ -189,14 +204,15 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointerup", onPointerUp);
 
     if (state != EventState.Dragging) {
-        openModal();
+        console.log("open");
+        isModalOpen.value = true;
         return;
     }
 
     state = EventState.None;
 
     emit("dragEnded", refData.value);
-    updateEvent();
+    updateBackendEvent();
 }
 
 function startResize(evt: PointerEvent): void {
@@ -267,7 +283,7 @@ function stopResize(): void {
     window.removeEventListener("pointerup", stopResize);
 
     emit("resizeEnded");
-    updateEvent();
+    updateBackendEvent();
 }
 //#endregion
 
@@ -324,6 +340,11 @@ function getGridArea(): string {
 }
 
 function getStyle() {
+    if (!shouldRender())
+        return {
+            visibility: "hidden",
+        };
+
     let style = {
         "grid-area": getGridArea(),
         "background-color": `var(${refData.value.color})`,
@@ -347,24 +368,16 @@ function getStyle() {
     return style;
 }
 
-function updateEvent() {
+function updateBackendEvent(): void {
     if (refData.value instanceof ShiftEvent) {
         refData.value.updateData();
         ShiftServices.update(refData.value.shift);
     }
 }
 
-//#region Modal Callbacks
-function openModal() {
-    modalStartTime.value = refData.value.startTime.toTime();
-    modalEndTime.value = refData.value.endTime.toTime();
-    isModalOpen.value = true;
-}
-
-function closeModal() {
+function closeModal(): void {
     isModalOpen.value = false;
 }
-//#endregion
 </script>
 
 <style>
@@ -388,130 +401,84 @@ function closeModal() {
 </style>
 
 <template>
-    <UModal
-        v-model:open="isModalOpen"
-        title="Event Editor"
-        description="Edit the details of a calendar event."
+    <UPopover
+        v-model:open="isPopoverOpen"
+        :content="{ side: 'right' }"
+        @update:open="
+            () => {
+                if (!canHover || !editable) isPopoverOpen = false;
+            }
+        "
     >
-        <UPopover
-            v-model:open="isPopoverOpen"
-            :content="{ side: 'right' }"
-            @update:open="
-                () => {
-                    if (!canHover || !editable) isPopoverOpen = false;
-                }
-            "
+        <UCard
+            ref="element"
+            class="event"
+            variant="ghost"
+            :style="getStyle()"
+            :ui="{
+                footer: 'mt-auto',
+            }"
+            @mouseenter="if (canHover && editable) isPopoverOpen = true;"
+            @mouseleave="isPopoverOpen = false"
+            @pointerdown="onPointerDown"
+            @pointerup="onPointerUp"
         >
-            <UCard
-                ref="element"
-                class="event"
-                variant="ghost"
-                :style="getStyle()"
-                :ui="{
-                    footer: 'mt-auto',
-                }"
-                @mouseenter="if (canHover && editable) isPopoverOpen = true;"
-                @mouseleave="isPopoverOpen = false"
-                @pointerdown="onPointerDown"
-                @pointerup="onPointerUp"
-            >
-                <template #header>
-                    <div
-                        :style="{
-                            marginTop: `${titleMargin}px`,
-                        }"
-                    >
-                        <UBadge
-                            class="text-black select-none"
-                            variant="ghost"
-                            :label="refData.name"
-                            style="max-width: 100%"
-                            :style="{
-                                fontSize: `${titleFontSize}px`,
-                            }"
-                        />
-                    </div>
-                </template>
-
-                <template #default>
+            <template #header>
+                <div
+                    :style="{
+                        marginTop: `${titleMargin}px`,
+                    }"
+                >
                     <UBadge
-                        class="font-normal text-gray-800 flex flex-col items-start"
+                        class="text-black select-none"
                         variant="ghost"
-                        :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
-                        :ui="{
-                            label: 'text-wrap line-clamp-2 select-none',
+                        :label="refData.name"
+                        style="max-width: 100%"
+                        :style="{
+                            fontSize: `${titleFontSize}px`,
                         }"
                     />
-                    <div
-                        v-if="
-                            props.calendarData.selectedView ===
-                                CalendarMode.Day && editable
-                        "
-                        class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
-                        style="width: 8px"
-                        @pointerdown="startResize"
-                    />
-                </template>
+                </div>
+            </template>
 
-                <template
-                    #footer
+            <template #default>
+                <UBadge
+                    class="font-normal text-gray-800 flex flex-col items-start"
+                    variant="ghost"
+                    :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
+                    :ui="{
+                        label: 'text-wrap line-clamp-2 select-none',
+                    }"
+                />
+                <div
                     v-if="
-                        props.calendarData.selectedView === CalendarMode.Week &&
+                        props.calendarData.selectedView === CalendarMode.Day &&
                         editable
                     "
-                >
-                    <div
-                        class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
-                        style="height: 8px"
-                        @pointerdown="startResize"
-                    />
-                </template>
-            </UCard>
-
-            <template #content>
-                <UCard class="size-48 m-4 inline-flex" variant="ghost">
-                    <template #header>
-                        {{ refData.name }}
-                    </template>
-
-                    <template #body>
-                        {{ refData.startTime.toTimeString() }} -
-                        {{ refData.endTime.toTimeString() }}
-                    </template>
-                </UCard>
-            </template>
-        </UPopover>
-        <template #content>
-            <div class="p-2 flex flex-row">
-                <p class="text-xl font-semibold">Event Editor</p>
-                <UButton
-                    class="ml-auto"
-                    variant="ghost"
-                    color="neutral"
-                    icon="i-lucide-x"
-                    @click="closeModal"
+                    class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
+                    style="width: 8px"
+                    @pointerdown="startResize"
                 />
-            </div>
-            <div class="p-4">
-                <UForm class="flex flex-col gap-4">
-                    <UFormField label="Name">
-                        <UInput v-model="refData.name" />
-                    </UFormField>
-                    <div class="flex flex-row gap-4">
-                        <UFormField label="Start Time">
-                            <UInputTime
-                                v-model="modalStartTime"
-                            />
-                        </UFormField>
-                        <p class="mt-auto mb-1.5">-</p>
-                        <UFormField label="End Time">
-                            <UInputTime
-                                v-model="modalEndTime"
-                            />
-                        </UFormField>
-                    </div>
-                </UForm>
-            </div>
-        </template>
-    </UModal>
+            </template>
+
+            <template
+                #footer
+                v-if="
+                    props.calendarData.selectedView === CalendarMode.Week &&
+                    editable
+                "
+            >
+                <div
+                    class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
+                    style="height: 8px"
+                    @pointerdown="startResize"
+                />
+            </template>
+        </UCard>
+        <CalendarEventEditor
+            :model-value="refData"
+            :is-open="isModalOpen"
+            @close-requested="closeModal"
+        />
+    </UPopover>
 </template>

@@ -16,7 +16,7 @@ function getStyle() {
         };
     else
         return {
-            marginBottom: `12px`,
+            marginBottom: `24px`,
             marginLeft: `${cellSize.x}px`,
         };
 }

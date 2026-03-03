@@ -43,10 +43,6 @@ function getBodyStyle() {
         };
     else return {};
 }
-
-function getGridStyle() {
-    return {};
-}
 </script>
 
 <style>
@@ -109,10 +105,7 @@ function getGridStyle() {
     <div class="calendarContainer" :style="getContainerStyle()">
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div
-                :class="gridClasses.get(data.selectedView)!"
-                :style="getGridStyle()"
-            >
+            <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"

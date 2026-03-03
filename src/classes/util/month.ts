@@ -3,7 +3,7 @@ import { MathUtil } from "./mathUtil.ts";
 export class Month {
     private static months = [
         new Month("January", "JAN"),
-        new Month("Feburary", "FEB"),
+        new Month("February", "FEB"),
         new Month("March", "MAR"),
         new Month("April", "APR"),
         new Month("May", "MAY"),

@@ -43,7 +43,7 @@ export class CalendarData {
     public set selectedView(mode: CalendarMode) {
         this.refSelectedView.value = mode;
 
-        this.updateRelevantEvents();
+        this.updateRelevantData();
     }
 
     public get selectedDay(): CalendarDate {
@@ -58,7 +58,7 @@ export class CalendarData {
 
         this.refSelectedWeek.value = { start, end };
 
-        this.updateRelevantEvents();
+        this.updateRelevantData();
     }
 
     public get selectedWeek(): CalendarRange {
@@ -110,8 +110,13 @@ export class CalendarData {
         return events;
     }
 
-    private async updateRelevantEvents() {
-        this.refRelevantEvents.value = [];
+    private async updateRelevantData() {
+        this.refRelevantEvents.value = await this.updateRelevantEvents();
+        this.refRelevantEmployees.value = await this.updateRelevantEmployees();
+    }
+
+    private async updateRelevantEvents(): Promise<EventData[]> {
+        let relevantEvents: EventData[];
 
         if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
@@ -121,26 +126,26 @@ export class CalendarData {
             beginningOfDay.setHours(0, 0, 0, 0);
             endOfDay.setHours(24, 59, 59, 99);
 
-            this.refRelevantEvents.value = await this.getEventsForDate(
+            relevantEvents = await this.getEventsForDate(
                 this.selectedDay,
             );
         } else {
-            this.refRelevantEvents.value = await this.getEventsInDateRange(
+            relevantEvents = await this.getEventsInDateRange(
                 this.selectedWeek.start,
                 this.selectedWeek.end,
             );
         }
 
-        this.updateRelevantEmployees();
+        return relevantEvents;
     }
 
-    private async updateRelevantEmployees() {
-        this.refRelevantEmployees.value = [];
+    private async updateRelevantEmployees(): Promise<Employee[]> {
+        let relevantEmployees: Employee[] = [];
 
         for (const event of this.refRelevantEvents.value) {
             if (!(event instanceof ShiftEvent)) continue;
 
-            const storedEmployee = this.refRelevantEmployees.value.find(
+            const storedEmployee = relevantEmployees.find(
                 (employee) => employee.id === event.shift.employeeID,
             );
 
@@ -149,11 +154,13 @@ export class CalendarData {
             const employee = await EmployeeServices.get(event.shift.employeeID);
 
             if (employee !== undefined)
-                this.refRelevantEmployees.value.push(employee);
+                relevantEmployees.push(employee);
             else
                 console.error(
                     `Could not find employee for event: ${JSON.stringify(event)}!`,
                 );
         }
+
+        return relevantEmployees;
     }
 }

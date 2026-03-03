@@ -33,7 +33,7 @@ function getTimeString(): string {
         const endDay = data.selectedWeek.end.toDate(CalendarData.timeZone);
 
         if (startDay.getMonth() === endDay.getMonth())
-            return `${Month.fromDate(startDay).fullName} ${startDay.getDate()}-${endDay.getDate()}`;
+            return `${Month.fromDate(startDay).fullName} ${startDay.getDate()}-${endDay.getDate()}, ${endDay.getFullYear()}`;
         else {
             if (startDay.getFullYear() === endDay.getFullYear())
                 return `${Month.fromDate(startDay).fullName} ${startDay.getDate()} - ${Month.fromDate(endDay).fullName} ${endDay.getDate()}, ${endDay.getFullYear()}`;
