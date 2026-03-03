@@ -112,8 +112,6 @@ function calculateBisects(): void {
         }
     }
 
-    expandSlotSizes();
-
     for (const event of sortedEvents) {
         if (!eventSlots.has(event)) {
             event.leftBisectMargin = 0;
@@ -172,16 +170,6 @@ function findLongestBisectChain(event: EventData): EventData[] {
 function getAllBisectingEvents(event: EventData): EventData[] {
     return calendarData.refRelevantEvents.value.filter((e) => e.bisects(event));
 }
-
-function expandSlotSizes() {
-    // for (const [event, slot] of eventSlots) {
-    //     const bisectingEvents = getAllBisectingEvents(event);
-    //     for (const bisectEvent of bisectingEvents) {
-    //         if (bisectEvent === event)
-    //             continue;
-    //     }
-    // }
-}
 </script>
 
 <style>
@@ -191,7 +179,6 @@ function expandSlotSizes() {
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;
     z-index: 1;
-    padding: 0;
 }
 
 .dayEventContainer {

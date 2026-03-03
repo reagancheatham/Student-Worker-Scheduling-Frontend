@@ -260,6 +260,11 @@ function stopResize(): void {
     window.removeEventListener("pointerup", stopResize);
 
     emit("resizeEnded");
+
+    if (refData.value instanceof ShiftEvent) {
+        refData.value.updateData();
+        ShiftServices.update(refData.value.shift);
+    }
 }
 //#endregion
 
@@ -298,10 +303,19 @@ function getGridArea(): string {
     const startTime = data.startTime;
     const endTime = data.endTime;
 
-    if (props.calendarData.selectedView == CalendarMode.Day)
-        return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    if (props.calendarData.selectedView == CalendarMode.Day) {
+        let row = 1;
+
+        if (refData.value instanceof ShiftEvent) {
+            const employeeID = refData.value.shift.employeeID;
+
+            row = props.calendarData.relevantEmployees.findIndex((employee) => employee.id === employeeID) + 1;
+        }
+
+        return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    }
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {

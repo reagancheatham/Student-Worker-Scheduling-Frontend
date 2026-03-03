@@ -21,7 +21,6 @@ function getStyle() {
     grid-template-rows: subgrid;
     grid-column: 1 / 61;
     grid-row: 2 / -1;
-
 }
 
 .employeeAvatar {
