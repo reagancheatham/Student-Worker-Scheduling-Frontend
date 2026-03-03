@@ -72,6 +72,24 @@ export class EventTime {
         return `${hourText}:${minuteText} ${periodText}`;
     }
 
+    toIsoTimeString(): string {
+        let hour = this.hour;
+        let minute = this.minute;
+
+        let hourText = "";
+        let minuteText = "";
+
+        if (hour > 12) hour -= 12;
+        else if (hour == 0) hour = 12;
+
+        hourText = hour > 9 ? hour.toString() : `0${hour.toString()}`;
+
+        if (minute >= 10) minuteText = `${minute}`;
+        else minuteText = `0${minute}`;
+
+        return `${hourText}:${minuteText}`;
+    }
+
     toDate(): Date {
         const date = new Date(
             this.year,

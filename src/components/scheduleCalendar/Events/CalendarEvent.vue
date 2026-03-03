@@ -369,10 +369,8 @@ function getStyle() {
 }
 
 function updateBackendEvent(): void {
-    if (refData.value instanceof ShiftEvent) {
-        refData.value.updateData();
-        ShiftServices.update(refData.value.shift);
-    }
+    if (refData.value instanceof ShiftEvent)
+        refData.value.updateBackendEvent();
 }
 
 function closeModal(): void {
