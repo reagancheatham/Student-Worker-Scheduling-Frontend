@@ -6,7 +6,7 @@ const { data } = defineProps<{
     data: CalendarData;
 }>();
 
-const weekFormatter = new DateFormatter(CalendarData.locale, {
+const weekFormatter = new DateFormatter(CalendarData.localeString, {
     weekday: "short",
 });
 

@@ -1,5 +1,10 @@
+<script setup lang="ts">
+import { CalendarData } from '@classes/calendar/calendarData.ts';
+
+</script>
+
 <template>
-    <UApp>
+    <UApp :locale="CalendarData.locale">
         <UMain>
             <UDashboardGroup>
                 <ScheduleSidebar />

@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "@internationalized/date": "^3.11.0",
-        "@nuxt/ui": "^4.4.0",
+        "@nuxt/ui": "^4.5.1",
         "axios": "^1.13.5",
         "tailwindcss": "^4.1.18",
         "valibot": "^1.2.0",

@@ -8,7 +8,7 @@ const { data } = defineProps<{
     data: CalendarData;
 }>();
 
-const locale = CalendarData.locale;
+const locale = CalendarData.localeString;
 const timeZone = CalendarData.timeZone;
 const formatter = new DateFormatter(locale, {
     dateStyle: "medium",

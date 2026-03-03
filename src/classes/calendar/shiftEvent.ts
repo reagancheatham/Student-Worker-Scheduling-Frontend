@@ -17,6 +17,7 @@ export class ShiftEvent extends EventData {
     }
 
     public updateBackendEvent(): void {
+        this.shift.name = this.name;
         this.shift.startTime = this.startTime.toDate();
         this.shift.endTime = this.endTime.toDate();
 

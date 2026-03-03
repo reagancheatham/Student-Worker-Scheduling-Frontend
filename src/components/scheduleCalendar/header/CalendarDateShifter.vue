@@ -8,7 +8,7 @@ const { data } = defineProps<{
     data: CalendarData;
 }>();
 
-const monthFormatter = new DateFormatter(CalendarData.locale, {
+const monthFormatter = new DateFormatter(CalendarData.localeString, {
     month: "long",
     day: "numeric",
 });

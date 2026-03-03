@@ -5,8 +5,8 @@ import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import { CalendarDate, DateFormatter, Time } from "@internationalized/date";
-import { reactive, ref, shallowRef } from "vue";
+import { CalendarDate, DateFormatter, DateValue, Time } from "@internationalized/date";
+import { onMounted, reactive, ref, shallowRef, watch } from "vue";
 
 const model = defineModel<EventData>({
     required: true,
@@ -18,7 +18,21 @@ const { isOpen } = defineProps<{
 
 const emit = defineEmits({ closeRequested: () => true });
 
-const formatter = new DateFormatter(CalendarData.locale, {
+onMounted(() => {
+    watch(
+        () => isOpen,
+        (value) => {
+            if (value) {
+                state.value.name = getData().name;
+                state.value.eventDate = getData().startTime.calendarDate();
+                state.value.startTime = getData().startTime.toTime();
+                state.value.endTime = getData().endTime.toTime();
+            }
+        },
+    );
+});
+
+const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
 });
 
@@ -30,83 +44,70 @@ const vTime = v.object({
 const schema = v.pipe(
     v.object({
         name: v.pipe(v.string(), v.nonEmpty("Name is required")),
-        eventDate: v.pipe(v.date()),
-        startTime: v.pipe(
-            v.string(),
-            v.nonEmpty("Time is required"),
-            v.isoTime(),
-        ),
-        endTime: v.pipe(
-            v.string(),
-            v.nonEmpty("Time is required"),
-            v.isoTime(),
-        ),
+        eventDate: v.any(),
+        startTime: vTime,
+        endTime: vTime,
     }),
-    v.check((data) => {
-        if (!data.startTime || !data.endTime) return false;
-
-        return (
-            timeStringToTime(data.endTime) > timeStringToTime(data.startTime)
-        );
-    }, "End time must be after start time"),
+    v.forward(
+        v.check(
+            (data) =>
+                data.startTime.hour * 60 + data.startTime.minute <
+                data.endTime.hour * 60 + data.endTime.minute,
+            "End time must be after start time",
+        ),
+        ["endTime"],
+    ),
 );
 
 type Schema = v.InferOutput<typeof schema>;
 
-const state = reactive({
-    name: "",
-    eventDate: getData().startTime.toDate(),
-    startTime: getData().startTime.toIsoTimeString(),
-    endTime: getData().endTime.toIsoTimeString(),
+const state = shallowRef<{
+    name: string;
+    eventDate: DateValue;
+    startTime: Time;
+    endTime: Time;
+}>({
+    name: getData().name,
+    eventDate: getData().startTime.calendarDate(),
+    startTime: getData().startTime.toTime(),
+    endTime: getData().endTime.toTime(),
 });
-
-function timeStringToTime(str: string): Time {
-    const [h, m] = str.split(":").map(Number);
-
-    return new Time(h, m);
-}
 
 function getData() {
     return model.value;
 }
 
-function close(): void {
-    if (!isOpen) {
-        state.name = getData().name;
-        state.eventDate = getData().startTime.toDate();
-        state.startTime = getData().startTime.toIsoTimeString();
-        state.endTime = getData().endTime.toIsoTimeString();
-        return;
-    }
+function toggleModal(): void {
+    if (!isOpen) return;
 
     emit("closeRequested");
 }
 
-function selectDate(date: any): void {
-    state.eventDate = (date as CalendarDate).toDate(CalendarData.timeZone);
+function selectDate(date: DateValue): void {
+    state.value.eventDate = date;
 }
 
-function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
+function submitModalForm(_: FormSubmitEvent<Schema>): void {
     const event = model.value;
-    const date = state.eventDate;
-    const startTime = timeStringToTime(state.startTime);
-    const endTime = timeStringToTime(state.endTime);
+    const date = state.value.eventDate;
+    const startTime = new Time(state.value.startTime.hour, state.value.startTime.minute);
+    const endTime = new Time(state.value.endTime.hour, state.value.endTime.minute);
 
     if (event instanceof ShiftEvent) {
-        event.name = state.name;
+        event.name = state.value.name;
 
         event.startTime = new EventTime(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
+            date.year,
+            date.month,
+            date.day,
             startTime.hour,
             startTime.minute,
         );
 
         event.endTime = new EventTime(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate(),
+            date.year,
+            date.month,
+            date.day,
             endTime.hour,
             endTime.minute,
         );
@@ -114,7 +115,7 @@ function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
         event.updateBackendEvent();
     }
 
-    close();
+    toggleModal();
 }
 </script>
 
@@ -123,7 +124,7 @@ function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
         :open="isOpen"
         title="Event Editor"
         description="Edit the details of a calendar event."
-        @update:open="close()"
+        @update:open="toggleModal()"
     >
         <template #content>
             <div class="p-2 flex flex-row">
@@ -137,7 +138,7 @@ function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
                     @submit="submitModalForm"
                 >
                     <UFormField label="Name" name="name">
-                        <UInput v-model="getData().name" />
+                        <UInput v-model="state.name" />
                     </UFormField>
                     <UFormField label="Date" name="eventDate">
                         <UPopover>
@@ -146,27 +147,32 @@ function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
                                 color="neutral"
                                 variant="subtle"
                                 icon="i-lucide-calendar"
-                                :label="formatter.format(state.eventDate)"
+                                :label="
+                                    formatter.format(
+                                        state.eventDate.toDate(
+                                            CalendarData.timeZone,
+                                        ),
+                                    )
+                                "
                             >
                             </UButton>
 
                             <template #content>
                                 <UCalendar
                                     prevent-deselect
+                                    v-model="state.eventDate"
                                     @update:model-value="selectDate"
                                 />
                             </template>
                         </UPopover>
                     </UFormField>
-                    <div class="flex flex-row gap-2">
-                        <UFormField label="Start Time" name="startTime">
+                    <UFormField label="Time Range" name="endTime">
+                        <div class="flex items-center gap-2">
                             <UInputTime v-model="state.startTime" />
-                        </UFormField>
-                        <p class="mt-auto mb-1.5">-</p>
-                        <UFormField label="End Time" name="endTime">
-                            <UInputTime v-model="endTime" />
-                        </UFormField>
-                    </div>
+                            <span class="text-gray-400">—</span>
+                            <UInputTime v-model="state.endTime" />
+                        </div>
+                    </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">
                             Submit
@@ -174,7 +180,7 @@ function submitModalForm(submitEvent: FormSubmitEvent<Schema>): void {
                         <UButton
                             variant="outline"
                             color="neutral"
-                            @click="close()"
+                            @click="toggleModal()"
                         >
                             Cancel
                         </UButton>

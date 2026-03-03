@@ -90,8 +90,8 @@ function shouldRender(): boolean {
         return isSameDay(startTime, calendarData.selectedDay);
     else {
         return isSameDay(
-            startOfWeek(startTime, CalendarData.locale),
-            startOfWeek(calendarData.selectedDay, CalendarData.locale),
+            startOfWeek(startTime, CalendarData.localeString),
+            startOfWeek(calendarData.selectedDay, CalendarData.localeString),
         );
     }
 }
@@ -204,7 +204,6 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointerup", onPointerUp);
 
     if (state != EventState.Dragging) {
-        console.log("open");
         isModalOpen.value = true;
         return;
     }
@@ -369,8 +368,7 @@ function getStyle() {
 }
 
 function updateBackendEvent(): void {
-    if (refData.value instanceof ShiftEvent)
-        refData.value.updateBackendEvent();
+    if (refData.value instanceof ShiftEvent) refData.value.updateBackendEvent();
 }
 
 function closeModal(): void {

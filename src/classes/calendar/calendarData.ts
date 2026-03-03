@@ -11,6 +11,7 @@ import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { EmployeeServices } from "../../services/employeeServices.ts";
+import { en } from "@nuxt/ui/runtime/locale/index.js";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -18,7 +19,8 @@ type CalendarRange = {
 };
 
 export class CalendarData {
-    public static readonly locale = "en-US";
+    public static readonly locale = en;
+    public static readonly localeString = "en-US";
     public static readonly timeZone = getLocalTimeZone();
     public readonly refSelectedView = ref<CalendarMode>(CalendarMode.Week);
     public readonly refSelectedDay = shallowRef<CalendarDate>(
@@ -53,7 +55,7 @@ export class CalendarData {
     public set selectedDay(date: CalendarDate) {
         this.refSelectedDay.value = date;
 
-        const start = startOfWeek(date, CalendarData.locale);
+        const start = startOfWeek(date, CalendarData.localeString);
         const end = start.add({ days: 6 });
 
         this.refSelectedWeek.value = { start, end };
