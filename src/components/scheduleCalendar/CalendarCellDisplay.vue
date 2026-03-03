@@ -45,7 +45,7 @@ onMounted(() => {
 
 function getLanes(): number {
     if (data.selectedView == CalendarMode.Day)
-        return data.relevantEmployees.length;
+        return 1 + data.relevantEmployees.length;
     else return 7;
 }
 
