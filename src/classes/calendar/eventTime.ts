@@ -1,4 +1,4 @@
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, Time } from "@internationalized/date";
 
 export class EventTime {
     constructor(
@@ -33,6 +33,10 @@ export class EventTime {
 
     isAfterOrEqual(other: EventTime): boolean {
         return this.isAfter(other) || this.totalTime() === other.totalTime();
+    }
+
+    toTime(): Time {
+        return new Time(this.hour, this.minute);
     }
 
     totalTime(): number {

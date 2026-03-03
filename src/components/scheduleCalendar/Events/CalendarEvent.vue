@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, toRef } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, toRef } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -9,6 +9,7 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftServices } from "../../../services/shiftServices.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { Time } from "@internationalized/date";
 
 //#region Variables
 enum EventState {
@@ -45,7 +46,14 @@ const element = ref<any>(null);
 const elementHeight = ref(0);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
-const isOpen = ref(false);
+const isPopoverOpen = ref(false);
+const isModalOpen = ref(false);
+const modalStartTime = shallowRef(
+    refData.value.startTime.toTime()
+);
+const modalEndTime = shallowRef(
+    refData.value.endTime.toTime()
+);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -104,7 +112,7 @@ function onPointerMove(evt: PointerEvent): void {
             state = EventState.Dragging;
             dragStartTime = refData.value.startTime.clone();
             dragEndTime = refData.value.endTime.clone();
-            isOpen.value = false;
+            isPopoverOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
 
             emit("dragBegan", refData.value);
@@ -180,16 +188,15 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointermove", onPointerMove);
     document.removeEventListener("pointerup", onPointerUp);
 
-    if (state != EventState.Dragging) return;
+    if (state != EventState.Dragging) {
+        openModal();
+        return;
+    }
 
     state = EventState.None;
 
     emit("dragEnded", refData.value);
-
-    if (refData.value instanceof ShiftEvent) {
-        refData.value.updateData();
-        ShiftServices.update(refData.value.shift);
-    }
+    updateEvent();
 }
 
 function startResize(evt: PointerEvent): void {
@@ -207,7 +214,7 @@ function startResize(evt: PointerEvent): void {
     window.addEventListener("pointermove", onResize);
     window.addEventListener("pointerup", stopResize, { once: true });
 
-    isOpen.value = false;
+    isPopoverOpen.value = false;
     state = EventState.Resizing;
 
     emit("resizeBegan");
@@ -260,11 +267,7 @@ function stopResize(): void {
     window.removeEventListener("pointerup", stopResize);
 
     emit("resizeEnded");
-
-    if (refData.value instanceof ShiftEvent) {
-        refData.value.updateData();
-        ShiftServices.update(refData.value.shift);
-    }
+    updateEvent();
 }
 //#endregion
 
@@ -309,12 +312,14 @@ function getGridArea(): string {
         if (refData.value instanceof ShiftEvent) {
             const employeeID = refData.value.shift.employeeID;
 
-            row = props.calendarData.relevantEmployees.findIndex((employee) => employee.id === employeeID) + 1;
+            row =
+                props.calendarData.relevantEmployees.findIndex(
+                    (employee) => employee.id === employeeID,
+                ) + 1;
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
-    }
-    else
+    } else
         return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
@@ -341,6 +346,25 @@ function getStyle() {
 
     return style;
 }
+
+function updateEvent() {
+    if (refData.value instanceof ShiftEvent) {
+        refData.value.updateData();
+        ShiftServices.update(refData.value.shift);
+    }
+}
+
+//#region Modal Callbacks
+function openModal() {
+    modalStartTime.value = refData.value.startTime.toTime();
+    modalEndTime.value = refData.value.endTime.toTime();
+    isModalOpen.value = true;
+}
+
+function closeModal() {
+    isModalOpen.value = false;
+}
+//#endregion
 </script>
 
 <style>
@@ -364,92 +388,130 @@ function getStyle() {
 </style>
 
 <template>
-    <UPopover
-        v-model:open="isOpen"
-        :content="{ side: 'right' }"
-        @update:open="
-            () => {
-                if (!canHover || !editable) isOpen = false;
-            }
-        "
+    <UModal
+        v-model:open="isModalOpen"
+        title="Event Editor"
+        description="Edit the details of a calendar event."
     >
-        <UCard
-            ref="element"
-            class="event"
-            variant="ghost"
-            :style="getStyle()"
-            :ui="{
-                footer: 'mt-auto',
-            }"
-            @mouseenter="if (canHover && editable) isOpen = true;"
-            @mouseleave="isOpen = false"
-            @pointerdown="onPointerDown"
-            @pointerup="onPointerUp"
+        <UPopover
+            v-model:open="isPopoverOpen"
+            :content="{ side: 'right' }"
+            @update:open="
+                () => {
+                    if (!canHover || !editable) isPopoverOpen = false;
+                }
+            "
         >
-            <template #header>
-                <div
-                    :style="{
-                        marginTop: `${titleMargin}px`,
-                    }"
-                >
-                    <UBadge
-                        class="text-black select-none"
-                        variant="ghost"
-                        :label="refData.name"
-                        style="max-width: 100%"
+            <UCard
+                ref="element"
+                class="event"
+                variant="ghost"
+                :style="getStyle()"
+                :ui="{
+                    footer: 'mt-auto',
+                }"
+                @mouseenter="if (canHover && editable) isPopoverOpen = true;"
+                @mouseleave="isPopoverOpen = false"
+                @pointerdown="onPointerDown"
+                @pointerup="onPointerUp"
+            >
+                <template #header>
+                    <div
                         :style="{
-                            fontSize: `${titleFontSize}px`,
+                            marginTop: `${titleMargin}px`,
+                        }"
+                    >
+                        <UBadge
+                            class="text-black select-none"
+                            variant="ghost"
+                            :label="refData.name"
+                            style="max-width: 100%"
+                            :style="{
+                                fontSize: `${titleFontSize}px`,
+                            }"
+                        />
+                    </div>
+                </template>
+
+                <template #default>
+                    <UBadge
+                        class="font-normal text-gray-800 flex flex-col items-start"
+                        variant="ghost"
+                        :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
+                        :ui="{
+                            label: 'text-wrap line-clamp-2 select-none',
                         }"
                     />
-                </div>
-            </template>
+                    <div
+                        v-if="
+                            props.calendarData.selectedView ===
+                                CalendarMode.Day && editable
+                        "
+                        class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
+                        style="width: 8px"
+                        @pointerdown="startResize"
+                    />
+                </template>
 
-            <template #default>
-                <UBadge
-                    class="font-normal text-gray-800 flex flex-col items-start"
-                    variant="ghost"
-                    :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
-                    :ui="{
-                        label: 'text-wrap line-clamp-2 select-none',
-                    }"
-                />
-                <div
+                <template
+                    #footer
                     v-if="
-                        props.calendarData.selectedView === CalendarMode.Day &&
+                        props.calendarData.selectedView === CalendarMode.Week &&
                         editable
                     "
-                    class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
-                    style="width: 8px"
-                    @pointerdown="startResize"
-                />
-            </template>
-
-            <template
-                #footer
-                v-if="
-                    props.calendarData.selectedView === CalendarMode.Week &&
-                    editable
-                "
-            >
-                <div
-                    class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
-                    style="height: 8px"
-                    @pointerdown="startResize"
-                />
-            </template>
-        </UCard>
-
-        <template #content>
-            <UCard class="size-48 m-4 inline-flex" variant="ghost">
-                <template #header>
-                    {{ refData.name }}
-                </template>
-
-                <template #body>
-                    {{ refData.startTime.toTimeString() }} -
-                    {{ refData.endTime.toTimeString() }}
+                >
+                    <div
+                        class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
+                        style="height: 8px"
+                        @pointerdown="startResize"
+                    />
                 </template>
             </UCard>
+
+            <template #content>
+                <UCard class="size-48 m-4 inline-flex" variant="ghost">
+                    <template #header>
+                        {{ refData.name }}
+                    </template>
+
+                    <template #body>
+                        {{ refData.startTime.toTimeString() }} -
+                        {{ refData.endTime.toTimeString() }}
+                    </template>
+                </UCard>
+            </template>
+        </UPopover>
+        <template #content>
+            <div class="p-2 flex flex-row">
+                <p class="text-xl font-semibold">Event Editor</p>
+                <UButton
+                    class="ml-auto"
+                    variant="ghost"
+                    color="neutral"
+                    icon="i-lucide-x"
+                    @click="closeModal"
+                />
+            </div>
+            <div class="p-4">
+                <UForm class="flex flex-col gap-4">
+                    <UFormField label="Name">
+                        <UInput v-model="refData.name" />
+                    </UFormField>
+                    <div class="flex flex-row gap-4">
+                        <UFormField label="Start Time">
+                            <UInputTime
+                                v-model="modalStartTime"
+                            />
+                        </UFormField>
+                        <p class="mt-auto mb-1.5">-</p>
+                        <UFormField label="End Time">
+                            <UInputTime
+                                v-model="modalEndTime"
+                            />
+                        </UFormField>
+                    </div>
+                </UForm>
+            </div>
         </template>
-    </UPopover>
+    </UModal>
 </template>
