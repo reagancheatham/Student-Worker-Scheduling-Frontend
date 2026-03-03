@@ -5,7 +5,7 @@ import {
     today,
 } from "@internationalized/date";
 import { ref, shallowRef } from "vue";
-import { EventData, EventColor } from "./eventData.ts";
+import { EventData } from "./eventData.ts";
 import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
@@ -81,9 +81,7 @@ export class CalendarData {
 
         await ShiftServices.getAllInRange(1, beginningOfDay, endOfDay).then(
             (shifts) => {
-                events = shifts.map(
-                    (shift) => new ShiftEvent(shift, EventColor.Blue),
-                );
+                events = shifts.map((shift) => new ShiftEvent(shift));
             },
         );
 
@@ -103,9 +101,7 @@ export class CalendarData {
 
         await ShiftServices.getAllInRange(1, startDate, endDate).then(
             (shifts) => {
-                events = shifts.map(
-                    (shift) => new ShiftEvent(shift, EventColor.Blue),
-                );
+                events = shifts.map((shift) => new ShiftEvent(shift));
             },
         );
 
@@ -128,9 +124,7 @@ export class CalendarData {
             beginningOfDay.setHours(0, 0, 0, 0);
             endOfDay.setHours(24, 59, 59, 99);
 
-            relevantEvents = await this.getEventsForDate(
-                this.selectedDay,
-            );
+            relevantEvents = await this.getEventsForDate(this.selectedDay);
         } else {
             relevantEvents = await this.getEventsInDateRange(
                 this.selectedWeek.start,
@@ -155,8 +149,7 @@ export class CalendarData {
 
             const employee = await EmployeeServices.get(event.shift.employeeID);
 
-            if (employee !== undefined)
-                relevantEmployees.push(employee);
+            if (employee !== undefined) relevantEmployees.push(employee);
             else
                 console.error(
                     `Could not find employee for event: ${JSON.stringify(event)}!`,

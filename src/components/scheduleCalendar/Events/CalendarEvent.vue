@@ -346,7 +346,7 @@ function getStyle() {
 
     let style = {
         "grid-area": getGridArea(),
-        "background-color": `var(${refData.value.color})`,
+        "background-color": `var(${refData.value.color.tailwind})`,
         "z-index": `${refData.value.zIndex}`,
         "margin-top": `0`,
         "margin-bottom": `0`,

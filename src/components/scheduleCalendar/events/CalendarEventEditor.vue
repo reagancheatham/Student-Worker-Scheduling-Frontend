@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import * as v from "valibot";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import { CalendarDate, DateFormatter, DateValue, Time } from "@internationalized/date";
-import { onMounted, reactive, ref, shallowRef, watch } from "vue";
+import { DateFormatter, DateValue, Time } from "@internationalized/date";
+import { onMounted, ref, shallowRef, watch } from "vue";
+import { EventColor } from "@classes/calendar/eventColor.ts";
 
 const model = defineModel<EventData>({
     required: true,
@@ -41,12 +42,21 @@ const vTime = v.object({
     minute: v.number(),
 });
 
+const vColor = v.object({
+    label: v.string(),
+    value: v.instance(EventColor, "Invalid color"),
+    chip: v.object({
+        color: v.string(),
+    }),
+});
+
 const schema = v.pipe(
     v.object({
         name: v.pipe(v.string(), v.nonEmpty("Name is required")),
         eventDate: v.any(),
         startTime: vTime,
         endTime: vTime,
+        color: vColor,
     }),
     v.forward(
         v.check(
@@ -61,16 +71,44 @@ const schema = v.pipe(
 
 type Schema = v.InferOutput<typeof schema>;
 
+type ColorItem = {
+    label: string;
+    value: EventColor;
+    chip: {
+        color: string;
+    };
+};
+
 const state = shallowRef<{
     name: string;
     eventDate: DateValue;
     startTime: Time;
     endTime: Time;
+    color: ColorItem;
 }>({
     name: getData().name,
     eventDate: getData().startTime.calendarDate(),
     startTime: getData().startTime.toTime(),
     endTime: getData().endTime.toTime(),
+    color: {
+        label: getData().color.name,
+        value: getData().color,
+        chip: {
+            color: getData().color.semantic,
+        },
+    },
+});
+
+const colors = ref<ColorItem[]>([]);
+
+colors.value = EventColor.colors.map((color) => {
+    return {
+        label: color.name,
+        value: color,
+        chip: {
+            color: color.semantic,
+        },
+    };
 });
 
 function getData() {
@@ -90,8 +128,14 @@ function selectDate(date: DateValue): void {
 function submitModalForm(_: FormSubmitEvent<Schema>): void {
     const event = model.value;
     const date = state.value.eventDate;
-    const startTime = new Time(state.value.startTime.hour, state.value.startTime.minute);
-    const endTime = new Time(state.value.endTime.hour, state.value.endTime.minute);
+    const startTime = new Time(
+        state.value.startTime.hour,
+        state.value.startTime.minute,
+    );
+    const endTime = new Time(
+        state.value.endTime.hour,
+        state.value.endTime.minute,
+    );
 
     if (event instanceof ShiftEvent) {
         event.name = state.value.name;
@@ -111,6 +155,8 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
             endTime.hour,
             endTime.minute,
         );
+
+        event.color = state.value.color.value;
 
         event.updateBackendEvent();
     }
@@ -172,6 +218,26 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                             <span class="text-gray-400">—</span>
                             <UInputTime v-model="state.endTime" />
                         </div>
+                    </UFormField>
+                    <UFormField label="Color" name="color">
+                        <USelectMenu
+                            v-model="state.color"
+                            :items="colors"
+                            label-key="label"
+                        >
+                            <template #leading="{ modelValue, ui }">
+                                <UChip
+                                    v-if="modelValue"
+                                    v-bind="modelValue.chip"
+                                    inset
+                                    standalone
+                                    :size="
+                                        ui.itemLeadingChipSize() as ChipProps['size']
+                                    "
+                                    :class="ui.itemLeadingChip()"
+                                />
+                            </template>
+                        </USelectMenu>
                     </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">

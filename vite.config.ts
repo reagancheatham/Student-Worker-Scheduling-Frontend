@@ -10,7 +10,35 @@ export default defineConfig(({ mode }) => {
     else baseURL = "/sev2026/t6";
 
     return {
-        plugins: [vue(), ui()],
+        plugins: [
+            vue(),
+            ui({
+                theme: {
+                    colors: [
+                        "primary",
+                        "secondary",
+                        "info",
+                        "success",
+                        "warning",
+                        "error",
+                        "event-blue",
+                        "event-orange",
+                        "event-red",
+                        "event-yellow",
+                        "event-purple",
+                    ],
+                },
+                ui: {
+                    colors: {
+                        "event-blue": "sky",
+                        "event-orange": "orange",
+                        "event-red": "red",
+                        "event-yellow": "yellow",
+                        "event-purple": "purple",
+                    },
+                },
+            }),
+        ],
         server: {
             host: "localhost",
             port: 8081,

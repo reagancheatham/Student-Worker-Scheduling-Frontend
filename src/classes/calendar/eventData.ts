@@ -1,12 +1,5 @@
+import { EventColor } from "./eventColor.ts";
 import { EventTime } from "./eventTime.ts";
-
-export enum EventColor {
-    Blue = "--color-sky-500",
-    Orange = "--color-orange-500",
-    Red = "--color-red-400",
-    Yellow = "--color-yellow-500",
-    Purple = "--color-purple-500",
-}
 
 export abstract class EventData {
     constructor(

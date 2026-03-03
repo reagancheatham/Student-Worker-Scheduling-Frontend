@@ -1,3 +1,4 @@
+import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 
 export class Shift extends DatabaseModel {
@@ -8,6 +9,7 @@ export class Shift extends DatabaseModel {
         public name: string,
         public startTime: Date,
         public endTime: Date,
+        public color: EventColor,
     ) {
         super();
     }
@@ -19,6 +21,9 @@ export class Shift extends DatabaseModel {
         const endTime = data["endTime"]
             ? new Date(data["endTime"])
             : new Date();
+        const color = data["color"]
+            ? EventColor.fromString(data["color"])
+            : EventColor.blue;
 
         return new Shift(
             data["id"] ?? 0,
@@ -27,6 +32,7 @@ export class Shift extends DatabaseModel {
             data["name"] ?? 0,
             startTime,
             endTime,
+            color,
         );
     }
 }
