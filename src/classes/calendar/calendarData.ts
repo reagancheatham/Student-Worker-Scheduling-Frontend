@@ -1,14 +1,16 @@
 import {
     CalendarDate,
     getLocalTimeZone,
-    isSameDay,
     startOfWeek,
     today,
 } from "@internationalized/date";
 import { ref, shallowRef } from "vue";
 import { EventData, EventColor } from "./eventData.ts";
-import { EventTime } from "./eventTime.ts";
 import { CalendarMode } from "./calendarMode.ts";
+import { ShiftServices } from "../../services/shiftServices.ts";
+import { ShiftEvent } from "./shiftEvent.ts";
+import { Employee } from "@classes/database/employee.ts";
+import { EmployeeServices } from "../../services/employeeServices.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -26,21 +28,8 @@ export class CalendarData {
         start: today(CalendarData.timeZone),
         end: today(CalendarData.timeZone).add({ days: 6 }),
     });
-    public readonly refEvents = ref<EventData[]>([
-        new EventData(
-            "First Event",
-            new EventTime(2026, 2, 19, 9, 0),
-            new EventTime(2026, 2, 19, 17, 30),
-            EventColor.Blue,
-        ),
-        new EventData(
-            "Second Event",
-            new EventTime(2026, 2, 20, 7, 0),
-            new EventTime(2026, 2, 20, 15, 30),
-            EventColor.Orange,
-        ),
-    ]);
-    public readonly relevantEvents = ref<EventData[]>([]);
+    public readonly refRelevantEmployees = ref<Employee[]>([]);
+    public readonly refRelevantEvents = ref<EventData[]>([]);
 
     constructor(selectedView: CalendarMode, selectedDay: CalendarDate) {
         this.refSelectedView.value = selectedView;
@@ -76,31 +65,95 @@ export class CalendarData {
         return this.refSelectedWeek.value;
     }
 
-    public getEventsForDate(date: CalendarDate): EventData[] {
-        return this.refEvents.value.filter((evt) => {
-            if (isSameDay(evt.startTime.calendarDate(), date)) return evt;
-        });
+    public get relevantEmployees(): Employee[] {
+        return this.refRelevantEmployees.value;
     }
 
-    public getEventsInDateRange(
+    public async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
+        const beginningOfDay = date.toDate(CalendarData.timeZone);
+        const endOfDay = date.toDate(CalendarData.timeZone);
+        beginningOfDay.setHours(0, 0, 0, 0);
+        endOfDay.setHours(23, 59, 59, 99);
+
+        let events: EventData[] = [];
+
+        await ShiftServices.getAllInRange(1, beginningOfDay, endOfDay).then(
+            (shifts) => {
+                events = shifts.map(
+                    (shift) => new ShiftEvent(shift, EventColor.Blue),
+                );
+            },
+        );
+
+        return events;
+    }
+
+    public async getEventsInDateRange(
         start: CalendarDate,
         end: CalendarDate,
-    ): EventData[] {
-        return this.refEvents.value.filter((evt) => {
-            const eventDate = evt.startTime.calendarDate();
+    ): Promise<EventData[]> {
+        const startDate = start.toDate(CalendarData.timeZone);
+        const endDate = end.toDate(CalendarData.timeZone);
 
-            if (eventDate.compare(start) >= 0 && eventDate.compare(end) <= 0)
-                return evt;
-        });
+        endDate.setHours(23, 59, 59, 99);
+
+        let events: EventData[] = [];
+
+        await ShiftServices.getAllInRange(1, startDate, endDate).then(
+            (shifts) => {
+                events = shifts.map(
+                    (shift) => new ShiftEvent(shift, EventColor.Blue),
+                );
+            },
+        );
+
+        return events;
     }
 
-    private updateRelevantEvents() {
-        if (this.selectedView === CalendarMode.Day)
-            this.relevantEvents.value = this.getEventsForDate(this.selectedDay);
-        else
-            this.relevantEvents.value = this.getEventsInDateRange(
+    private async updateRelevantEvents() {
+        this.refRelevantEvents.value = [];
+
+        if (this.selectedView === CalendarMode.Day) {
+            const beginningOfDay = this.selectedDay.toDate(
+                CalendarData.timeZone,
+            );
+            const endOfDay = this.selectedDay.toDate(CalendarData.timeZone);
+            beginningOfDay.setHours(0, 0, 0, 0);
+            endOfDay.setHours(24, 59, 59, 99);
+
+            this.refRelevantEvents.value = await this.getEventsForDate(
+                this.selectedDay,
+            );
+        } else {
+            this.refRelevantEvents.value = await this.getEventsInDateRange(
                 this.selectedWeek.start,
                 this.selectedWeek.end,
             );
+        }
+
+        this.updateRelevantEmployees();
+    }
+
+    private async updateRelevantEmployees() {
+        this.refRelevantEmployees.value = [];
+
+        for (const event of this.refRelevantEvents.value) {
+            if (!(event instanceof ShiftEvent)) continue;
+
+            const storedEmployee = this.refRelevantEmployees.value.find(
+                (employee) => employee.id === event.shift.employeeID,
+            );
+
+            if (storedEmployee !== undefined) continue;
+
+            const employee = await EmployeeServices.get(event.shift.employeeID);
+
+            if (employee !== undefined)
+                this.refRelevantEmployees.value.push(employee);
+            else
+                console.error(
+                    `Could not find employee for event: ${JSON.stringify(event)}!`,
+                );
+        }
     }
 }

@@ -7,6 +7,8 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
+import { ShiftServices } from "../../../services/shiftServices.ts";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 
 //#region Variables
 enum EventState {
@@ -104,7 +106,7 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
-            
+
             emit("dragBegan", refData.value);
         }
     }
@@ -175,14 +177,19 @@ function updateDrag(delta: Vector2): void {
 }
 
 function onPointerUp(_: PointerEvent): void {
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+
     if (state != EventState.Dragging) return;
 
     state = EventState.None;
 
-    document.removeEventListener("pointermove", onPointerMove);
-    document.removeEventListener("pointerup", onPointerUp);
-
     emit("dragEnded", refData.value);
+
+    if (refData.value instanceof ShiftEvent) {
+        refData.value.updateData();
+        ShiftServices.update(refData.value.shift);
+    }
 }
 
 function startResize(evt: PointerEvent): void {
@@ -253,6 +260,11 @@ function stopResize(): void {
     window.removeEventListener("pointerup", stopResize);
 
     emit("resizeEnded");
+
+    if (refData.value instanceof ShiftEvent) {
+        refData.value.updateData();
+        ShiftServices.update(refData.value.shift);
+    }
 }
 //#endregion
 
@@ -291,10 +303,19 @@ function getGridArea(): string {
     const startTime = data.startTime;
     const endTime = data.endTime;
 
-    if (props.calendarData.selectedView == CalendarMode.Day)
-        return `${2} / ${60 * (1 + startTime.hour) + startTime.minute} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    if (props.calendarData.selectedView == CalendarMode.Day) {
+        let row = 1;
+
+        if (refData.value instanceof ShiftEvent) {
+            const employeeID = refData.value.shift.employeeID;
+
+            row = props.calendarData.relevantEmployees.findIndex((employee) => employee.id === employeeID) + 1;
+        }
+
+        return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
+    }
     else
-        return `${60 * (1 + startTime.hour) + startTime.minute} / ${2 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+        return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {

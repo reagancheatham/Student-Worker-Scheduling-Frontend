@@ -2,6 +2,7 @@
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
+import { today } from "@internationalized/date";
 
 const { data, cellSize } = defineProps<{
     data: CalendarData;
@@ -11,13 +12,17 @@ const { data, cellSize } = defineProps<{
 function getStyle() {
     if (data.selectedView === CalendarMode.Day)
         return {
-            marginBottom: `${-0.4 * cellSize.y}px`,
             marginLeft: `${cellSize.x}px`,
         };
     else
         return {
+            marginBottom: `12px`,
             marginLeft: `${cellSize.x}px`,
         };
+}
+
+function goToToday() {
+    data.selectedDay = today(CalendarData.timeZone);
 }
 </script>
 
@@ -26,6 +31,7 @@ function getStyle() {
     display: flex;
     flex-direction: row;
     align-items: flex-end;
+    height: 10%;
 }
 
 .headerSegment {
@@ -56,6 +62,7 @@ function getStyle() {
             <CalendarDateShifter :data="data" />
         </div>
         <div class="headerSegment rightSegment">
+            <UButton label="Today" variant="outline" color="neutral" @click="goToToday"></UButton>
             <UFormField class="selectMenuContainer" label="Date" name="option">
                 <CalendarDatePicker :data="data" />
             </UFormField>

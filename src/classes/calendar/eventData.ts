@@ -8,7 +8,7 @@ export enum EventColor {
     Purple = "--color-purple-500",
 }
 
-export class EventData {
+export abstract class EventData {
     constructor(
         public name: string,
         public startTime: EventTime,

@@ -2,15 +2,13 @@
 import { ref } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { useTemplateRef } from "vue";
-import { Employee } from "@classes/Employee";
+import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
 
 const table = useTemplateRef("table");
 const globalFilter = ref("");
 
 let data: Employee[];
-
-console.log('test');
 
 EmployeeServices.getAllForBusiness(1)
     .then((result) => {
@@ -19,12 +17,6 @@ EmployeeServices.getAllForBusiness(1)
     }).catch((err) => {
         console.error(err);
     })
-
-//const test: Employee = await EmployeeServices.get(1);
-
-//console.log(test);
-
-//TODO: NEED TO IMPLEMENT INFINITE SCROLL WHEN WE START GETTING DATA FROM BACKEND
 
 const columns: TableColumn<Employee>[] = [
     {

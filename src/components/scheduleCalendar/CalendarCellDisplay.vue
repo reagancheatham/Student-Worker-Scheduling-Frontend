@@ -12,6 +12,8 @@ const { data } = defineProps<{
     data: CalendarData;
 }>();
 
+const ROWS_IN_DAY = 4;
+
 const cellElements = useTemplateRef<any[]>("cells");
 
 const containerClasses = new Map<CalendarMode, string>([
@@ -43,7 +45,7 @@ onMounted(() => {
 
 function getLanes(): number {
     if (data.selectedView == CalendarMode.Day)
-        return 4; // number of users
+        return data.relevantEmployees.length;
     else return 7;
 }
 
@@ -59,7 +61,7 @@ function getBorderStyle(cellIndex: number) {
         borderBottomRightRadius = "0px";
 
     const cellsInRow = data.selectedView === CalendarMode.Day ? 24 : 7;
-    const rows = data.selectedView === CalendarMode.Day ? 4 : 24;
+    const rows = data.selectedView === CalendarMode.Day ? getLanes() : 24;
 
     if (cellIndex > cellsInRow) borderTopWidth = "0px";
 
@@ -67,8 +69,9 @@ function getBorderStyle(cellIndex: number) {
 
     if (cellIndex === 1) borderTopLeftRadius = "8px";
     else if (cellIndex === cellsInRow) borderTopRightRadius = "8px";
-    else if (cellIndex === ((cellsInRow) * (rows - 1)) + 1) borderBottomLeftRadius = "8px";
-    else if (cellIndex === (cellsInRow * rows)) borderBottomRightRadius = "8px";
+    else if (cellIndex === cellsInRow * (rows - 1) + 1)
+        borderBottomLeftRadius = "8px";
+    else if (cellIndex === cellsInRow * rows) borderBottomRightRadius = "8px";
 
     const style = {
         borderTopWidth,

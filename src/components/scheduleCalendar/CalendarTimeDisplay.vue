@@ -23,7 +23,7 @@ const labelClasses = new Map<CalendarMode, string>([
 function getStyle() {
     if (data.selectedView === CalendarMode.Day) {
         return {
-            marginTop: `${0.3 * cellSize.y}px`,
+            marginBottom: `${0.2 * cellSize.y}px`,
         };
     } else {
         return {
@@ -35,13 +35,14 @@ function getStyle() {
 
 <style>
 .timeContainer {
+    pointer-events: none;
     display: grid;
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;
 }
 
 .dayContainer {
-    grid-column: 1 / -1;
+    grid-column: 61 / -1;
     grid-row: 1;
 }
 
@@ -60,10 +61,10 @@ function getStyle() {
 
 .dayLabel {
     grid-column: span 60;
-    padding-bottom: 12px;
-    left: 50%;
+    left: -50%;
     justify-content: center;
     text-align: center;
+    align-items: end;
 }
 
 .weekLabel {

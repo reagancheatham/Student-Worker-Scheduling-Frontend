@@ -39,7 +39,7 @@ onMounted(() => {
 });
 
 function initializeZIndices(): void {
-    calendarData.relevantEvents.value.forEach((element) => {
+    calendarData.refRelevantEvents.value.forEach((element) => {
         element.zIndex = element.startTime.totalTime();
     });
 }
@@ -72,7 +72,7 @@ function onEventDragEnded(event: EventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents: EventData[] = [...calendarData.relevantEvents.value].sort(
+    const sortedEvents: EventData[] = [...calendarData.refRelevantEvents.value].sort(
         (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
     );
 
@@ -111,8 +111,6 @@ function calculateBisects(): void {
             });
         }
     }
-
-    expandSlotSizes();
 
     for (const event of sortedEvents) {
         if (!eventSlots.has(event)) {
@@ -170,47 +168,34 @@ function findLongestBisectChain(event: EventData): EventData[] {
 }
 
 function getAllBisectingEvents(event: EventData): EventData[] {
-    return calendarData.relevantEvents.value.filter((e) => e.bisects(event));
-}
-
-function expandSlotSizes() {
-    // for (const [event, slot] of eventSlots) {
-    //     const bisectingEvents = getAllBisectingEvents(event);
-    //     for (const bisectEvent of bisectingEvents) {
-    //         if (bisectEvent === event)
-    //             continue;
-    //     }
-    // }
+    return calendarData.refRelevantEvents.value.filter((e) => e.bisects(event));
 }
 </script>
 
 <style>
 .eventContainer {
-    width: 100%;
-    height: 100%;
     display: grid;
     grid-area: stack-area;
     grid-template-columns: subgrid;
     grid-template-rows: subgrid;
     z-index: 1;
-    padding: 0;
 }
 
 .dayEventContainer {
-    grid-column: 2 / -1;
-    grid-row: 1 / -1;
+    grid-column: 61 / -1;
+    grid-row: 2 / -1;
 }
 
 .weekEventContainer {
-    grid-column: 1 / -1;
-    grid-row: 2 / -1;
+    grid-column: 2 / -1;
+    grid-row: 61 / -1;
 }
 </style>
 
 <template>
     <div :class="displayClasses.get(calendarData.selectedView)!">
         <CalendarEvent
-            v-for="event in calendarData.relevantEvents.value"
+            v-for="event in calendarData.refRelevantEvents.value"
             :model-value="event"
             :calendar-data="calendarData"
             :can-hover="canHover"
