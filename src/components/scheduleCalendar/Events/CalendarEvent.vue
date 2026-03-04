@@ -56,9 +56,6 @@ const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
-const assignedEmployee = ref<Employee>();
-
-watch(refData, updateEmployee);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -80,8 +77,6 @@ onMounted(() => {
     });
 
     observer.observe(elementValue);
-
-    updateEmployee();
 });
 
 onBeforeUnmount(() => {
@@ -101,19 +96,6 @@ function shouldRender(): boolean {
             startOfWeek(calendarData.selectedDay, CalendarData.localeString),
         );
     }
-}
-
-function updateEmployee() {
-    if (!(refData.value instanceof ShiftEvent)) return;
-
-    if (refData.value.shift.employeeID === 0) {
-        assignedEmployee.value = undefined;
-        return;
-    }
-
-    EmployeeServices.get(refData.value.shift.employeeID).then((employee) => {
-        assignedEmployee.value = employee;
-    });
 }
 
 //#region Resize Callbacks
@@ -349,12 +331,9 @@ function getGridArea(): string {
         let row = 1;
 
         if (refData.value instanceof ShiftEvent) {
-            const employeeID = refData.value.shift.employeeID;
+            const employee = refData.value.shift.employee;
 
-            row =
-                props.calendarData.relevantEmployees.findIndex(
-                    (employee) => employee.id === employeeID,
-                ) + 1;
+            row = props.calendarData.relevantEmployees.indexOf(employee);
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
@@ -476,8 +455,9 @@ function closeModal(): void {
                         class="font-normal text-gray-700 flex flex-col items-start"
                         variant="ghost"
                         :label="
-                            assignedEmployee
-                                ? `${assignedEmployee.firstName} ${assignedEmployee.lastName}`
+                            refData instanceof ShiftEvent &&
+                            refData.shift.employee
+                                ? `${refData.shift.employee.firstName} ${refData.shift.employee.lastName}`
                                 : ''
                         "
                     />

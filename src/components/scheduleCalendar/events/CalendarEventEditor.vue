@@ -6,15 +6,9 @@ import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
-import {
-    onMounted,
-    reactive,
-    ref,
-    shallowReactive,
-    shallowRef,
-    watch,
-} from "vue";
+import { onMounted, ref, shallowReactive, watch } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 const model = defineModel<EventData>({
     required: true,
@@ -64,6 +58,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
+        employee: v.optional(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
         v.check(
@@ -92,6 +87,7 @@ const state = shallowReactive<{
     startTime: Time;
     endTime: Time;
     color: ColorItem;
+    employee: Employee;
 }>({
     name: getData().name,
     eventDate: getData().startTime.calendarDate(),
@@ -104,6 +100,10 @@ const state = shallowReactive<{
             color: getData().color.semantic,
         },
     },
+    employee:
+        getData() instanceof ShiftEvent
+            ? (getData() as ShiftEvent).shift.employee
+            : undefined,
 });
 
 const colors = ref<ColorItem[]>([]);
@@ -187,39 +187,47 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                     <UFormField label="Name" name="name">
                         <UInput v-model="state.name" />
                     </UFormField>
-                    <UFormField label="Date" name="eventDate">
-                        <UPopover>
-                            <UButton
-                                class="h-1/2"
-                                color="neutral"
-                                variant="subtle"
-                                icon="i-lucide-calendar"
-                                :label="
-                                    formatter.format(
-                                        state.eventDate.toDate(
-                                            CalendarData.timeZone,
-                                        ),
-                                    )
-                                "
-                            >
-                            </UButton>
+                    <div class="flex gap-4">
+                        <UFormField label="Date" name="eventDate">
+                            <UPopover>
+                                <UButton
+                                    class="h-1/2"
+                                    color="neutral"
+                                    variant="subtle"
+                                    icon="i-lucide-calendar"
+                                    :label="
+                                        formatter.format(
+                                            state.eventDate.toDate(
+                                                CalendarData.timeZone,
+                                            ),
+                                        )
+                                    "
+                                >
+                                </UButton>
 
-                            <template #content>
-                                <UCalendar
-                                    prevent-deselect
-                                    v-model="state.eventDate"
-                                    @update:model-value="selectDate"
-                                />
-                            </template>
-                        </UPopover>
-                    </UFormField>
-                    <UFormField label="Time Range" name="endTime">
-                        <div class="flex items-center gap-2">
-                            <UInputTime v-model="state.startTime" />
-                            <span class="text-gray-400">—</span>
-                            <UInputTime v-model="state.endTime" />
-                        </div>
-                    </UFormField>
+                                <template #content>
+                                    <UCalendar
+                                        prevent-deselect
+                                        v-model="state.eventDate"
+                                        @update:model-value="selectDate"
+                                    />
+                                </template>
+                            </UPopover>
+                        </UFormField>
+                        <USeparator
+                            class="h-8 self-end"
+                            orientation="vertical"
+                            size="sm"
+                            decorative
+                        />
+                        <UFormField label="Time Range" name="endTime">
+                            <div class="flex items-center gap-2">
+                                <UInputTime v-model="state.startTime" />
+                                <span class="text-gray-400">—</span>
+                                <UInputTime v-model="state.endTime" />
+                            </div>
+                        </UFormField>
+                    </div>
                     <UFormField label="Color" name="color">
                         <USelectMenu
                             v-model="state.color"

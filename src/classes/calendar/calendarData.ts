@@ -141,19 +141,19 @@ export class CalendarData {
         for (const event of this.refRelevantEvents.value) {
             if (!(event instanceof ShiftEvent)) continue;
 
+            console.log(
+                "relevant employee: " + JSON.stringify(event.shift.employee),
+            );
+
+            if (event.shift.employee === undefined) continue;
+
             const storedEmployee = relevantEmployees.find(
-                (employee) => employee.id === event.shift.employeeID,
+                (employee) => employee === event.shift.employee,
             );
 
             if (storedEmployee !== undefined) continue;
 
-            const employee = await EmployeeServices.get(event.shift.employeeID);
-
-            if (employee !== undefined) relevantEmployees.push(employee);
-            else
-                console.error(
-                    `Could not find employee for event: ${JSON.stringify(event)}!`,
-                );
+            relevantEmployees.push(storedEmployee);
         }
 
         return relevantEmployees;
