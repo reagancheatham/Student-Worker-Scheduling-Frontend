@@ -1,6 +1,4 @@
-import {
-    DatabaseModelStatic,
-} from "@classes/database/databaseModel.ts";
+import { DatabaseModelStatic } from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
 
 export class DatabaseServices {

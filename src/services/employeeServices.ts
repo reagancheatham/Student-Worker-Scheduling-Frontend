@@ -17,7 +17,10 @@ export class EmployeeServices {
     }
 
     static async get(id: number) {
-        return await DatabaseServices.get<Employee>(Employee, `${API_ROOT}/${id}`);
+        return await DatabaseServices.get<Employee>(
+            Employee,
+            `${API_ROOT}/${id}`,
+        );
     }
 
     static async getAllForBusiness(businessID: number) {

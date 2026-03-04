@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, shallowRef, toRef } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, toRef, watch } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -16,6 +16,8 @@ import {
     startOfWeek,
     Time,
 } from "@internationalized/date";
+import { Employee } from "@classes/database/employee.ts";
+import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 //#region Variables
 enum EventState {
@@ -23,6 +25,13 @@ enum EventState {
     Resizing,
     Dragging,
 }
+
+const MAX_Z_INDEX = Infinity;
+const FONT_RANGE = new Range(6, 12);
+const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
+const RESIZE_STEP = 5;
+const RESIZE_RATIO = 60 / RESIZE_STEP;
+const DRAG_THRESHOLD = 0.5;
 
 const refData = defineModel<EventData>({ required: true });
 
@@ -41,19 +50,15 @@ const emit = defineEmits({
     dragEnded: (_: EventData) => true,
 });
 
-const MAX_Z_INDEX = Infinity;
-const FONT_RANGE = new Range(6, 12);
-const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
-const RESIZE_STEP = 5;
-const RESIZE_RATIO = 60 / RESIZE_STEP;
-const DRAG_THRESHOLD = 0.5;
-
 const element = ref<any>(null);
 const elementHeight = ref(0);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
+const assignedEmployee = ref<Employee>();
+
+watch(refData, updateEmployee);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -75,6 +80,8 @@ onMounted(() => {
     });
 
     observer.observe(elementValue);
+
+    updateEmployee();
 });
 
 onBeforeUnmount(() => {
@@ -94,6 +101,19 @@ function shouldRender(): boolean {
             startOfWeek(calendarData.selectedDay, CalendarData.localeString),
         );
     }
+}
+
+function updateEmployee() {
+    if (!(refData.value instanceof ShiftEvent)) return;
+
+    if (refData.value.shift.employeeID === 0) {
+        assignedEmployee.value = undefined;
+        return;
+    }
+
+    EmployeeServices.get(refData.value.shift.employeeID).then((employee) => {
+        assignedEmployee.value = employee;
+    });
 }
 
 //#region Resize Callbacks
@@ -204,7 +224,9 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointerup", onPointerUp);
 
     if (state != EventState.Dragging) {
-        isModalOpen.value = true;
+        if (state == EventState.None && props.editable)
+            isModalOpen.value = true;
+
         return;
     }
 
@@ -230,7 +252,6 @@ function startResize(evt: PointerEvent): void {
     window.addEventListener("pointerup", stopResize, { once: true });
 
     isPopoverOpen.value = false;
-    state = EventState.Resizing;
 
     emit("resizeBegan");
 }
@@ -268,18 +289,21 @@ function onResize(evt: PointerEvent): void {
 
     if (minuteDifference < 15) return;
 
+    state = EventState.Resizing;
     refData.value.endTime.hour = hour;
     refData.value.endTime.minute = minute;
 
-    state = EventState.None;
     emit("resized", refData.value);
 }
 
 function stopResize(): void {
+    console.log("end resize");
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
     window.removeEventListener("pointermove", onResize);
     window.removeEventListener("pointerup", stopResize);
+
+    state = EventState.None;
 
     emit("resizeEnded");
     updateBackendEvent();
@@ -352,6 +376,7 @@ function getStyle() {
         "margin-bottom": `0`,
         "margin-left": `0`,
         "margin-right": `0`,
+        cursor: props.editable ? "pointer" : "cursor",
     };
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
@@ -436,16 +461,27 @@ function closeModal(): void {
                     />
                 </div>
             </template>
-
+            <!-- SHOULD ADD AN AVATAR TO THE EMPLOYEE AND ALSO DONT NEED TO USE A UBADGE -->
             <template #default>
-                <UBadge
-                    class="font-normal text-gray-800 flex flex-col items-start"
-                    variant="ghost"
-                    :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
-                    :ui="{
-                        label: 'text-wrap line-clamp-2 select-none',
-                    }"
-                />
+                <div>
+                    <UBadge
+                        class="font-normal text-gray-800 flex flex-col items-start"
+                        variant="ghost"
+                        :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
+                        :ui="{
+                            label: 'text-wrap line-clamp-2 select-none',
+                        }"
+                    />
+                    <UBadge
+                        class="font-normal text-gray-700 flex flex-col items-start"
+                        variant="ghost"
+                        :label="
+                            assignedEmployee
+                                ? `${assignedEmployee.firstName} ${assignedEmployee.lastName}`
+                                : ''
+                        "
+                    />
+                </div>
                 <div
                     v-if="
                         props.calendarData.selectedView === CalendarMode.Day &&

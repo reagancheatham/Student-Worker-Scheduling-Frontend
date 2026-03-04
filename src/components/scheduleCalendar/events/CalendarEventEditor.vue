@@ -6,7 +6,14 @@ import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
-import { onMounted, ref, shallowRef, watch } from "vue";
+import {
+    onMounted,
+    reactive,
+    ref,
+    shallowReactive,
+    shallowRef,
+    watch,
+} from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 
 const model = defineModel<EventData>({
@@ -24,10 +31,10 @@ onMounted(() => {
         () => isOpen,
         (value) => {
             if (value) {
-                state.value.name = getData().name;
-                state.value.eventDate = getData().startTime.calendarDate();
-                state.value.startTime = getData().startTime.toTime();
-                state.value.endTime = getData().endTime.toTime();
+                state.name = getData().name;
+                state.eventDate = getData().startTime.calendarDate();
+                state.startTime = getData().startTime.toTime();
+                state.endTime = getData().endTime.toTime();
             }
         },
     );
@@ -79,7 +86,7 @@ type ColorItem = {
     };
 };
 
-const state = shallowRef<{
+const state = shallowReactive<{
     name: string;
     eventDate: DateValue;
     startTime: Time;
@@ -122,23 +129,17 @@ function toggleModal(): void {
 }
 
 function selectDate(date: DateValue): void {
-    state.value.eventDate = date;
+    state.eventDate = date;
 }
 
 function submitModalForm(_: FormSubmitEvent<Schema>): void {
     const event = model.value;
-    const date = state.value.eventDate;
-    const startTime = new Time(
-        state.value.startTime.hour,
-        state.value.startTime.minute,
-    );
-    const endTime = new Time(
-        state.value.endTime.hour,
-        state.value.endTime.minute,
-    );
+    const date = state.eventDate;
+    const startTime = new Time(state.startTime.hour, state.startTime.minute);
+    const endTime = new Time(state.endTime.hour, state.endTime.minute);
 
     if (event instanceof ShiftEvent) {
-        event.name = state.value.name;
+        event.name = state.name;
 
         event.startTime = new EventTime(
             date.year,
@@ -156,7 +157,7 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
             endTime.minute,
         );
 
-        event.color = state.value.color.value;
+        event.color = state.color.value;
 
         event.updateBackendEvent();
     }
