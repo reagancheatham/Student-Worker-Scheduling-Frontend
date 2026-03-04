@@ -1,4 +1,4 @@
-import { apiClient } from "../../services/services";
+import { apiClient } from "../../authServices.ts/services";
 
 export class DatabaseServices {
     static async create(path: string, object: any) {
