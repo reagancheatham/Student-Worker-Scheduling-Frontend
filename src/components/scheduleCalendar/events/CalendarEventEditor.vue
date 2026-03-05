@@ -9,16 +9,21 @@ import { DateFormatter, DateValue, Time } from "@internationalized/date";
 import { onMounted, ref, shallowReactive, watch } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
+import { Business } from "@classes/database/business.ts";
 
 const model = defineModel<EventData>({
     required: true,
 });
 
-const { isOpen } = defineProps<{
+const { isOpen, creator = true } = defineProps<{
     isOpen: boolean;
+    creator?: boolean;
 }>();
 
-const emit = defineEmits({ closeRequested: () => true });
+const emit = defineEmits({
+    closeRequested: () => true,
+    formSubmitted: () => true,
+});
 
 onMounted(() => {
     watch(
@@ -29,6 +34,17 @@ onMounted(() => {
                 state.eventDate = getData().startTime.calendarDate();
                 state.startTime = getData().startTime.toTime();
                 state.endTime = getData().endTime.toTime();
+                state.color = {
+                    label: getData().color.name,
+                    value: getData().color,
+                    chip: {
+                        color: getData().color.semantic,
+                    },
+                };
+                state.employee =
+                    getData() instanceof ShiftEvent
+                        ? (getData() as ShiftEvent).shift.employee
+                        : undefined;
             }
         },
     );
@@ -158,8 +174,9 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
         );
 
         event.color = state.color.value;
+        event.shift.employee = state.employee;
 
-        event.updateBackendEvent();
+        event.updateBackendEvent().then(() => emit("formSubmitted"));
     }
 
     toggleModal();
@@ -169,13 +186,15 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
 <template>
     <UModal
         :open="isOpen"
-        title="Event Editor"
+        :title="creator ? 'Event Creator' : 'Event Editor'"
         description="Edit the details of a calendar event."
         @update:open="toggleModal()"
     >
         <template #content>
             <div class="p-2 flex flex-row">
-                <p class="text-xl font-semibold ml-2">Event Editor</p>
+                <p class="text-xl font-semibold ml-2">
+                    {{ creator ? "Event Creator" : "Event Editor" }}
+                </p>
             </div>
             <div class="p-4">
                 <UForm
@@ -248,9 +267,33 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                             </template>
                         </USelectMenu>
                     </UFormField>
+                    <UFormField label="Assigned Employee" name="employee">
+                        <USelectMenu
+                            class="min-w-36"
+                            v-model="state.employee"
+                            :items="Business.current.refEmployees.value"
+                            label-key="fullName"
+                        ></USelectMenu>
+                        <UButton
+                            v-if="state.employee"
+                            class="ml-1 relative top-0.5"
+                            size="xs"
+                            variant="subtle"
+                            color="neutral"
+                            icon="i-lucide-x"
+                            @click="state.employee = undefined"
+                        />
+                    </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">
                             Submit
+                        </UButton>
+                        <UButton
+                            v-if="!creator"
+                            color="neutral"
+                            variant="outline"
+                        >
+                            Delete
                         </UButton>
                         <UButton
                             variant="outline"

@@ -30,6 +30,7 @@ export class CalendarData {
         start: today(CalendarData.timeZone),
         end: today(CalendarData.timeZone).add({ days: 6 }),
     });
+    public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
 
@@ -108,7 +109,7 @@ export class CalendarData {
         return events;
     }
 
-    private async updateRelevantData() {
+    public async updateRelevantData() {
         this.refRelevantEvents.value = await this.updateRelevantEvents();
         this.refRelevantEmployees.value = await this.updateRelevantEmployees();
     }
@@ -141,19 +142,16 @@ export class CalendarData {
         for (const event of this.refRelevantEvents.value) {
             if (!(event instanceof ShiftEvent)) continue;
 
-            console.log(
-                "relevant employee: " + JSON.stringify(event.shift.employee),
-            );
+            if (!event.shift.employee) continue;
 
-            if (event.shift.employee === undefined) continue;
+            if (
+                relevantEmployees.find(
+                    (employee) => employee.id === event.shift.employee.id,
+                )
+            )
+                continue;
 
-            const storedEmployee = relevantEmployees.find(
-                (employee) => employee === event.shift.employee,
-            );
-
-            if (storedEmployee !== undefined) continue;
-
-            relevantEmployees.push(storedEmployee);
+            relevantEmployees.push(event.shift.employee);
         }
 
         return relevantEmployees;

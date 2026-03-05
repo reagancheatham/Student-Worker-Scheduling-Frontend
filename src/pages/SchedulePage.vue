@@ -2,7 +2,8 @@
 
 <style>
 .scheduleContainer {
-    height: 80vh;
+    height: 82vh;
+    padding-bottom: 20px;
 }
 
 body {

@@ -26,4 +26,8 @@ export class Employee extends DatabaseModel {
             phoneNumber,
         );
     }
+
+    public get fullName(): string {
+        return `${this.firstName} ${this.lastName}`;
+    }
 }

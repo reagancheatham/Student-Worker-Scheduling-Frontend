@@ -13,14 +13,13 @@ export class ShiftEvent extends EventData {
         );
     }
 
-    public updateBackendEvent(): void {
+    public async updateBackendEvent() {
         this.shift.name = this.name;
         this.shift.startTime = this.startTime.toDate();
         this.shift.endTime = this.endTime.toDate();
         this.shift.color = this.color;
 
-        console.log(JSON.stringify(this.shift));
-
-        ShiftServices.update(this.shift);
+        if (this.shift.isValid()) return ShiftServices.update(this.shift);
+        else return ShiftServices.create(this.shift);
     }
 }

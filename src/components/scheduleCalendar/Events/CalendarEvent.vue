@@ -333,7 +333,9 @@ function getGridArea(): string {
         if (refData.value instanceof ShiftEvent) {
             const employee = refData.value.shift.employee;
 
-            row = props.calendarData.relevantEmployees.indexOf(employee);
+            row = props.calendarData.relevantEmployees.findIndex(
+                (relEmployee) => relEmployee.id === employee.id,
+            ) + 1;
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;

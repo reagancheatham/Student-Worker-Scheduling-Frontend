@@ -45,24 +45,15 @@ function getDayNumber(index: number): string {
     align-items: center;
     color: var(--color-gray-500);
     position: relative;
+    margin-bottom: 2px;
 }
 </style>
 
 <template>
     <div class="weekDayContainer">
         <div class="weekDayDisplay" v-for="n in 7">
-            <UBadge
-                class="text-primary"
-                color="clear"
-                size="xl"
-                :label="getDayName(n)"
-            />
-            <UBadge
-                class="text-dimmed"
-                color="clear"
-                size="xl"
-                :label="getDayNumber(n)"
-            />
+            <div class="text-primary">{{ getDayName(n) }}</div>
+            <div class="text-dimmed">{{ getDayNumber(n) }}</div>
         </div>
     </div>
 </template>

@@ -29,11 +29,11 @@ function updateCellSize(size: Vector2): void {
 }
 
 function getContainerStyle() {
-    if (data.selectedView === CalendarMode.Week)
+    if (data.selectedView === CalendarMode.Day) return {};
+    else
         return {
-            marginLeft: `${-0.65 * cellSize.value.x}px`,
+            marginLeft: `${-0.5 * cellSize.value.x}px`,
         };
-    else return {};
 }
 
 function getBodyStyle() {
@@ -41,7 +41,10 @@ function getBodyStyle() {
         return {
             marginTop: `${-0.5 * cellSize.value.y}px`,
         };
-    else return {};
+    else
+        return {
+            paddingTop: `${0.5 * cellSize.value.y}px`,
+        };
 }
 </script>
 
@@ -60,6 +63,7 @@ function getBodyStyle() {
     min-height: 10px;
     min-width: 100px;
     height: 100%;
+    width: 100%;
 }
 
 .calendarBody {

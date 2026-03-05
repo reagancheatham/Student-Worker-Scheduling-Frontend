@@ -5,15 +5,15 @@ const API_ROOT: string = "shifts";
 
 export class ShiftServices {
     static async create(shift: Shift) {
-        await DatabaseServices.create(API_ROOT, shift);
+        return await DatabaseServices.create(Shift, API_ROOT, shift);
     }
 
     static async update(shift: Shift) {
-        await DatabaseServices.update(API_ROOT, shift);
+        return await DatabaseServices.update(Shift, API_ROOT, shift);
     }
 
     static async delete(shift: Shift) {
-        await DatabaseServices.delete(`${API_ROOT}/${shift.id}`);
+        return await DatabaseServices.delete(`${API_ROOT}/${shift.id}`);
     }
 
     static async get(id: number) {
