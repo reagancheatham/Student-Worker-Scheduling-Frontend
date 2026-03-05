@@ -26,7 +26,7 @@ enum EventState {
     Dragging,
 }
 
-const MAX_Z_INDEX = Infinity;
+const MAX_Z_INDEX = 999999999;
 const FONT_RANGE = new Range(6, 12);
 const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
 const RESIZE_STEP = 5;
@@ -131,6 +131,7 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isPopoverOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
+            console.log("z index");
 
             emit("dragBegan", refData.value);
         }
@@ -373,7 +374,7 @@ function getStyle() {
         style["margin-left"] = `${refData.value.leftBisectMargin}%`;
         style["margin-right"] = `${refData.value.rightBisectMargin}%`;
     }
-
+    
     return style;
 }
 
