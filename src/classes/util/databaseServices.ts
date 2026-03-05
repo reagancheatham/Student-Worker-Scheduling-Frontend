@@ -1,14 +1,16 @@
-import { apiClient } from "../../authServices.ts/services";
+import { apiClient } from "../../services/services";
 
 export class DatabaseServices {
     static async create(path: string, object: any) {
-        await apiClient
+        return await apiClient
             .post(path, object)
-            .then(() => {
+            .then((response) => {
                 console.log(`${path} created successfully`);
+                return response.data;
             })
             .catch((err) => {
                 console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
+                return null;
             });
     }
 

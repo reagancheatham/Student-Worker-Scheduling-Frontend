@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ParseLocalStorage } from "@classes/util/parseLocalStorage";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, ref } from "vue";
 
@@ -6,11 +7,12 @@ defineProps<{
     collapsed?: boolean;
 }>();
 
+const localUser = ParseLocalStorage.parseUser()
 const user = ref({
-    name: "Reagan Cheatham",
+    name: `${localUser?.firstName} ${localUser?.lastName}` ,
     avatar: {
-        src: "/avatar.png",
-        alt: "Reagan Cheatham",
+        src: localUser?.profilePicture,
+        alt: "User",
     },
 });
 

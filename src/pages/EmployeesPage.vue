@@ -3,7 +3,7 @@ import { ref } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { useTemplateRef } from "vue";
 import { Employee } from "@classes/Employee";
-import { EmployeeServices } from "../authServices.ts/employeeServices";
+import { EmployeeServices } from "../services/employeeServices";
 
 const table = useTemplateRef("table");
 const globalFilter = ref("");
