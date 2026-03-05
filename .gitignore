@@ -35,5 +35,6 @@ __screenshots__/
 auto-imports.d.ts
 components.d.ts
 
-# env
-*.env
+# dotenv environment variables file
+.env
+.env.test
