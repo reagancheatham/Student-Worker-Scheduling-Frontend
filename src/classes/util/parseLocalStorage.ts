@@ -1,4 +1,4 @@
-import { User } from "@classes/User";
+import { User } from "@classes/database/User";
 
 export class ParseLocalStorage {
   static parseUser(): User | null{
