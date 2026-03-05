@@ -4,22 +4,10 @@ import { CalendarData } from '@classes/calendar/calendarData.ts';
 </script>
 
 <template>
-    <UApp :locale="CalendarData.locale">
-        <UMain>
-            <UDashboardGroup>
-                <ScheduleSidebar />
-                <UDashboardPanel>
-                    <template #header>
-                        <ScheduleNavbar/>
-                    </template>
-
-                    <template #body class="overflow-hidden!">
-                        <!-- <ScheduleCalendar /> -->
-                        <RouterView />
-                    </template>
-                </UDashboardPanel>
-            </UDashboardGroup>
-        </UMain>
-        <UFooter />
-    </UApp>
+  <UApp>
+    <UMain>
+      <RouterView />
+    </UMain>
+    <UFooter />
+  </UApp>
 </template>

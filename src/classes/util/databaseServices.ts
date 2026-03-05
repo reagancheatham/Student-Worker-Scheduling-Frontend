@@ -17,6 +17,7 @@ export class DatabaseServices {
             })
             .catch((err) => {
                 console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
+                return null;
             });
 
         if (finalResult === null)

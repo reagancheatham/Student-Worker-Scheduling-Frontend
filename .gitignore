@@ -34,3 +34,7 @@ __screenshots__/
 # Nuxt UI
 auto-imports.d.ts
 components.d.ts
+
+# dotenv environment variables file
+.env
+.env.test
