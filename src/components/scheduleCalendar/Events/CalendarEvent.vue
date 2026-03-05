@@ -279,7 +279,6 @@ function onResize(evt: PointerEvent): void {
 }
 
 function stopResize(): void {
-    console.log("end resize");
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
     window.removeEventListener("pointermove", onResize);
@@ -291,6 +290,10 @@ function stopResize(): void {
     updateBackendEvent();
 }
 //#endregion
+
+function onMouseEnter(): void {
+    if (props.canHover && !props.editable) isPopoverOpen.value = true;
+}
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (minute < 0) {
@@ -333,9 +336,10 @@ function getGridArea(): string {
         if (refData.value instanceof ShiftEvent) {
             const employee = refData.value.shift.employee;
 
-            row = props.calendarData.relevantEmployees.findIndex(
-                (relEmployee) => relEmployee.id === employee.id,
-            ) + 1;
+            row =
+                props.calendarData.relevantEmployees.findIndex(
+                    (relEmployee) => relEmployee.id === employee.id,
+                ) + 1;
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
@@ -407,15 +411,27 @@ function deleted(): void {
 </style>
 
 <template>
-    <UPopover
-        v-model:open="isPopoverOpen"
-        :content="{ side: 'right' }"
-        @update:open="
-            () => {
-                if (!canHover || !editable) isPopoverOpen = false;
-            }
-        "
-    >
+    <UPopover v-model:open="isPopoverOpen" :content="{ side: 'right' }">
+        <template #content>
+            <UCard>
+                <template #header>{{ refData.name }}</template>
+                <template #default>
+                    <div>
+                        {{ refData.startTime.toTimeString() }} -
+                        {{ refData.endTime.toTimeString() }}
+                    </div>
+                    <div
+                        v-if="
+                            refData instanceof ShiftEvent &&
+                            refData.shift.employee
+                        "
+                    >
+                        {{ refData.shift.employee.fullName }}
+                    </div>
+                </template>
+            </UCard>
+        </template>
+
         <UCard
             ref="element"
             class="event"
@@ -424,7 +440,7 @@ function deleted(): void {
             :ui="{
                 footer: 'mt-auto',
             }"
-            @mouseenter="if (canHover && editable) isPopoverOpen = true;"
+            @mouseenter="onMouseEnter"
             @mouseleave="isPopoverOpen = false"
             @pointerdown="onPointerDown"
             @pointerup="onPointerUp"

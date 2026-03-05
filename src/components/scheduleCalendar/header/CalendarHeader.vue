@@ -59,7 +59,6 @@ function createEvent() {
     editedEvent.value = new ShiftEvent(createDefaultShift());
 
     isModalOpen.value = true;
-    console.log("open");
 }
 
 function createDefaultShift(): Shift {
