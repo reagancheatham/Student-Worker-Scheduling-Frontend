@@ -5,11 +5,11 @@ const API_ROOT: string = "employees";
 
 export class EmployeeServices {
     static async create(employee: Employee) {
-        await DatabaseServices.create(API_ROOT, employee);
+        await DatabaseServices.create(Employee, API_ROOT, employee);
     }
 
     static async update(employee: Employee) {
-        await DatabaseServices.update(API_ROOT, employee);
+        await DatabaseServices.update(Employee, API_ROOT, employee);
     }
 
     static async delete(employee: Employee) {
@@ -17,7 +17,10 @@ export class EmployeeServices {
     }
 
     static async get(id: number) {
-        return await DatabaseServices.get<Employee>(Employee, `${API_ROOT}/${id}`);
+        return await DatabaseServices.get<Employee>(
+            Employee,
+            `${API_ROOT}/${id}`,
+        );
     }
 
     static async getAllForBusiness(businessID: number) {

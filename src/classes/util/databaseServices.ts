@@ -1,31 +1,48 @@
-import {
-    DatabaseModelStatic,
-} from "@classes/database/databaseModel.ts";
+import { DatabaseModelStatic } from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
 
 export class DatabaseServices {
-    static async create(path: string, object: any) {
-        return await apiClient
+    static async create<T>(
+        model: DatabaseModelStatic<T>,
+        path: string,
+        object: any,
+    ): Promise<T> {
+        let finalResult: T | null = null;
+
+        await apiClient
             .post(path, object)
-            .then((response) => {
+            .then((result) => {
+                finalResult = model.create(result.data);
                 console.log(`${path} created successfully`);
-                return response.data;
             })
             .catch((err) => {
                 console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
                 return null;
             });
+
+        if (finalResult === null)
+            throw Error(`Error creating ${path}: invalid result!`);
+        else return finalResult;
     }
 
-    static async update(path: string, object: any) {
+    static async update<T>(
+        model: DatabaseModelStatic<T>,
+        path: string,
+        object: any,
+    ): Promise<T> {
+        let finalResult: T | null = null;
+
         await apiClient
             .put(path, object)
-            .then(() => {
+            .then((result) => {
+                finalResult = model.create(result.data);
                 console.log(`${path} updated successfully`);
             })
             .catch((err) => {
                 console.error(`Error updating ${path}: ${JSON.stringify(err)}`);
             });
+
+        return finalResult;
     }
 
     static async delete(path: string) {

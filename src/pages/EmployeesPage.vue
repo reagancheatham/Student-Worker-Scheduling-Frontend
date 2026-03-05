@@ -14,9 +14,10 @@ EmployeeServices.getAllForBusiness(1)
     .then((result) => {
         data = result;
         console.log(data);
-    }).catch((err) => {
-        console.error(err);
     })
+    .catch((err) => {
+        console.error(err);
+    });
 
 const columns: TableColumn<Employee>[] = [
     {
@@ -52,11 +53,6 @@ const columns: TableColumn<Employee>[] = [
 
 <template>
     <div class="h-screen flex flex-col">
-        <UTable
-            class="flex-1"
-            :data="data"
-            :columns="columns"
-            ref="table"
-        />
+        <UTable class="flex-1" :data="data" :columns="columns" ref="table" />
     </div>
 </template>

@@ -11,12 +11,12 @@ export class Employee extends DatabaseModel {
         super();
     }
 
-    protected static createFromData(data: any): Employee {
+    public static createFromData(data: any): Employee {
         let user = data["User"];
-        let firstName = user ? user.firstName : "" as string;
-        let lastName = user ? user.lastName : "" as string;
-        let email = user ? user.email : "" as string;
-        let phoneNumber = user ? user.phoneNumber : "" as string;
+        let firstName = user ? user.firstName : ("" as string);
+        let lastName = user ? user.lastName : ("" as string);
+        let email = user ? user.email : ("" as string);
+        let phoneNumber = user ? user.phoneNumber : ("" as string);
 
         return new Employee(
             data["id"] ?? 0,
@@ -25,5 +25,9 @@ export class Employee extends DatabaseModel {
             email,
             phoneNumber,
         );
+    }
+
+    public get fullName(): string {
+        return `${this.firstName} ${this.lastName}`;
     }
 }

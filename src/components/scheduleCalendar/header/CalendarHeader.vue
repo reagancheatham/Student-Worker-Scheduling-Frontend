@@ -1,13 +1,34 @@
 <script setup lang="ts">
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { EventColor } from "@classes/calendar/eventColor.ts";
+import { EventData } from "@classes/calendar/eventData.ts";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { Business } from "@classes/database/business.ts";
+import { Shift } from "@classes/database/shift.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
+import { ref } from "vue";
 
 const { data, cellSize } = defineProps<{
     data: CalendarData;
     cellSize: Vector2;
 }>();
+
+const editedEvent = ref<EventData>(new ShiftEvent(createDefaultShift()));
+const isModalOpen = ref(false);
+
+const createItems = [
+    [
+        {
+            label: "Shift",
+            icon: "i-heroicons-calendar-days-20-solid",
+            onSelect() {
+                createEvent();
+            },
+        },
+    ],
+];
 
 function getStyle() {
     if (data.selectedView === CalendarMode.Day)
@@ -16,13 +37,54 @@ function getStyle() {
         };
     else
         return {
-            marginBottom: `12px`,
-            marginLeft: `${cellSize.x}px`,
+            marginLeft: `${0.25 * cellSize.x}px`,
+            marginBottom: `24px`,
+        };
+}
+
+function getButtonStyle() {
+    if (data.selectedView === CalendarMode.Day) return {};
+    else
+        return {
+            marginLeft: `${0.35 * cellSize.x}px`,
+            marginRight: `${0.1 * cellSize.x}px`,
         };
 }
 
 function goToToday() {
     data.selectedDay = today(CalendarData.timeZone);
+}
+
+function createEvent() {
+    editedEvent.value = new ShiftEvent(createDefaultShift());
+
+    isModalOpen.value = true;
+}
+
+function createDefaultShift(): Shift {
+    const startTime = new Date();
+    const endTime = new Date();
+
+    startTime.setHours(9, 0);
+    endTime.setHours(12, 0);
+
+    return new Shift(
+        0,
+        Business.current.id,
+        "New Shift",
+        startTime,
+        endTime,
+        EventColor.blue,
+        undefined,
+    );
+}
+
+function closeModal() {
+    isModalOpen.value = false;
+}
+
+function updateRelevantEvents() {
+    data.updateRelevantData();
 }
 </script>
 
@@ -36,7 +98,6 @@ function goToToday() {
 
 .headerSegment {
     display: flex;
-    flex-direction: row;
     align-items: flex-end;
     gap: 12px;
 }
@@ -58,11 +119,23 @@ function goToToday() {
 
 <template>
     <div class="headerContainer" :style="getStyle()">
+        <UDropdownMenu :items="createItems">
+            <UButton
+                icon="i-heroicons-plus-20-solid"
+                class="px-5 py-5 shadow-md -mb-4"
+                :style="getButtonStyle()"
+            />
+        </UDropdownMenu>
         <div class="headerSegment leftSegment">
             <CalendarDateShifter :data="data" />
         </div>
         <div class="headerSegment rightSegment">
-            <UButton label="Today" variant="outline" color="neutral" @click="goToToday"></UButton>
+            <UButton
+                label="Today"
+                variant="outline"
+                color="neutral"
+                @click="goToToday"
+            ></UButton>
             <UFormField class="selectMenuContainer" label="Date" name="option">
                 <CalendarDatePicker :data="data" />
             </UFormField>
@@ -71,4 +144,11 @@ function goToToday() {
             </UFormField>
         </div>
     </div>
+    <CalendarEventEditor
+        v-model="editedEvent"
+        :is-open="isModalOpen"
+        @close-requested="closeModal"
+        @form-submitted="updateRelevantEvents"
+        creator
+    />
 </template>

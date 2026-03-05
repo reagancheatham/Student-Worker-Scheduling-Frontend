@@ -2,7 +2,12 @@
 
 <style>
 .scheduleContainer {
-    height: 85vh;
+    height: 82vh;
+    padding-bottom: 20px;
+}
+
+body {
+    overflow: hidden;
 }
 </style>
 

@@ -2,18 +2,18 @@
 @import "@nuxt/ui";
 
 @theme static {
-  --color-maroon-50:  #fbeaec;
-  --color-maroon-100: #f3c6cc;
-  --color-maroon-200: #e89aa4;
-  --color-maroon-300: #d96a78;
-  --color-maroon-400: #c23b53;
-  --color-maroon-500: #811429;
-  --color-maroon-600: #6f1022;
-  --color-maroon-700: #5f0f1d;
-  --color-maroon-800: #4b0c17;
-  --color-maroon-900: #35080f;
+    --color-maroon-50: #fbeaec;
+    --color-maroon-100: #f3c6cc;
+    --color-maroon-200: #e89aa4;
+    --color-maroon-300: #d96a78;
+    --color-maroon-400: #c23b53;
+    --color-maroon-500: #811429;
+    --color-maroon-600: #6f1022;
+    --color-maroon-700: #5f0f1d;
+    --color-maroon-800: #4b0c17;
+    --color-maroon-900: #35080f;
 }
 
 :root {
-  --ui-primary: var(--color-maroon-500);
+    --ui-primary: var(--color-maroon-500);
 }

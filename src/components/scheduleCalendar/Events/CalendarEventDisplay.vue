@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 
 type EventSlot = {
     index: number;
@@ -33,7 +34,7 @@ const displayClasses = new Map<CalendarMode, string>([
     [CalendarMode.Month, "eventContainer monthEventContainer"],
 ]);
 
-onMounted(() => {
+watch(calendarData.refRelevantEvents, () => {
     initializeZIndices();
     calculateBisects();
 });
@@ -72,9 +73,9 @@ function onEventDragEnded(event: EventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents: EventData[] = [...calendarData.refRelevantEvents.value].sort(
-        (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
-    );
+    const sortedEvents: EventData[] = [
+        ...calendarData.refRelevantEvents.value,
+    ].sort((a, b) => a.startTime.totalTime() - b.startTime.totalTime());
 
     for (const event of sortedEvents) {
         if (eventSlots.has(event)) continue;
@@ -168,7 +169,17 @@ function findLongestBisectChain(event: EventData): EventData[] {
 }
 
 function getAllBisectingEvents(event: EventData): EventData[] {
-    return calendarData.refRelevantEvents.value.filter((e) => e.bisects(event));
+    return calendarData.refRelevantEvents.value.filter((e) => {
+        if (calendarData.selectedView === CalendarMode.Day) {
+            const event1 = event as ShiftEvent;
+            const event2 = e as ShiftEvent;
+
+            return (
+                event1.bisects(event2) &&
+                event1.shift.employee.id === event2.shift.employee.id
+            );
+        } else return event.bisects(e);
+    });
 }
 </script>
 

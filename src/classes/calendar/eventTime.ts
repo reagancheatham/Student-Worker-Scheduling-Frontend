@@ -1,4 +1,4 @@
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, Time } from "@internationalized/date";
 
 export class EventTime {
     constructor(
@@ -35,6 +35,10 @@ export class EventTime {
         return this.isAfter(other) || this.totalTime() === other.totalTime();
     }
 
+    toTime(): Time {
+        return new Time(this.hour, this.minute);
+    }
+
     totalTime(): number {
         const day = new CalendarDate(this.year, this.month, this.day);
         const julianStart = day.calendar.toJulianDay(
@@ -66,6 +70,24 @@ export class EventTime {
         else periodText = "PM";
 
         return `${hourText}:${minuteText} ${periodText}`;
+    }
+
+    toIsoTimeString(): string {
+        let hour = this.hour;
+        let minute = this.minute;
+
+        let hourText = "";
+        let minuteText = "";
+
+        if (hour > 12) hour -= 12;
+        else if (hour == 0) hour = 12;
+
+        hourText = hour > 9 ? hour.toString() : `0${hour.toString()}`;
+
+        if (minute >= 10) minuteText = `${minute}`;
+        else minuteText = `0${minute}`;
+
+        return `${hourText}:${minuteText}`;
     }
 
     toDate(): Date {

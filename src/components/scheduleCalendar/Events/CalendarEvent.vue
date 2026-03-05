@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, toRef } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef, toRef, watch } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -9,6 +9,15 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftServices } from "../../../services/shiftServices.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import {
+    CalendarDate,
+    DateFormatter,
+    isSameDay,
+    startOfWeek,
+    Time,
+} from "@internationalized/date";
+import { Employee } from "@classes/database/employee.ts";
+import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 //#region Variables
 enum EventState {
@@ -16,6 +25,13 @@ enum EventState {
     Resizing,
     Dragging,
 }
+
+const MAX_Z_INDEX = Infinity;
+const FONT_RANGE = new Range(6, 12);
+const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
+const RESIZE_STEP = 5;
+const RESIZE_RATIO = 60 / RESIZE_STEP;
+const DRAG_THRESHOLD = 0.5;
 
 const refData = defineModel<EventData>({ required: true });
 
@@ -34,18 +50,12 @@ const emit = defineEmits({
     dragEnded: (_: EventData) => true,
 });
 
-const MAX_Z_INDEX = Infinity;
-const FONT_RANGE = new Range(6, 12);
-const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
-const RESIZE_STEP = 5;
-const RESIZE_RATIO = 60 / RESIZE_STEP;
-const DRAG_THRESHOLD = 0.5;
-
 const element = ref<any>(null);
 const elementHeight = ref(0);
 const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
-const isOpen = ref(false);
+const isPopoverOpen = ref(false);
+const isModalOpen = ref(false);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -72,6 +82,21 @@ onMounted(() => {
 onBeforeUnmount(() => {
     observer?.disconnect();
 });
+
+// This prevents events from flickering when loading data from backend
+function shouldRender(): boolean {
+    const calendarData = props.calendarData;
+    const startTime = refData.value.startTime.calendarDate();
+
+    if (calendarData.selectedView === CalendarMode.Day)
+        return isSameDay(startTime, calendarData.selectedDay);
+    else {
+        return isSameDay(
+            startOfWeek(startTime, CalendarData.localeString),
+            startOfWeek(calendarData.selectedDay, CalendarData.localeString),
+        );
+    }
+}
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
@@ -104,7 +129,7 @@ function onPointerMove(evt: PointerEvent): void {
             state = EventState.Dragging;
             dragStartTime = refData.value.startTime.clone();
             dragEndTime = refData.value.endTime.clone();
-            isOpen.value = false;
+            isPopoverOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
 
             emit("dragBegan", refData.value);
@@ -180,16 +205,17 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointermove", onPointerMove);
     document.removeEventListener("pointerup", onPointerUp);
 
-    if (state != EventState.Dragging) return;
+    if (state != EventState.Dragging) {
+        if (state == EventState.None && props.editable)
+            isModalOpen.value = true;
+
+        return;
+    }
 
     state = EventState.None;
 
     emit("dragEnded", refData.value);
-
-    if (refData.value instanceof ShiftEvent) {
-        refData.value.updateData();
-        ShiftServices.update(refData.value.shift);
-    }
+    updateBackendEvent();
 }
 
 function startResize(evt: PointerEvent): void {
@@ -207,8 +233,7 @@ function startResize(evt: PointerEvent): void {
     window.addEventListener("pointermove", onResize);
     window.addEventListener("pointerup", stopResize, { once: true });
 
-    isOpen.value = false;
-    state = EventState.Resizing;
+    isPopoverOpen.value = false;
 
     emit("resizeBegan");
 }
@@ -246,10 +271,10 @@ function onResize(evt: PointerEvent): void {
 
     if (minuteDifference < 15) return;
 
+    state = EventState.Resizing;
     refData.value.endTime.hour = hour;
     refData.value.endTime.minute = minute;
 
-    state = EventState.None;
     emit("resized", refData.value);
 }
 
@@ -259,14 +284,16 @@ function stopResize(): void {
     window.removeEventListener("pointermove", onResize);
     window.removeEventListener("pointerup", stopResize);
 
-    emit("resizeEnded");
+    state = EventState.None;
 
-    if (refData.value instanceof ShiftEvent) {
-        refData.value.updateData();
-        ShiftServices.update(refData.value.shift);
-    }
+    emit("resizeEnded");
+    updateBackendEvent();
 }
 //#endregion
+
+function onMouseEnter(): void {
+    if (props.canHover && !props.editable) isPopoverOpen.value = true;
+}
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
     if (minute < 0) {
@@ -307,26 +334,34 @@ function getGridArea(): string {
         let row = 1;
 
         if (refData.value instanceof ShiftEvent) {
-            const employeeID = refData.value.shift.employeeID;
+            const employee = refData.value.shift.employee;
 
-            row = props.calendarData.relevantEmployees.findIndex((employee) => employee.id === employeeID) + 1;
+            row =
+                props.calendarData.relevantEmployees.findIndex(
+                    (relEmployee) => relEmployee.id === employee.id,
+                ) + 1;
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
-    }
-    else
+    } else
         return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
 function getStyle() {
+    if (!shouldRender())
+        return {
+            visibility: "hidden",
+        };
+
     let style = {
         "grid-area": getGridArea(),
-        "background-color": `var(${refData.value.color})`,
+        "background-color": `var(${refData.value.color.tailwind})`,
         "z-index": `${refData.value.zIndex}`,
         "margin-top": `0`,
         "margin-bottom": `0`,
         "margin-left": `0`,
         "margin-right": `0`,
+        cursor: props.editable ? "pointer" : "cursor",
     };
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
@@ -340,6 +375,18 @@ function getStyle() {
     }
 
     return style;
+}
+
+function updateBackendEvent(): void {
+    if (refData.value instanceof ShiftEvent) refData.value.updateBackendEvent();
+}
+
+function closeModal(): void {
+    isModalOpen.value = false;
+}
+
+function deleted(): void {
+    props.calendarData.updateRelevantData();
 }
 </script>
 
@@ -364,15 +411,27 @@ function getStyle() {
 </style>
 
 <template>
-    <UPopover
-        v-model:open="isOpen"
-        :content="{ side: 'right' }"
-        @update:open="
-            () => {
-                if (!canHover || !editable) isOpen = false;
-            }
-        "
-    >
+    <UPopover v-model:open="isPopoverOpen" :content="{ side: 'right' }">
+        <template #content>
+            <UCard>
+                <template #header>{{ refData.name }}</template>
+                <template #default>
+                    <div>
+                        {{ refData.startTime.toTimeString() }} -
+                        {{ refData.endTime.toTimeString() }}
+                    </div>
+                    <div
+                        v-if="
+                            refData instanceof ShiftEvent &&
+                            refData.shift.employee
+                        "
+                    >
+                        {{ refData.shift.employee.fullName }}
+                    </div>
+                </template>
+            </UCard>
+        </template>
+
         <UCard
             ref="element"
             class="event"
@@ -381,8 +440,8 @@ function getStyle() {
             :ui="{
                 footer: 'mt-auto',
             }"
-            @mouseenter="if (canHover && editable) isOpen = true;"
-            @mouseleave="isOpen = false"
+            @mouseenter="onMouseEnter"
+            @mouseleave="isPopoverOpen = false"
             @pointerdown="onPointerDown"
             @pointerup="onPointerUp"
         >
@@ -403,16 +462,28 @@ function getStyle() {
                     />
                 </div>
             </template>
-
+            <!-- SHOULD ADD AN AVATAR TO THE EMPLOYEE AND ALSO DONT NEED TO USE A UBADGE -->
             <template #default>
-                <UBadge
-                    class="font-normal text-gray-800 flex flex-col items-start"
-                    variant="ghost"
-                    :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
-                    :ui="{
-                        label: 'text-wrap line-clamp-2 select-none',
-                    }"
-                />
+                <div>
+                    <UBadge
+                        class="font-normal text-gray-800 flex flex-col items-start"
+                        variant="ghost"
+                        :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
+                        :ui="{
+                            label: 'text-wrap line-clamp-2 select-none',
+                        }"
+                    />
+                    <UBadge
+                        class="font-normal text-gray-700 flex flex-col items-start"
+                        variant="ghost"
+                        :label="
+                            refData instanceof ShiftEvent &&
+                            refData.shift.employee
+                                ? `${refData.shift.employee.firstName} ${refData.shift.employee.lastName}`
+                                : ''
+                        "
+                    />
+                </div>
                 <div
                     v-if="
                         props.calendarData.selectedView === CalendarMode.Day &&
@@ -438,18 +509,11 @@ function getStyle() {
                 />
             </template>
         </UCard>
-
-        <template #content>
-            <UCard class="size-48 m-4 inline-flex" variant="ghost">
-                <template #header>
-                    {{ refData.name }}
-                </template>
-
-                <template #body>
-                    {{ refData.startTime.toTimeString() }} -
-                    {{ refData.endTime.toTimeString() }}
-                </template>
-            </UCard>
-        </template>
+        <CalendarEventEditor
+            :model-value="refData"
+            :is-open="isModalOpen"
+            @close-requested="closeModal()"
+            @event-deleted="deleted()"
+        />
     </UPopover>
 </template>
