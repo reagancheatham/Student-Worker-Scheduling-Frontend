@@ -22,4 +22,10 @@ export class ShiftEvent extends EventData {
         if (this.shift.isValid()) return ShiftServices.update(this.shift);
         else return ShiftServices.create(this.shift);
     }
+
+    public async destroy() {
+        if (!this.shift.isValid()) return;
+
+        return ShiftServices.delete(this.shift);
+    }
 }

@@ -380,6 +380,10 @@ function updateBackendEvent(): void {
 function closeModal(): void {
     isModalOpen.value = false;
 }
+
+function deleted(): void {
+    props.calendarData.updateRelevantData();
+}
 </script>
 
 <style>
@@ -492,7 +496,8 @@ function closeModal(): void {
         <CalendarEventEditor
             :model-value="refData"
             :is-open="isModalOpen"
-            @close-requested="closeModal"
+            @close-requested="closeModal()"
+            @event-deleted="deleted()"
         />
     </UPopover>
 </template>

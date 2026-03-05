@@ -154,6 +154,8 @@ export class CalendarData {
             relevantEmployees.push(event.shift.employee);
         }
 
+        relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+
         return relevantEmployees;
     }
 }

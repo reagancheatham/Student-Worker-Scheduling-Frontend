@@ -41,7 +41,7 @@ function getStyle() {
 
 <template>
     <div class="employeeContainer" :style="getStyle()">
-        <div class="employeeAvatar">
+        <div v-for="employee in data.relevantEmployees" class="employeeAvatar">
             <UAvatar class="employeePicture" src="avatar.png" />
         </div>
     </div>

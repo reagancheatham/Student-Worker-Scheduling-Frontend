@@ -15,7 +15,7 @@ const model = defineModel<EventData>({
     required: true,
 });
 
-const { isOpen, creator = true } = defineProps<{
+const { isOpen, creator = false } = defineProps<{
     isOpen: boolean;
     creator?: boolean;
 }>();
@@ -23,6 +23,7 @@ const { isOpen, creator = true } = defineProps<{
 const emit = defineEmits({
     closeRequested: () => true,
     formSubmitted: () => true,
+    eventDeleted: () => true,
 });
 
 onMounted(() => {
@@ -181,6 +182,12 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
 
     toggleModal();
 }
+
+function deleteEvent(): void {
+    (model.value as ShiftEvent).destroy().then(() => emit("eventDeleted"));
+
+    toggleModal();
+}
 </script>
 
 <template>
@@ -292,6 +299,7 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                             v-if="!creator"
                             color="neutral"
                             variant="outline"
+                            @click="deleteEvent()"
                         >
                             Delete
                         </UButton>
