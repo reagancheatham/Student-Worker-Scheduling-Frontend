@@ -2,43 +2,45 @@ name: Deploy dev to AWS
 
 #turn off deploy to AWS
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - dev
-  workflow_dispatch:
+    pull_request:
+        types: [closed]
+        branches:
+            - dev
+    workflow_dispatch:
 
 jobs:
-  aws-deploy:
-    runs-on: ubuntu-latest
-    env:
-      VITE_APP_CLIENT_ID: ${{secrets.VITE_APP_CLIENT_ID}}
-      VITE_APP_API_URL: ${{secrets.VITE_APP_API_URL}}
-      VITE_APP_CLIENT_URL: ${{secrets.VITE_APP_CLIENT_URL}}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: dev
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 22
-      - run: |
-          touch .env
-          echo VITE_APP_CLIENT_ID="$VITE_APP_CLIENT_ID" >> .env
-          echo VITE_APP_API_URL="$VITE_APP_API_URL" >> .env
-          echo VITE_APP_CLIENT_URL="workerscheduling.eaglesoftwareteam.com" >> .env
-          echo VITE_APP_SITE_URL="workerscheduling.eaglesoftwareteam.com" >> .env
-
-      - run: npm install
-      - run: npm run build
-      - run: npm run bundle
-
-      - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@v2.1.1
+    aws-deploy:
+        runs-on: ubuntu-latest
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          ARGS: "-rltgoDzvO --delete"
-          SOURCE: "dist/"
-          REMOTE_HOST: "workerscheduling.eaglesoftwareteam.com"
-          REMOTE_USER: ubuntu
-          TARGET: "/var/www/html/sev2026/t6"
+            VITE_APP_CLIENT_ID: ${{secrets.VITE_APP_CLIENT_ID}}
+            VITE_APP_API_URL: ${{secrets.VITE_APP_API_URL}}
+            VITE_APP_CLIENT_URL: ${{secrets.VITE_APP_CLIENT_URL}}
+            VITE_GOOGLE_CLIENT_ID: ${{secrets.VITE_GOOGLE_CLIENT_ID}}
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  ref: dev
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 22
+            - run: |
+                  touch .env
+                  echo VITE_APP_CLIENT_ID="$VITE_APP_CLIENT_ID" >> .env
+                  echo VITE_APP_API_URL="$VITE_APP_API_URL" >> .env
+                  echo VITE_APP_CLIENT_URL="workerscheduling.eaglesoftwareteam.com" >> .env
+                  echo VITE_APP_SITE_URL="workerscheduling.eaglesoftwareteam.com" >> .env
+                  echo VITE_GOOGLE_CLIENT_ID="$VITE_GOOGLE_CLIENT_ID" >> .env
+
+            - run: npm install
+            - run: npm run build
+            - run: npm run bundle
+
+            - name: Deploy to Server
+              uses: easingthemes/ssh-deploy@v2.1.1
+              env:
+                  SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+                  ARGS: "-rltgoDzvO --delete"
+                  SOURCE: "dist/"
+                  REMOTE_HOST: "workerscheduling.eaglesoftwareteam.com"
+                  REMOTE_USER: ubuntu
+                  TARGET: "/var/www/html/sev2026/t6"

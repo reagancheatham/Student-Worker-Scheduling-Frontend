@@ -55,10 +55,10 @@ function handleLogin() {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
+  <div class="mt-36 flex flex-col items-center justify-center gap-4 p-4">
     <UPageCard class="w-full max-w-md">
       <UAuthForm
-        title="Login"
+        title="Scheduler Login"
         description="Please enter your Oklahoma Christian credentials to continue."
         icon="i-lucide-user"
       />

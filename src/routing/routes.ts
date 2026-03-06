@@ -6,16 +6,14 @@
 //     Settings = "/settings",
 // }
 
-import { defineComponent, DefineComponent } from "vue";
 import DashboardPage from "../pages/DashboardPage.vue";
 import SchedulePage from "../pages/SchedulePage.vue";
-import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
 import EmployeesPage from "../pages/EmployeesPage.vue";
 import SettingsPage from "../pages/SettingsPage.vue";
 import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
-import DefaultLayout from "@components/templates/DefaultLayout.vue";
+import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
 
 //rag might want to get rid of component: any in favor of an actual type
 class Route {
@@ -45,7 +43,7 @@ export const routes = {
   NavbarLayout: new Route("", NavbarLayout, "NavbarLayout", true, [
     new Route("/dashboard", DashboardPage, "Dashboard", true),
     new Route("/schedule", SchedulePage, "Schedule", true),
-    new Route("/openShifts", OpenShifts, "Open Shifts", true),
+    new Route("/openShifts", OpenShiftsPage, "Open Shifts", true),
     new Route("/employees", EmployeesPage, "Employees", true),
     new Route("/settings", SettingsPage, "Settings", true),
   ]),

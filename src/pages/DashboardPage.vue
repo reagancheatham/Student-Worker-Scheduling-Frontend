@@ -20,7 +20,7 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
                 }"
             >
                 <template #header>
-                    <div class="text-base font-semibold">Schedule</div>
+                    <div class="text-base font-semibold">Today's Schedule</div>
                 </template>
                 <div class="w-full h-full min-h-0 mt-5">
                     <ScheduleCalendar default-view="Day" />
