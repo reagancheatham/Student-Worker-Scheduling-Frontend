@@ -38,3 +38,5 @@ components.d.ts
 # dotenv environment variables file
 .env
 .env.test
+
+.package-lock.json
