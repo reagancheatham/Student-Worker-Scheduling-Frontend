@@ -1,4 +1,5 @@
 import { TimeOffRequest } from "@classes/database/timeOffRequest";
+import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseServices } from "@classes/util/databaseServices";
 
 const API_ROOT: string = "timeOffRequests";
@@ -28,5 +29,15 @@ export class TimeOffRequestServices {
       TimeOffRequest,
       `${API_ROOT}/business/${businessID}`,
     );
+  }
+
+  static async approve(timeOffRequest: TimeOffRequest) {
+    timeOffRequest.status = ApprovalStatus.Approved;
+    return await this.update(timeOffRequest)
+  }
+
+  static async deny(timeOffRequest: TimeOffRequest) {
+    timeOffRequest.status = ApprovalStatus.Denied;
+    return await this.update(timeOffRequest)
   }
 }
