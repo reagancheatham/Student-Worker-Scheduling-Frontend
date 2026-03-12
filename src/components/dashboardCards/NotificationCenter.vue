@@ -1,6 +1,23 @@
 <script setup lang="ts">
+import { ref } from "vue";
+import { TimeOffRequestServices } from "../../services/timeOffServices";
+import { useRoute } from "vue-router";
 
-//create class for these eventually
+const notifications = ref<Notification[]>([]);
+
+//this function will more likely than not just service call each type of notification backend model, unify them, then put em in an array of notification classes
+function getNotifications() {
+  const route = useRoute();
+  const businessID = route.params.businessID as string;
+  const timeOffRequests = TimeOffRequestServices.getAllForBusiness(Number(businessID));
+
+  notifications.value = timeOffRequests.map((req) => {
+    return new Notification(
+      req.employeeName, 
+      
+    );
+  });
+}
 const users = [
   {
     name: "Davey Clonts",
@@ -32,6 +49,10 @@ const users = [
             :name="user.name"
             :description="user.description"
             :avatar="user.avatar"
+            :ui="{
+              root: 'hover:bg-gray-50 rounded-md cursor-pointer transition-colors duration-150',
+            }"
+            @click="console.log()"
           />
         </template>
       </UPageCard>
