@@ -21,8 +21,10 @@ export const apiClient = axios.create({
         return JSON.stringify(data);
     },
     transformResponse: (data) => {
-        data = JSON.parse(data);
-
-        return data;
+        try {
+            return JSON.parse(data);
+        } catch {
+            return data;
+        }
     },
 });
