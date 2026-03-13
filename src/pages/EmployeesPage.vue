@@ -7,7 +7,11 @@ import { TableColumn } from "@nuxt/ui";
 let data = ref<Employee[]>([]);
 
 const columns: TableColumn<Employee>[] = [
-    
+    {
+        accessorKey: 'studentID',
+        header: 'Id',
+        cell: ({ row }) => `#${row.getValue('studentID')}`
+    }
 ]
 
 EmployeeServices.getAllForBusiness(1)
@@ -22,6 +26,6 @@ EmployeeServices.getAllForBusiness(1)
 
 <template>
     <div class="h-screen flex flex-col">
-        <UTable class="flex-1" :data="data" ref="table" />
+        <UTable class="flex-1" :columns="columns" :data="data" ref="table" />
     </div>
 </template>
