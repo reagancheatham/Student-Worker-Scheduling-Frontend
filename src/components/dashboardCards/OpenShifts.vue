@@ -3,6 +3,8 @@ import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { ShiftServices } from "../../services/shiftServices.ts";
+import { EmployeeServices } from "../../services/employeeServices.ts";
+import { ParseLocalStorage } from "@classes/util/parseLocalStorage.ts";
 
 const UBadge = resolveComponent("UBadge");
 
@@ -17,6 +19,20 @@ const { title } = defineProps<{
 
 const data = ref<OpenShiftRow[]>([]);
 
+async function getCurrentUserBusinessID(): Promise<number | null> {
+    const currentUser = ParseLocalStorage.parseUser();
+
+    if (!currentUser) return null;
+
+    try {
+        const employee = await EmployeeServices.getForUser(currentUser.id);
+        return employee.businessID;
+    } catch (error) {
+        console.error("Unable to resolve business for current user", error);
+        return null;
+    }
+}
+
 function formatShiftSlot(start: Date, end: Date): string {
     const dateStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const startTime = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -25,11 +41,18 @@ function formatShiftSlot(start: Date, end: Date): string {
 }
 
 onMounted(async () => {
+    const businessID = await getCurrentUserBusinessID();
+
+    if (!businessID) {
+        data.value = [];
+        return;
+    }
+
     const now = new Date();
     const future = new Date(now);
     future.setDate(future.getDate() + 30);
 
-    const shifts = await ShiftServices.getAllInRange(1, now, future);
+    const shifts = await ShiftServices.getAllInRange(businessID, now, future);
     data.value = shifts
         .filter((shift) => !shift.employee)
         .map((shift) => ({

@@ -3,6 +3,8 @@ import { DatabaseModel } from "./databaseModel.ts";
 export class Employee extends DatabaseModel {
     constructor(
         public readonly id: number,
+        public readonly businessID: number,
+        public readonly userID: number,
         public readonly firstName: string,
         public readonly lastName: string,
         public readonly email: string,
@@ -20,6 +22,8 @@ export class Employee extends DatabaseModel {
 
         return new Employee(
             data["id"] ?? 0,
+            data["businessID"] ?? 0,
+            data["userID"] ?? 0,
             firstName,
             lastName,
             email,

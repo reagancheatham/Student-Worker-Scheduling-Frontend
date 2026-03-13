@@ -23,6 +23,13 @@ export class EmployeeServices {
         );
     }
 
+    static async getForUser(userID: number) {
+        return await DatabaseServices.get<Employee>(
+            Employee,
+            `${API_ROOT}/user/${userID}`,
+        );
+    }
+
     static async getAllForBusiness(businessID: number) {
         return await DatabaseServices.getAll<Employee>(
             Employee,
