@@ -6,12 +6,28 @@ import { TableColumn } from "@nuxt/ui";
 
 let data = ref<Employee[]>([]);
 
+// "Nonsensical" be warned
 const columns: TableColumn<Employee>[] = [
     {
         accessorKey: 'studentID',
         header: 'Id',
-        cell: ({ row }) => `#${row.getValue('studentID')}`
-    }
+        cell: ({ row }) => `${row.getValue('studentID')}`
+    },
+    {
+        id: "name",
+        header: "Name",
+        cell: ({ row }) => row.original.fullName
+    },
+    {
+        accessorKey: 'email',
+        header: 'Email',
+        cell: ({ row }) => `${row.getValue('email')}`
+    },
+    {
+        accessorKey: 'phoneNumber',
+        header: 'Phone Number',
+        cell: ({ row }) => `${row.getValue('phoneNumber')}`
+    },
 ]
 
 EmployeeServices.getAllForBusiness(1)
