@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     let baseURL = "";
 
     if (mode === "development") baseURL = "/";
-    else baseURL = "/sev2026/t6";
+    else baseURL = "/sev2026/t6/";
 
     return {
         plugins: [
