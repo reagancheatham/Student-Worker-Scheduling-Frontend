@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
-import { useRoute } from "vue-router";
 import { ShiftServices } from "../../services/shiftServices.ts";
-import { Business } from "@classes/database/business.ts";
 
 const UBadge = resolveComponent("UBadge");
 
+type OpenShiftRow = {
+    ShiftSlot: string;
+    Reason: "Unscheduled";
+}
 type OpenShiftRow = {
     ShiftSlot: string;
     Reason: "Unscheduled";
@@ -18,17 +21,6 @@ const { title } = defineProps<{
 }>();
 
 const data = ref<OpenShiftRow[]>([]);
-const route = useRoute();
-
-function getBusinessIDFromRoute(): number | null {
-    const businessIDParam = route.params.businessID;
-    const parsedBusinessID = Number(businessIDParam);
-
-    if (!Number.isFinite(parsedBusinessID) || parsedBusinessID <= 0)
-        return null;
-
-    return parsedBusinessID;
-}
 
 function formatShiftSlot(start: Date, end: Date): string {
     const dateStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -38,18 +30,11 @@ function formatShiftSlot(start: Date, end: Date): string {
 }
 
 onMounted(async () => {
-    const businessID = Business.current.id;;
-
-    if (!businessID) {
-        data.value = [];
-        return;
-    }
-
     const now = new Date();
     const future = new Date(now);
     future.setDate(future.getDate() + 30);
 
-    const shifts = await ShiftServices.getAllInRange(businessID, now, future);
+    const shifts = await ShiftServices.getAllInRange(1, now, future);
     data.value = shifts
         .filter((shift) => !shift.employee)
         .map((shift) => ({
@@ -58,6 +43,7 @@ onMounted(async () => {
         }));
 });
 
+const columns: TableColumn<OpenShiftRow>[] = [
 const columns: TableColumn<OpenShiftRow>[] = [
     {
         accessorKey: "ShiftSlot",
