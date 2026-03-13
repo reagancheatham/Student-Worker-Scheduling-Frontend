@@ -32,19 +32,18 @@ class Route {
       component: this.component,
       name: this.name,
       meta: { requiresAuth: this.requiresAuth },
-      children: this.children ? this.children.map((c) => c.unwrap()) : []
+      children: this.children ? this.children.map((c) => c.unwrap()) : [],
     };
   }
 }
 
-const navbarChildren = [];
 export const routes = {
   Login: new Route("/login", LoginPage, "Login", false),
-  NavbarLayout: new Route("", NavbarLayout, "NavbarLayout", true, [
-    new Route("/dashboard", DashboardPage, "Dashboard", true),
-    new Route("/schedule", SchedulePage, "Schedule", true),
-    new Route("/openShifts", OpenShiftsPage, "Open Shifts", true),
-    new Route("/employees", EmployeesPage, "Employees", true),
-    new Route("/settings", SettingsPage, "Settings", true),
+  NavbarLayout: new Route("/:businessID", NavbarLayout, "NavbarLayout", true, [
+    new Route("dashboard", DashboardPage, "Dashboard", true),
+    new Route("schedule", SchedulePage, "Schedule", true),
+    new Route("openShifts", OpenShiftsPage, "Open Shifts", true),
+    new Route("employees", EmployeesPage, "Employees", true),
+    new Route("settings", SettingsPage, "Settings", true),
   ]),
 };
