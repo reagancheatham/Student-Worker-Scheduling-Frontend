@@ -12,6 +12,7 @@ export const router = createRouter({
 router.beforeEach((to, from, next) => {
     const storedUser = localStorage.getItem("user");
     let token: string | null = null;
+    let businessID = 1;
 
     if (storedUser) {
         try {
@@ -26,9 +27,9 @@ router.beforeEach((to, from, next) => {
     }
 
     if (to.meta.requiresAuth && !token) {
-        next("/login");
+        next(`/login`);
     } else if (to.path === "/login" && token) {
-        next("/dashboard");
+        next(`/${businessID}/dashboard/`);
     } else {
         next();
     }
