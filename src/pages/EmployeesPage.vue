@@ -2,8 +2,13 @@
 import { ref } from "vue";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
+import { TableColumn } from "@nuxt/ui";
 
 let data = ref<Employee[]>([]);
+
+const columns: TableColumn<Employee>[] = [
+    
+]
 
 EmployeeServices.getAllForBusiness(1)
     .then((result) => {
