@@ -3,7 +3,7 @@ import axios from "axios";
 var baseURL: string = "";
 
 if (import.meta.env.MODE === "development")
-    baseURL = "http://localhost/workerscheduling-t6/";
+    baseURL = "http://localhost:3136/workerscheduling-t6/";
 else baseURL = "/workerscheduling-t6/";
 
 export const apiClient = axios.create({
@@ -21,8 +21,10 @@ export const apiClient = axios.create({
         return JSON.stringify(data);
     },
     transformResponse: (data) => {
-        data = JSON.parse(data);
-
-        return data;
+        try {
+            return JSON.parse(data);
+        } catch {
+            return data;
+        }
     },
 });
