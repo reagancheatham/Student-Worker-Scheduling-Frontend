@@ -1,40 +1,44 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
+import { ShiftServices } from "../../services/shiftServices.ts";
 
 const UBadge = resolveComponent("UBadge");
 
-//create class for these eventually
-type OpenShifts = {
-    ShiftSlot: String;
-    Reason: "Dropped" | "Unscheduled";
+type OpenShiftRow = {
+    ShiftSlot: string;
+    Reason: "Unscheduled";
 }
 
 const { title } = defineProps<{
     title: string
 }>();
 
-const data = ref<OpenShifts[]>([
-    {
-        ShiftSlot: "Feb. 16, 10:30a.m. - 1:30p.m.",
-        Reason: "Dropped"
-    },
-    {
-        ShiftSlot: "Feb. 22, 10:30a.m. - 1:30p.m.",
-        Reason: "Unscheduled"
-    },
-    {
-        ShiftSlot: "Feb. 23, 10:30a.m. - 1:30p.m.",
-        Reason: "Unscheduled"
-    },
-    {
-        ShiftSlot: "Feb. 24, 10:30a.m. - 11:30p.m.",
-        Reason: "Unscheduled"
-    },
-]);
+const data = ref<OpenShiftRow[]>([]);
 
-const columns: TableColumn<OpenShifts>[] = [
+function formatShiftSlot(start: Date, end: Date): string {
+    const dateStr = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const startTime = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const endTime = end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return `${dateStr}, ${startTime} - ${endTime}`;
+}
+
+onMounted(async () => {
+    const now = new Date();
+    const future = new Date(now);
+    future.setDate(future.getDate() + 30);
+
+    const shifts = await ShiftServices.getAllInRange(1, now, future);
+    data.value = shifts
+        .filter((shift) => !shift.employee)
+        .map((shift) => ({
+            ShiftSlot: formatShiftSlot(new Date(shift.startTime), new Date(shift.endTime)),
+            Reason: "Unscheduled",
+        }));
+});
+
+const columns: TableColumn<OpenShiftRow>[] = [
     {
         accessorKey: "ShiftSlot",
         header: "Shift",
@@ -47,7 +51,6 @@ const columns: TableColumn<OpenShifts>[] = [
         header: "Reason",
         cell: ({ row }) => {
             const color = {
-                Dropped: "error" as const,
                 Unscheduled: "neutral" as const,
             }[row.getValue("Reason") as string];
 
