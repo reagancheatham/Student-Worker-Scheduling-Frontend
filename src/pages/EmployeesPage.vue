@@ -67,6 +67,8 @@ const columns: TableColumn<Employee>[] = [
     },
 ];
 
+//something to do with [] syntax... idk i messed it up so TODO figure it out
+//Then i need to finish delete functionality...
 function getRowItems(row: Row<Employee>) {
     return [
         [
