@@ -152,12 +152,14 @@ EmployeeServices.getAllForBusiness(1)
     </UModal>
 
     <div class="h-screen flex flex-col">
-        <div class="flex px-4 py-3.5 border-b border-accented">
+        <div class="flex justify-between px-4 py-3.5 border-b border-accented">
             <UInput
                 v-model="globalFilter"
                 class="max-w-sm"
                 placeholder="Filter..."
             />
+
+            <UButton label="Add Employee" color="primary" />
         </div>
         <UTable
             class="flex-1"
