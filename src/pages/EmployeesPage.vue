@@ -6,7 +6,6 @@ import { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
-import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
 
 const globalFilter = ref();
 const toast = useToast();
@@ -14,7 +13,8 @@ const { copy } = useClipboard();
 const UButton = resolveComponent("UButton");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
 
-const isOpen = ref(false); //ask rag for better ways to handle the double confirm modal???
+const deleteDoubleConfirm = ref(false); //ask rag for better ways to handle the double confirm modal???
+const selectedEmployee = ref(<Employee | null>null);
 
 let data = ref<Employee[]>([]);
 
@@ -67,8 +67,6 @@ const columns: TableColumn<Employee>[] = [
     },
 ];
 
-//something to do with [] syntax... idk i messed it up so TODO figure it out
-//Then i need to finish delete functionality...
 function getRowItems(row: Row<Employee>) {
     return [
         [
@@ -77,44 +75,54 @@ function getRowItems(row: Row<Employee>) {
                 icon: "i-lucide-copy",
                 onSelect() {
                     copy(row.original.studentID);
-    
+
                     toast.add({
                         title: "Employee ID copied to clipboard!",
                         color: "success",
                         icon: "i-lucide-circle-check",
-                    })
+                    });
                 },
             },
-        ],
-        [
             {
                 label: "Copy Email",
                 icon: "i-lucide-copy",
-                onselect() {
+                onSelect() {
                     copy(row.original.email);
-    
+
                     toast.add({
                         title: "Employee Email copied to clipboard!",
                         color: "success",
                         icon: "i-lucide-circle-check",
-                    })
+                    });
                 },
             },
         ],
         [
             {
-                type: "separator",
-            },
-            {
                 label: "Delete",
                 icon: "i-lucide-trash",
                 color: "error",
-                onselect() {
-                    console.log("made it");
+                onSelect() {
+                    openDoubleConfirm(row.original);
                 },
             },
-        ]
+        ],
     ];
+}
+
+function openDoubleConfirm(employee: Employee) {
+    deleteDoubleConfirm.value = true;
+    selectedEmployee.value = employee;
+}
+
+function deleteEmployee() {
+    EmployeeServices.delete(selectedEmployee.value);
+    deleteDoubleConfirm.value = false;
+
+    //chatGPT table update solution
+    data.value = data.value.filter(
+        e => e.studentID !== selectedEmployee.value!.studentID
+    );
 }
 
 EmployeeServices.getAllForBusiness(1)
@@ -128,13 +136,20 @@ EmployeeServices.getAllForBusiness(1)
 </script>
 
 <template>
-    <!-- <UModal v-model="isOpen">
-        <UCard>
-            <template #header>
-                <h3 class="text-lg font-semibold">Confirm Deletion</h3>
-            </template>
-        </UCard>
-    </UModal> -->
+    <!-- TODO: figure out how to get an x instead of arrow -->
+    <UModal v-model:open="deleteDoubleConfirm" title="Are you sure?" close-icon="i-lucide-arrow-right">
+        <template #body>
+            <div class="text-center text-2xl font-medium">
+                Are you sure you want to delete 
+                <br>
+                {{ selectedEmployee.fullName }}?
+            </div>
+            <div class="flex justify-center gap-4 pt-4">
+                <UButton label="Yes" color="primary" @click="deleteEmployee()"/>
+                <UButton label="No" color="neutral" variant="outline" @click="deleteDoubleConfirm = false" />
+            </div>
+        </template>
+    </UModal>
 
     <div class="h-screen flex flex-col">
         <div class="flex px-4 py-3.5 border-b border-accented">
