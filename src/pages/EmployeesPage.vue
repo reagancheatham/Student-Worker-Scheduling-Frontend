@@ -9,6 +9,7 @@ import { Row } from "@tanstack/vue-table";
 import { f } from "vue-router/dist/router-CWoNjPRp.mjs";
 
 const globalFilter = ref();
+const toast = useToast();
 const { copy } = useClipboard();
 const UButton = resolveComponent('UButton');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
@@ -68,21 +69,37 @@ function getRowItems(row: Row<Employee>) {
     return [
         {
             label: 'Copy Student ID',
+            icon: 'i-lucide-copy',
             onSelect() {
                 copy(row.original.studentID);
+
+                toast.add({
+                    title: 'Employee ID copied to clipboard!',
+                    color: 'success',
+                    icon: 'i-lucide-circle-check'
+                })
             }
         },
         {
             label: 'Copy Email',
+            icon: 'i-lucide-copy',
             onselect() {
                 copy(row.original.email);
+
+                toast.add({
+                    title: 'Employee ID copied to clipboard!',
+                    color: 'success',
+                    icon: 'i-lucide-circle-check'
+                })
             }
         },
         {
             type: 'separator'
         },
         {
-            label: 'Delete'
+            label: 'Delete',
+            icon: 'i-lucide-trash',
+            color: 'error'
         }
     ]
 }
