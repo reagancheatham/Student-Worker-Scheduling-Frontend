@@ -35,7 +35,7 @@ const columns: TableColumn<Employee>[] = [
     {
         accessorKey: "phoneNumber",
         header: "Phone Number",
-        cell: ({ row }) => `${row.getValue("phoneNumber")}`,
+        cell: ({ row }) => row.original.formattedPhoneNumber,
     },
     {
         id: 'actions',
