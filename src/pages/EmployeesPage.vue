@@ -123,6 +123,17 @@ EmployeeServices.getAllForBusiness(1)
                 placeholder="Filter..."
             />
         </div>
-        <UTable class="flex-1" :columns="columns" :data="data" ref="table" v-model:global-filter="globalFilter" />
+        <UTable class="flex-1" :columns="columns" :data="data" ref="table" v-model:global-filter="globalFilter" >
+            <template #name-cell="{ row }">
+                <div class="flex items-center gap-3">
+                    <UAvatar />
+                    <div>
+                        <p class="font-medium">
+                            {{ row.original.fullName }}
+                        </p>
+                    </div>
+                </div>
+            </template>
+        </UTable> 
     </div>
 </template>
