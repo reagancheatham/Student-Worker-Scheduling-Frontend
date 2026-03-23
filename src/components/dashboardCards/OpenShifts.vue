@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { ShiftServices } from "../../services/shiftServices.ts";
 
 const UBadge = resolveComponent("UBadge");
 
-type OpenShiftRow = {
-    ShiftSlot: string;
-    Reason: "Unscheduled";
-}
 type OpenShiftRow = {
     ShiftSlot: string;
     Reason: "Unscheduled";
@@ -43,7 +38,6 @@ onMounted(async () => {
         }));
 });
 
-const columns: TableColumn<OpenShiftRow>[] = [
 const columns: TableColumn<OpenShiftRow>[] = [
     {
         accessorKey: "ShiftSlot",
