@@ -2,9 +2,8 @@
 import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
+import { useRoute } from "vue-router";
 import { ShiftServices } from "../../services/shiftServices.ts";
-import { EmployeeServices } from "../../services/employeeServices.ts";
-import { ParseLocalStorage } from "@classes/util/parseLocalStorage.ts";
 
 const UBadge = resolveComponent("UBadge");
 
@@ -18,19 +17,16 @@ const { title } = defineProps<{
 }>();
 
 const data = ref<OpenShiftRow[]>([]);
+const route = useRoute();
 
-async function getCurrentUserBusinessID(): Promise<number | null> {
-    const currentUser = ParseLocalStorage.parseUser();
+function getBusinessIDFromRoute(): number | null {
+    const businessIDParam = route.params.businessID;
+    const parsedBusinessID = Number(businessIDParam);
 
-    if (!currentUser) return null;
-
-    try {
-        const employee = await EmployeeServices.getForUser(currentUser.id);
-        return employee.businessID;
-    } catch (error) {
-        console.error("Unable to resolve business for current user", error);
+    if (!Number.isFinite(parsedBusinessID) || parsedBusinessID <= 0)
         return null;
-    }
+
+    return parsedBusinessID;
 }
 
 function formatShiftSlot(start: Date, end: Date): string {
@@ -41,7 +37,7 @@ function formatShiftSlot(start: Date, end: Date): string {
 }
 
 onMounted(async () => {
-    const businessID = await getCurrentUserBusinessID();
+    const businessID = getBusinessIDFromRoute();
 
     if (!businessID) {
         data.value = [];
