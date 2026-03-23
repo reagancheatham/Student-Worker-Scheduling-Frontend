@@ -29,7 +29,7 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
             <WorkingCurrently
                 class="col-span-4 min-h-0 h-full"
             ></WorkingCurrently>
-            <OpenShifts class="col-span-3 min-h-0 h-full"></OpenShifts>
+            <OpenShifts class="col-span-3 min-h-0 h-full" title="Open Shifts"></OpenShifts>
         </div>
 
         <!-- Little Side -->

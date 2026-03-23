@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routes } from "./routes.ts";
 
-//creates dictionary for routes, so the list of routes can be looped through and unwrapped.
 const unwrappedRoutes = Object.entries(routes).map((r) => r[1].unwrap());
 
 export const router = createRouter({
@@ -12,7 +11,6 @@ export const router = createRouter({
 router.beforeEach((to, from, next) => {
     const storedUser = localStorage.getItem("user");
     let token: string | null = null;
-    let businessID = 1;
 
     if (storedUser) {
         try {
@@ -27,9 +25,9 @@ router.beforeEach((to, from, next) => {
     }
 
     if (to.meta.requiresAuth && !token) {
-        next(`/login`);
+        next("/login");
     } else if (to.path === "/login" && token) {
-        next(`/${businessID}/dashboard/`);
+        next("/nav/dashboard");
     } else {
         next();
     }

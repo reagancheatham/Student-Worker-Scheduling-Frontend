@@ -1,11 +1,3 @@
-// export const enum Routes {
-//     Dashboard = "/dashboard",
-//     Schedule = "/schedule",
-//     OpenShifts = "/openShifts",
-//     Employees = "/employees",
-//     Settings = "/settings",
-// }
-
 import DashboardPage from "../pages/DashboardPage.vue";
 import SchedulePage from "../pages/SchedulePage.vue";
 import EmployeesPage from "../pages/EmployeesPage.vue";
@@ -15,35 +7,39 @@ import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
 
-//rag might want to get rid of component: any in favor of an actual type
 class Route {
-  constructor(
-    public path: string,
-    public component: any,
-    public name: string,
-    public requiresAuth: boolean = true,
-    public children?: Route[],
-  ) {}
+    constructor(
+        public path: string,
+        public component: any,
+        public name: string,
+        public requiresAuth: boolean = true,
+        public children?: Route[],
+    ) {}
 
-  //Provides a RouteRecordRaw for router routes
-  unwrap(): RouteRecordRaw {
-    return {
-      path: this.path,
-      component: this.component,
-      name: this.name,
-      meta: { requiresAuth: this.requiresAuth },
-      children: this.children ? this.children.map((c) => c.unwrap()) : [],
-    };
-  }
+    unwrap(): RouteRecordRaw {
+        return {
+            path: this.path,
+            component: this.component,
+            name: this.name,
+            meta: { requiresAuth: this.requiresAuth },
+            children: this.children ? this.children.map((c) => c.unwrap()) : [],
+        };
+    }
 }
 
 export const routes = {
-  Login: new Route("/login", LoginPage, "Login", false),
-  NavbarLayout: new Route("/:businessID", NavbarLayout, "NavbarLayout", true, [
-    new Route("dashboard", DashboardPage, "Dashboard", true),
-    new Route("schedule", SchedulePage, "Schedule", true),
-    new Route("openShifts", OpenShiftsPage, "Open Shifts", true),
-    new Route("employees", EmployeesPage, "Employees", true),
-    new Route("settings", SettingsPage, "Settings", true),
-  ]),
+    Login: new Route("/login", LoginPage, "Login", false),
+    NavbarLayout: new Route(
+        "/nav",
+        NavbarLayout,
+        "NavbarLayout",
+        true,
+        [
+            new Route("dashboard", DashboardPage, "Dashboard", true),
+            new Route("schedule", SchedulePage, "Schedule", true),
+            new Route("openShifts", OpenShiftsPage, "Open Shifts", true),
+            new Route("employees", EmployeesPage, "Employees", true),
+            new Route("settings", SettingsPage, "Settings", true),
+        ],
+    ),
 };

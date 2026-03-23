@@ -14,7 +14,7 @@ type OpenShiftRow = {
 }
 
 const { title } = defineProps<{
-    title: string
+    title: string;
 }>();
 
 const data = ref<OpenShiftRow[]>([]);
@@ -75,8 +75,10 @@ const columns: TableColumn<OpenShiftRow>[] = [
             }[row.getValue("Reason") as string];
 
             //no idea what h is
-            return h(UBadge, { class: "capitalize", variant: "subtle", color }, () =>
-                row.getValue("Reason"),
+            return h(
+                UBadge,
+                { class: "capitalize", variant: "subtle", color },
+                () => row.getValue("Reason"),
             );
         },
     },
@@ -85,21 +87,21 @@ const columns: TableColumn<OpenShiftRow>[] = [
 
 <template>
     <UCard
-    class="h-full min-h-0 flex flex-col"
-    :ui="{
-      header: 'font-semibold text-black shrink-0',
-      body: 'px-0! pt-0! pb-3! flex-1 overflow-y-auto min-h-0',
-    }"
-  >
-    <template #header>
-      <span class="mb"> {{ title }} </span>
-    </template>
-    <UTable 
-        :columns="columns" 
-        :data="data" 
-        :ui = "{
-            thead: 'hidden',
+        class="h-full min-h-0 flex flex-col"
+        :ui="{
+            header: 'font-semibold text-black shrink-0',
+            body: 'px-0! pt-0! pb-3! flex-1 overflow-y-auto min-h-0',
         }"
-    ></UTable>
-  </UCard>
+    >
+        <template #header>
+            <span class="mb"> {{ title }} </span>
+        </template>
+        <UTable
+            :columns="columns"
+            :data="data"
+            :ui="{
+                thead: 'hidden',
+            }"
+        ></UTable>
+    </UCard>
 </template>
