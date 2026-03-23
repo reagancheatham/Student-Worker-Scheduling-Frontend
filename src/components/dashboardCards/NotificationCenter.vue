@@ -4,14 +4,13 @@ import { TimeOffRequestServices } from "../../services/timeOffServices";
 import { useRoute } from "vue-router";
 import { Notification, NotificationModel } from "@classes/util/notification";
 import { NotificationType } from "@classes/util/notificationType";
+import { Business } from "@classes/database/business.ts";
 
 const notifications = ref<Notification<NotificationModel>[]>([]);
 
 //this function will more likely than not just service call each type of notification backend model, unify them, then put em in an array of notification classes
 async function getNotifications() {
-    const route = useRoute();
-    const businessID = route.params.businessID as string;
-    console.log("businessID: " + businessID);
+    const businessID = Business.current.id;
 
     const timeOffRequests = await TimeOffRequestServices.getAllForBusiness(
         Number(businessID),
