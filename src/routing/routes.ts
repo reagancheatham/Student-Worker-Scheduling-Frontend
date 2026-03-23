@@ -14,6 +14,7 @@ import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import AdminPage from "../pages/AdminPage.vue";
 
 //rag might want to get rid of component: any in favor of an actual type
 class Route {
@@ -46,4 +47,5 @@ export const routes = {
     new Route("employees", EmployeesPage, "Employees", true),
     new Route("settings", SettingsPage, "Settings", true),
   ]),
+  Admin: new Route("/admin", AdminPage, "Admin", true),
 };
