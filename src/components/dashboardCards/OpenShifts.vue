@@ -4,6 +4,7 @@ import type { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useRoute } from "vue-router";
 import { ShiftServices } from "../../services/shiftServices.ts";
+import { Business } from "@classes/database/business.ts";
 
 const UBadge = resolveComponent("UBadge");
 
@@ -37,7 +38,7 @@ function formatShiftSlot(start: Date, end: Date): string {
 }
 
 onMounted(async () => {
-    const businessID = getBusinessIDFromRoute();
+    const businessID = Business.current.id;;
 
     if (!businessID) {
         data.value = [];
