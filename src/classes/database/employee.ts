@@ -28,33 +28,22 @@ export class Employee extends DatabaseModel {
       try {
         const storedUser = localStorage.getItem("user");
         let token: string | null = null;
-        if (storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            token = parsedUser.token;
-          } catch (err) {
-            console.error(
-              "Error parsing user from localStorage: " + JSON.stringify(err),
-            );
-            token = null;
-          }
-          const res = await fetch(
-            `https://admin.googleapis.com/admin/directory/v1/users/${encodeURIComponent(email)}/photos/thumbnail`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+        const res = await fetch(
+          `https://admin.googleapis.com/admin/directory/v1/users/${email}/photos/thumbnail`,
+          {
+            headers: {
+              Authorization: `${import.meta.env.VITE_GOOGLE_CLIENT_ID}`,
             },
-          );
+          },
+        );
 
-          if (res.ok) {
-            const json = await res.json();
-            avatar.src = json.photoData
-              ? `data:image/jpeg;base64,${json.photoData}`
-              : "";
-          } else {
-            console.warn(`Avatar not found for ${email}:`, res.statusText);
-          }
+        if (res.ok) {
+          const json = await res.json();
+          avatar.src = json.photoData
+            ? `data:image/jpeg;base64,${json.photoData}`
+            : "";
+        } else {
+          console.warn(`Avatar not found for ${email}:`, res.statusText);
         }
       } catch (err) {
         console.error(`Error fetching avatar for ${email}:`, err);
