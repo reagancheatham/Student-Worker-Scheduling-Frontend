@@ -17,9 +17,34 @@ export class AuthServices {
             const business = await apiClient.get(`/employees/${user.id}`); //This gets the business ID, but we def need to check if they actually belong to the business
             const businessID = business.data.businessID;
 
-            router.push(`${businessID}/dashboard`);
+            router.push(`nav/dashboard`);
         } else {
             console.error("Login failed: invalid credentials");
+        }
+    }
+
+    static async logout() {
+        try {
+            const user = JSON.parse(localStorage.getItem("user")!);
+
+            localStorage.removeItem("user");
+            router.push("/login");
+
+            await apiClient.post(
+                "/authentication/logout",
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${user.token}`,
+                    },
+                },
+            );
+
+            
+        } catch (error) {
+            console.error("Logout failed", error);
+            localStorage.removeItem("user");
+            router.push("/login");
         }
     }
 }
