@@ -9,28 +9,28 @@ const UBadge = resolveComponent("UBadge");
 type OpenShifts = {
     ShiftSlot: String;
     Reason: "Dropped" | "Unscheduled";
-}
+};
 
 const { title } = defineProps<{
-    title: string
+    title: string;
 }>();
 
 const data = ref<OpenShifts[]>([
     {
         ShiftSlot: "Feb. 16, 10:30a.m. - 1:30p.m.",
-        Reason: "Dropped"
+        Reason: "Dropped",
     },
     {
         ShiftSlot: "Feb. 22, 10:30a.m. - 1:30p.m.",
-        Reason: "Unscheduled"
+        Reason: "Unscheduled",
     },
     {
         ShiftSlot: "Feb. 23, 10:30a.m. - 1:30p.m.",
-        Reason: "Unscheduled"
+        Reason: "Unscheduled",
     },
     {
         ShiftSlot: "Feb. 24, 10:30a.m. - 11:30p.m.",
-        Reason: "Unscheduled"
+        Reason: "Unscheduled",
     },
 ]);
 
@@ -52,8 +52,10 @@ const columns: TableColumn<OpenShifts>[] = [
             }[row.getValue("Reason") as string];
 
             //no idea what h is
-            return h(UBadge, { class: "capitalize", variant: "subtle", color }, () =>
-                row.getValue("Reason"),
+            return h(
+                UBadge,
+                { class: "capitalize", variant: "subtle", color },
+                () => row.getValue("Reason"),
             );
         },
     },
@@ -62,21 +64,21 @@ const columns: TableColumn<OpenShifts>[] = [
 
 <template>
     <UCard
-    class="h-full min-h-0 flex flex-col"
-    :ui="{
-      header: 'font-semibold text-black shrink-0',
-      body: 'px-0! pt-0! pb-3! flex-1 overflow-y-auto min-h-0',
-    }"
-  >
-    <template #header>
-      <span class="mb"> {{ title }} </span>
-    </template>
-    <UTable 
-        :columns="columns" 
-        :data="data" 
-        :ui = "{
-            thead: 'hidden',
+        class="h-full min-h-0 flex flex-col"
+        :ui="{
+            header: 'font-semibold text-black shrink-0',
+            body: 'px-0! pt-0! pb-3! flex-1 overflow-y-auto min-h-0',
         }"
-    ></UTable>
-  </UCard>
+    >
+        <template #header>
+            <span class="mb"> {{ title }} </span>
+        </template>
+        <UTable
+            :columns="columns"
+            :data="data"
+            :ui="{
+                thead: 'hidden',
+            }"
+        ></UTable>
+    </UCard>
 </template>

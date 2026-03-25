@@ -2,6 +2,7 @@
 import { ParseLocalStorage } from "@classes/util/parseLocalStorage";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, ref } from "vue";
+import { AuthServices } from "../services/authServices";
 
 defineProps<{
     collapsed?: boolean;
@@ -32,6 +33,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
         {
             label: "Log out",
             icon: "i-lucide-log-out",
+            onSelect: () => AuthServices.logout(),
         },
     ],
 ]);
