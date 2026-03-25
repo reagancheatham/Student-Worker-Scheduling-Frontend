@@ -4,33 +4,12 @@ import type { Row } from "@tanstack/vue-table";
 import { BusinessServices } from "../services/businessService";
 import { Business } from "@classes/database/business";
 import { Employee } from "@classes/database/employee";
-import { AvatarProps } from "@nuxt/ui";
 
 const UButton = resolveComponent("UButton");
+const UBadge = resolveComponent("UBadge");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
-const UAvatar = resolveComponent("UAvatar");
 
-let data = ref<BusinessRow[]>([]);
-
-type BusinessRow = {
-  id: number;
-  name: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-};
-
-BusinessServices.getAll()
-  .then((result) => {
-    data.value = result.map((business) => ({
-      id: business.id,
-      name: business.name,
-      fullName: business.owner.fullName,
-      email: business.owner.email,
-      phoneNumber: business.owner.phoneNumber,
-    }));
-  })
-  .catch(console.error);
+let data = ref<Business[]>([]);
 
 const columns = [
   {
@@ -42,32 +21,15 @@ const columns = [
     header: "Name",
   },
   {
-    accessorFn: (row: { owner: { fullName: any } }) =>
-      row.owner?.fullName ?? "",
-    header: "Owner",
+    accessorFn: (row: { owner: { fullName: any; }; }) => row.owner?.fullName ?? "",
+    header: "Owner Name",
     cell: ({ row }: { row: Row<Business> }) => {
       const business = row.original;
-      const avatar: AvatarProps = {
-        src: business.owner?.avatar?.src ?? "",
-        alt: business.owner ? business.owner.fullName : "No Avatar",
-      };
-
-      return h("div", { class: "flex items-center gap-3" }, [
-        h(UAvatar, { ...avatar, size: "lg", loading: "lazy" }),
-        h("div", undefined, [
-          h(
-            "p",
-            { class: "font-medium text-highlighted" },
-            business.owner?.fullName ?? "Unknown",
-          ),
-          h("p", { class: "text-muted" }, business.owner?.email ?? ""),
-        ]),
-      ]);
+      return business.owner.fullName;
     },
   },
   {
-    accessorFn: (row: { owner: { phoneNumber: any } }) =>
-      row.owner?.phoneNumber ?? "",
+    accessorFn: (row: { owner: { phoneNumber: any; }; }) => row.owner?.phoneNumber ?? "",
     header: "Owner Phone Number",
     cell: ({ row }: { row: Row<Business> }) => {
       const business = row.original;
@@ -75,7 +37,7 @@ const columns = [
     },
   },
   {
-    accessorFn: (row: { owner: { email: any } }) => row.owner?.email ?? "",
+    accessorFn: (row: { owner: { email: any; }; }) => row.owner?.email ?? "",
     header: "Owner Name",
     cell: ({ row }: { row: Row<Business> }) => {
       const business = row.original;
@@ -127,6 +89,15 @@ function getRowItems(row: Row<Business>) {
     },
   ];
 }
+
+BusinessServices.getAll()
+  .then((result) => {
+    data.value = result;
+    console.log(data);
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
 const globalFilter = ref("");
 </script>
