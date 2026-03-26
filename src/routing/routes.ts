@@ -47,12 +47,7 @@ export const routes = {
         false, //just to make accessible for now
         [
             new Route("homePage", HomePage, "Home Page", false),
-            new Route(
-                "scheduleMobile",
-                SchedulePageMobile,
-                "Scheduling",
-                false,
-            ),
+            new Route("scheduleMobile", SchedulePageMobile, "Calendar", false),
             new Route("tradeBoard", TradeBoardPage, "Trade Board", false),
         ],
     ),
