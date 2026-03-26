@@ -4,13 +4,13 @@ import { EmployeeServices } from "../../services/employeeServices.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 
 export class Business extends DatabaseModel {
-  public static current = new Business(1, "My Business", new Employee(1, "fName", ));
+  public static current = new Business(1, "My Business");
+  
   public refEmployees = ref<Employee[]>([]);
 
   constructor(
     public readonly id: number,
     public readonly name: string,
-    public readonly owner: Employee,
   ) {
     super();
 
@@ -23,8 +23,7 @@ export class Business extends DatabaseModel {
     let id = data["id"];
     let name = data["name"];
     console.log(data)
-    let employee = Employee.createFromData(data["Managers"][0].Employee);
 
-    return new Business(id, name, employee);
+    return new Business(id, name);
   }
 }

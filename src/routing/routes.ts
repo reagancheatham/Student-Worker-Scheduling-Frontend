@@ -43,4 +43,5 @@ export const routes = {
             new Route("settings", SettingsPage, "Settings", true),
         ],
     ),
+    Admin: new Route("/admin", AdminPage, "Admin", true)
 };

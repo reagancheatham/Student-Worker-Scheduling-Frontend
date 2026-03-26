@@ -1,130 +1,149 @@
 <script setup lang="ts">
 import { ref, h, resolveComponent, useTemplateRef, computed } from "vue";
 import type { Row } from "@tanstack/vue-table";
-import { BusinessServices } from "../services/businessService";
 import { Business } from "@classes/database/business";
 import { Employee } from "@classes/database/employee";
+import { EmployeeServices } from "../services/employeeServices";
+import { BusinessServices } from "../services/businessService";
 
 const UButton = resolveComponent("UButton");
-const UBadge = resolveComponent("UBadge");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
 
-let data = ref<Business[]>([]);
+type BusinessRow = {
+    id: number;
+    name: string;
+    ownerName: string;
+    ownerPhoneNumber: string;
+    ownerEmail: string;
+};
+let data = ref<BusinessRow[]>([]);
 
 const columns = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorFn: (row: { owner: { fullName: any; }; }) => row.owner?.fullName ?? "",
-    header: "Owner Name",
-    cell: ({ row }: { row: Row<Business> }) => {
-      const business = row.original;
-      return business.owner.fullName;
+    {
+        accessorKey: "id",
+        header: "ID",
+        meta: { class: "w-[20%] whitespace-normal" },
     },
-  },
-  {
-    accessorFn: (row: { owner: { phoneNumber: any; }; }) => row.owner?.phoneNumber ?? "",
-    header: "Owner Phone Number",
-    cell: ({ row }: { row: Row<Business> }) => {
-      const business = row.original;
-      return business.owner.phoneNumber;
+    {
+        accessorKey: "name",
+        header: "Name",
+        meta: { style: "w-[60%] whitespace-normal" },
     },
-  },
-  {
-    accessorFn: (row: { owner: { email: any; }; }) => row.owner?.email ?? "",
-    header: "Owner Name",
-    cell: ({ row }: { row: Row<Business> }) => {
-      const business = row.original;
-      return business.owner.email;
+    {
+        accessorKey: "ownerName",
+        header: "Owner Name",
+        width: "5%",
     },
-  },
-  {
-    id: "actions",
-    meta: {
-      class: {
-        td: "text-right",
-      },
+    {
+        accessorKey: "ownerPhoneNumber",
+        header: "Owner Phone Number",
+        width: "5%",
     },
-    cell: ({ row }: { row: Row<Business> }) => {
-      return h(
-        UDropdownMenu,
-        {
-          content: {
-            align: "end",
-          },
-          items: getRowItems(row),
-          "aria-label": "Actions dropdown",
+    {
+        accessorKey: "ownerEmail",
+        header: "Owner Email",
+        width: "5%",
+    },
+    {
+        id: "actions",
+        width: "5%",
+        meta: {
+            class: {
+                td: "text-right",
+            },
         },
-        () =>
-          h(UButton, {
-            icon: "i-lucide-ellipsis-vertical",
-            color: "neutral",
-            variant: "ghost",
-            "aria-label": "Actions dropdown",
-          }),
-      );
+        cell: ({ row }: { row: Row<BusinessRow> }) => {
+            return h(
+                UDropdownMenu,
+                {
+                    content: {
+                        align: "end",
+                    },
+                    items: getRowItems(row),
+                    "aria-label": "Actions dropdown",
+                },
+                () =>
+                    h(UButton, {
+                        icon: "i-lucide-ellipsis-vertical",
+                        color: "neutral",
+                        variant: "ghost",
+                        "aria-label": "Actions dropdown",
+                    }),
+            );
+        },
     },
-  },
 ];
 
-function getRowItems(row: Row<Business>) {
-  return [
-    {
-      type: "label",
-      label: "Actions",
-    },
-    {
-      label: "Edit Business",
-      onSelect() {},
-    },
-    {
-      label: "Delete Business",
-      onSelect() {},
-    },
-  ];
+function getRowItems(row: Row<BusinessRow>) {
+    return [
+        {
+            type: "label",
+            label: "Actions",
+        },
+        {
+            label: "Edit Business",
+            onSelect() {},
+        },
+        {
+            label: "Delete Business",
+            onSelect() {},
+        },
+    ];
 }
 
-BusinessServices.getAll()
-  .then((result) => {
-    data.value = result;
-    console.log(data);
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+EmployeeServices.getAllOwners()
+    .then((owners: any[]) => {
+        const rows = owners.map((owner) => {
+            const ownerEmployee = new Employee(
+                owner.id,
+                owner.User.studentID,
+                owner.User.firstName,
+                owner.User.lastName,
+                owner.User.email,
+                owner.User.phoneNumber,
+            );
+
+            return {
+                id: owner.Business.id,
+                name: owner.Business.name,
+                ownerName: ownerEmployee.fullName,
+                ownerPhoneNumber: ownerEmployee.formattedPhoneNumber,
+                ownerEmail: ownerEmployee.email,
+            };
+        });
+
+        data.value = rows;
+    })
+    .catch((err) => {
+        console.error(err);
+    });
 
 const globalFilter = ref("");
 </script>
 
 <template>
-  <UDashboardPanel>
-    <template #header>
-      <ScheduleNavbar />
-    </template>
+    <UDashboardPanel>
+        <template #header>
+            <ScheduleNavbar />
+        </template>
 
-    <template #body class="overflow-hidden!">
-      <div class="h-screen flex flex-col">
-        <UInput
-          v-model="globalFilter"
-          class="max-w-sm"
-          placeholder="Search all columns..."
-        />
+        <template #body class="overflow-hidden!">
+            <div class="h-screen flex flex-col">
+                <UInput
+                    v-model="globalFilter"
+                    class="max-w-sm"
+                    placeholder="Search all columns..."
+                />
 
-        <UTable
-          sticky
-          class="flex-1"
-          v-model:global-filter="globalFilter"
-          :data="data"
-          ref="table"
-          :columns="columns"
-        />
-      </div>
-    </template>
-  </UDashboardPanel>
+                <UTable
+                    sticky
+                    class="flex-1"
+                    v-model:global-filter="globalFilter"
+                    :data="data"
+                    ref="table"
+                    :columns="columns"
+                />
+            </div>
+        </template>
+    </UDashboardPanel>
 </template>
