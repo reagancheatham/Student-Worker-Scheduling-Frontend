@@ -14,7 +14,7 @@ const items = computed(() => [
         active: route.path.includes(routes.MobileLayout.children![0].path),
     },
     {
-        label: "Schedule",
+        label: "Calendar",
         icon: "i-lucide-calendar-fold",
         to: routes.MobileLayout.children![1].path,
         active: route.path.includes(routes.MobileLayout.children![1].path),
