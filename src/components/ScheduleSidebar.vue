@@ -106,5 +106,5 @@ const searchGroups = computed(() => [
         </template>
     </UDashboardSidebar>
 
-    <UDashboardSearch :groups="searchGroups" />
+    <UDashboardSearch :groups="searchGroups" :color-mode="false" />
 </template>
