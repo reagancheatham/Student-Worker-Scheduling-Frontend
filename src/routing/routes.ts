@@ -6,6 +6,9 @@ import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import HomePage from "../mobile/pages/HomePage.vue";
+import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
+import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 
 class Route {
     constructor(
@@ -27,19 +30,25 @@ class Route {
     }
 }
 
+//formatter broke someone plz fix...
 export const routes = {
     Login: new Route("/login", LoginPage, "Login", false),
-    NavbarLayout: new Route(
-        "/nav",
+    NavbarLayout: new Route("/nav", NavbarLayout, "NavbarLayout", true, [
+        new Route("dashboard", DashboardPage, "Dashboard", true),
+        new Route("schedule", SchedulePage, "Schedule", true),
+        new Route("openShifts", OpenShiftsPage, "Open Shifts", true),
+        new Route("employees", EmployeesPage, "Employees", true),
+        new Route("settings", SettingsPage, "Settings", true),
+    ]),
+    MobileLayout: new Route(
+        "/mobile",
         NavbarLayout,
-        "NavbarLayout",
-        true,
+        "MobileLayout",
+        false, //just to make accessible for now
         [
-            new Route("dashboard", DashboardPage, "Dashboard", true),
-            new Route("schedule", SchedulePage, "Schedule", true),
-            new Route("openShifts", OpenShiftsPage, "Open Shifts", true),
-            new Route("employees", EmployeesPage, "Employees", true),
-            new Route("settings", SettingsPage, "Settings", true),
+            new Route("homePage", HomePage, "Home Page", false),
+            new Route("scheduleMobile", SchedulePageMobile, "Schedule", false),
+            new Route("tradeBoard", TradeBoardPage, "Trade Board", false),
         ],
     ),
 };
