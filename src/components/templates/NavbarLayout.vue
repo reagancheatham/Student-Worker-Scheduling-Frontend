@@ -36,16 +36,21 @@ const items: NavigationMenuItem[] = [
         </UDashboardPanel>
     </UDashboardGroup>
 
-    <UNavigationMenu
-        v-if="isMobile"
-        :items="items"
-        :ui="{
-            root: 'justify-around border-t border-default py-2',
-            item: 'py-0',
-            link: 'flex-col gap-1 px-6',
-            linkLeadingIcon: 'size-5',
-            linkLabel: 'text-[10px]/3 font-normal',
-        }"
-        class="w-full fixed bottom-0"
-    />
+    <div class="flex flex-col min-h-screen" v-if="isMobile">
+        <div class="flex-1">
+            <RouterView />
+        </div>
+
+        <UNavigationMenu
+            :items="items"
+            :ui="{
+                root: 'justify-around border-t border-default py-2',
+                item: 'py-0',
+                link: 'flex-col gap-1 px-6',
+                linkLeadingIcon: 'size-5',
+                linkLabel: 'text-[10px]/3 font-normal',
+            }"
+            class="w-full fixed bottom-0"
+        />
+    </div>
 </template>
