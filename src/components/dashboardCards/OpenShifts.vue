@@ -23,17 +23,21 @@ function formatShiftSlot(start: Date, end: Date): string {
     const endTime = end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     return `${dateStr}, ${startTime} - ${endTime}`;
 }
-
 onMounted(async () => {
     const now = new Date();
     const future = new Date(now);
     future.setDate(future.getDate() + 30);
 
-    const shifts = await ShiftServices.getAllInRange(1, now, future);
+    const shiftsResponse = await ShiftServices.getAllInRange(1, now, future);
+    const shifts = Array.isArray(shiftsResponse) ? shiftsResponse : [shiftsResponse];
+
     data.value = shifts
-        .filter((shift) => !shift.employee)
+        .filter((shift) => shift.employee == null)
         .map((shift) => ({
-            ShiftSlot: formatShiftSlot(new Date(shift.startTime), new Date(shift.endTime)),
+            ShiftSlot: formatShiftSlot(
+                new Date(shift.startTime),
+                new Date(shift.endTime)
+            ),
             Reason: "Unscheduled",
         }));
 });
