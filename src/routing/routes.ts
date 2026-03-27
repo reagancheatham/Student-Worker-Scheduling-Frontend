@@ -6,6 +6,9 @@ import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import HomePage from "../mobile/pages/HomePage.vue";
+import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
+import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 
 class Route {
     constructor(
@@ -52,5 +55,10 @@ export const routes = {
         Route.create("openShifts", OpenShiftsPage, "Open Shifts", true),
         Route.create("employees", EmployeesPage, "Employees", true),
         Route.create("settings", SettingsPage, "Settings", true),
+    ]),
+    MobileLayout: Route.create("/mobile", NavbarLayout, "MobileLayout", false, [
+        Route.create("homePage", HomePage, "Home Page", false),
+        Route.create("scheduleMobile", SchedulePageMobile, "Calendar", false),
+        Route.create("tradeBoard", TradeBoardPage, "Trade Board", false),
     ]),
 };
