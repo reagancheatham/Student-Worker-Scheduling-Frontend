@@ -1,5 +1,6 @@
 import { Shift } from "@classes/database/shift.ts";
 import { DatabaseServices } from "@classes/util/databaseServices";
+import { TaskListServices } from "./taskListServices.ts";
 
 const API_ROOT: string = "shifts";
 
@@ -17,7 +18,10 @@ export class ShiftServices {
     }
 
     static async get(id: number) {
-        return await DatabaseServices.get<Shift>(Shift, `${API_ROOT}/${id}`);
+        return await DatabaseServices.get<Shift>(
+            Shift,
+            `${API_ROOT}/${id}`,
+        );
     }
 
     static async getAllForBusiness(businessID: number) {
