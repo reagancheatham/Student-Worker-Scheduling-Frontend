@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as v from "valibot";
-import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
+import type { ChipProps, FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
@@ -10,6 +10,9 @@ import { onMounted, ref, shallowReactive, watch } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { Business } from "@classes/database/business.ts";
+import { TaskList } from "@classes/database/taskList.ts";
+import { TaskListServices } from "../../../services/taskListServices.ts";
+import { Task } from "@classes/database/task.ts";
 
 const model = defineModel<EventData>({
     required: true,
@@ -25,6 +28,8 @@ const emit = defineEmits({
     formSubmitted: () => true,
     eventDeleted: () => true,
 });
+
+const taskList = ref<TaskList>();
 
 onMounted(() => {
     watch(
@@ -46,6 +51,17 @@ onMounted(() => {
                     getData() instanceof ShiftEvent
                         ? (getData() as ShiftEvent).shift.employee
                         : undefined;
+
+                if (
+                    model.value instanceof ShiftEvent &&
+                    model.value.shift.isValid()
+                ) {
+                    TaskListServices.getOrCreateForShift(
+                        model.value.shift.id,
+                    ).then((value) => {
+                        taskList.value = value;
+                    });
+                }
             }
         },
     );
@@ -124,6 +140,21 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
+
+const taskColumns = [
+    {
+        accessorKey: "completeStatus",
+        header: "Complete Status",
+    },
+    {
+        accessorKey: "name",
+        header: "Name",
+    },
+    {
+        id: "action",
+        header: "Action",
+    },
+];
 
 colors.value = EventColor.colors.map((color) => {
     return {
@@ -290,6 +321,28 @@ function deleteEvent(): void {
                             icon="i-lucide-x"
                             @click="state.employee = undefined"
                         />
+                    </UFormField>
+                    <UFormField label="Task List" name="taskList">
+                        <UTable
+                            v-if="taskList"
+                            :data="taskList.tasks"
+                            :columns="taskColumns"
+                        >
+                            <template #action-cell="{ row }">
+                                <UButton
+                                    color="neutral"
+                                    variant="outline"
+                                    icon="i-lucide-pencil"
+                                    size="sm"
+                                />
+                                <UButton
+                                    color="neutral"
+                                    variant="outline"
+                                    icon="i-lucide-x"
+                                    size="sm"
+                                />
+                            </template>
+                        </UTable>
                     </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">

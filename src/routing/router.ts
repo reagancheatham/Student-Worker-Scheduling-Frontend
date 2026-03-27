@@ -24,11 +24,7 @@ router.beforeEach((to, from, next) => {
         }
     }
 
-    if (to.meta.requiresAuth && !token) {
-        next("/login");
-    } else if (to.path === "/login" && token) {
-        next("/nav/dashboard");
-    } else {
-        next();
-    }
+    if (to.meta.requiresAuth && !token) next("/login");
+    else if (to.path === "/login" && token) next("/nav/dashboard");
+    else next();
 });
