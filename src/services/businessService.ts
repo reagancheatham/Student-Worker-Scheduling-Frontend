@@ -1,5 +1,4 @@
 import { Business } from "@classes/database/business";
-import { Employee } from "@classes/database/employee";
 import { DatabaseServices } from "@classes/util/databaseServices";
 
 const API_ROOT: string = "businesses";
@@ -13,8 +12,14 @@ export class BusinessServices {
         await DatabaseServices.update(Business, API_ROOT, business);
     }
 
-    static async delete(business: Business) {
-        await DatabaseServices.delete(`${API_ROOT}/${business.id}`);
+    static async delete(business: Business): Promise<void>;
+    static async delete(id: number): Promise<void>;
+
+    static async delete(business: Business | number) {
+        const id = typeof business === 'number'
+            ? business
+            : business.id;
+        DatabaseServices.delete(`${API_ROOT}/${id}`);
     }
 
     static async get(id: number) {
