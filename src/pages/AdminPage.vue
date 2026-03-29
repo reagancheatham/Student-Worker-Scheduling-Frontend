@@ -182,7 +182,7 @@ async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
 }
 //ADD BUSINESS-------------------------
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
-    await BusinessServices
+    await BusinessServices.create(new Business(-1, addState.name), addState.email)
 }
 
 //GET DATA----------

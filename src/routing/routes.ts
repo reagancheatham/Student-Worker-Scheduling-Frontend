@@ -49,7 +49,7 @@ class Route {
 
 export const routes = {
     Default: Route.createRedirect("/", "Default", "/login"),
-    Login: Route.create("/login", LoginPage, "Login", false),
+    Login: Route.create("/login/:code?", LoginPage, "Login", false),
     NavbarLayout: Route.create("/nav", NavbarLayout, "NavbarLayout", true, [
         Route.create("dashboard", DashboardPage, "Dashboard", true),
         Route.create("schedule", SchedulePage, "Schedule", true),
@@ -62,5 +62,5 @@ export const routes = {
         Route.create("scheduleMobile", SchedulePageMobile, "Calendar", false),
         Route.create("tradeBoard", TradeBoardPage, "Trade Board", false),
     ]),
-    Admin: new Route("/admin", AdminPage, "Admin", null, true)
+    Admin: new Route("/admin", AdminPage, "Admin", "", true)
 };
