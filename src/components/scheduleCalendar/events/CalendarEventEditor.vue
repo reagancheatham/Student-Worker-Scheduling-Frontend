@@ -143,12 +143,12 @@ const colors = ref<ColorItem[]>([]);
 
 const taskColumns = [
     {
-        accessorKey: "completeStatus",
-        header: "Complete Status",
-    },
-    {
         accessorKey: "name",
         header: "Name",
+    },
+    {
+        accessorKey: "completeStatus",
+        header: "Complete Status",
     },
     {
         id: "action",
@@ -325,6 +325,7 @@ function deleteEvent(): void {
                     <UFormField label="Task List" name="taskList">
                         <UTable
                             v-if="taskList"
+                            class="overflow-y-auto h-48"
                             :data="taskList.tasks"
                             :columns="taskColumns"
                         >
