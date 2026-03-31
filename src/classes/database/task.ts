@@ -9,9 +9,9 @@ export class Task extends DatabaseModel {
     public constructor(
         public readonly id: number,
         public readonly taskListID: number,
-        public readonly name: string,
-        public readonly description: string,
-        public readonly completeStatus: CompleteStatus,
+        public name: string,
+        public description: string,
+        public completeStatus: CompleteStatus,
     ) {
         super();
     }

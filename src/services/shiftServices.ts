@@ -41,7 +41,7 @@ export class ShiftServices {
 
         return await DatabaseServices.getAll<Shift>(
             Shift,
-            `${API_ROOT}/${businessID}/startTime=${startString}/endTime=${endString}`,
+            `${API_ROOT}/business/${businessID}/startTime=${startString}/endTime=${endString}`,
         );
     }
 }

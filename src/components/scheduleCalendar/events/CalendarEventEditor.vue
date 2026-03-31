@@ -13,6 +13,7 @@ import { Business } from "@classes/database/business.ts";
 import { TaskList } from "@classes/database/taskList.ts";
 import { TaskListServices } from "../../../services/taskListServices.ts";
 import { Task } from "@classes/database/task.ts";
+import { TaskServices } from "../../../services/taskServices.ts";
 
 const model = defineModel<EventData>({
     required: true,
@@ -27,48 +28,6 @@ const emit = defineEmits({
     closeRequested: () => true,
     formSubmitted: () => true,
     eventDeleted: () => true,
-});
-
-const taskList = ref<TaskList>();
-
-onMounted(() => {
-    watch(
-        () => isOpen,
-        (value) => {
-            if (value) {
-                state.name = getData().name;
-                state.eventDate = getData().startTime.calendarDate();
-                state.startTime = getData().startTime.toTime();
-                state.endTime = getData().endTime.toTime();
-                state.color = {
-                    label: getData().color.name,
-                    value: getData().color,
-                    chip: {
-                        color: getData().color.semantic,
-                    },
-                };
-                state.employee =
-                    getData() instanceof ShiftEvent
-                        ? (getData() as ShiftEvent).shift.employee
-                        : undefined;
-
-                if (
-                    model.value instanceof ShiftEvent &&
-                    model.value.shift.isValid()
-                ) {
-                    TaskListServices.getOrCreateForShift(
-                        model.value.shift.id,
-                    ).then((value) => {
-                        taskList.value = value;
-                    });
-                }
-            }
-        },
-    );
-});
-
-const formatter = new DateFormatter(CalendarData.localeString, {
-    dateStyle: "medium",
 });
 
 const vTime = v.object({
@@ -103,7 +62,6 @@ const schema = v.pipe(
         ["endTime"],
     ),
 );
-
 type Schema = v.InferOutput<typeof schema>;
 
 type ColorItem = {
@@ -140,6 +98,13 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
+const taskList = ref<TaskList>();
+
+const formatter = new DateFormatter(CalendarData.localeString, {
+    dateStyle: "medium",
+});
+
+let taskListPromise: Promise<TaskList>;
 
 const taskColumns = [
     {
@@ -164,6 +129,42 @@ colors.value = EventColor.colors.map((color) => {
             color: color.semantic,
         },
     };
+});
+
+onMounted(() => {
+    watch(
+        () => isOpen,
+        (value) => {
+            if (value) {
+                state.name = getData().name;
+                state.eventDate = getData().startTime.calendarDate();
+                state.startTime = getData().startTime.toTime();
+                state.endTime = getData().endTime.toTime();
+                state.color = {
+                    label: getData().color.name,
+                    value: getData().color,
+                    chip: {
+                        color: getData().color.semantic,
+                    },
+                };
+                state.employee =
+                    getData() instanceof ShiftEvent
+                        ? (getData() as ShiftEvent).shift.employee
+                        : undefined;
+
+                if (
+                    model.value instanceof ShiftEvent &&
+                    model.value.shift.isValid()
+                ) {
+                    TaskListServices.getOrCreateForShift(
+                        model.value.shift.id,
+                    ).then((value) => {
+                        taskList.value = value;
+                    });
+                }
+            }
+        },
+    );
 });
 
 function getData() {
@@ -218,6 +219,20 @@ function deleteEvent(): void {
     (model.value as ShiftEvent).destroy().then(() => emit("eventDeleted"));
 
     toggleModal();
+}
+
+function deleteTask(task: Task): void {
+    // Delete task
+    TaskServices.delete(task).then(() => {
+        let shift = (model.value as ShiftEvent).shift;
+        let promise = TaskListServices.getOrCreateForShift(shift.id); // Ask to update task list
+        taskListPromise = promise;
+
+        promise.then((newList) => {
+            if (taskListPromise === promise) // If this is the most recent update, then update our task list
+                taskList.value = newList;
+        })
+    });
 }
 </script>
 
@@ -341,6 +356,7 @@ function deleteEvent(): void {
                                     variant="outline"
                                     icon="i-lucide-x"
                                     size="sm"
+                                    @click="deleteTask(row.original)"
                                 />
                             </template>
                         </UTable>
