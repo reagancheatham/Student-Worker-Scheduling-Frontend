@@ -33,11 +33,11 @@ const items = computed(() => [
     <UNavigationMenu
         :items="items"
         :ui="{
-            root: 'justify-around border-t border-default py-2',
-            item: 'py-0',
-            link: 'flex-col gap-1 px-6',
+            root: 'flex justify-around border-t border-default py-2 pr-6',
+            item: 'flex-1 py-0',
+            link: 'flex-col gap-1 mx-3',
             linkLeadingIcon: 'size-5',
-            linkLabel: 'text-[10px]/3 font-normal',
+            linkLabel: 'text-[10px]/3 font-normal whitespace-nowrap',
         }"
         class="w-full fixed bottom-0 bg-maroon-500"
     >
