@@ -37,9 +37,15 @@ const isEditOpen = ref(false);
 const selectedBusiness = ref<BusinessRow | null>(null);
 const editState = shallowReactive({
     name: "",
+    email: "",
 });
 const editValidationSchema = valibot.object({
     name: valibot.pipe(valibot.string(), valibot.nonEmpty("Name is required")),
+    email: valibot.pipe(
+        valibot.string(),
+        valibot.nonEmpty("Email is required"),
+        valibot.email("Invalid email address"),
+    ),
 });
 type EditValidationSchema = valibot.InferOutput<typeof editValidationSchema>;
 const isAddOpen = ref(false);
@@ -161,7 +167,7 @@ async function deleteBusiness(id: number) {
 async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
     if (!selectedBusiness.value) return;
     await BusinessServices.update(
-        new Business(selectedBusiness.value.id, editState.name),
+        new Business(selectedBusiness.value.id, editState.name), editState.email
     )
         .then(() => {
             toastNotification.add({
@@ -257,6 +263,9 @@ getData();
                 >
                     <UFormField label="Business Name" name="name">
                         <UInput v-model="editState.name" />
+                    </UFormField>
+                    <UFormField label="Business Owner Name" name="name">
+                        <UInput v-model="editState.email" />
                     </UFormField>
 
                     <div class="flex gap-2 justify-end">

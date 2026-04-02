@@ -12,8 +12,11 @@ export class BusinessServices {
             .catch(() => console.log(`Error creating business: ${business.name}`));
     }
 
-    static async update(business: Business) {
-        await DatabaseServices.update(Business, API_ROOT, business);
+    static async update(business: Business, email: string) {
+        await apiClient
+            .put(`${API_ROOT}/`, { business: business, email: email })
+            .then(() => console.log(`Successfully updated business: ${business.name}`))
+            .catch(() => console.log(`Error updating business: ${business.name}`));
     }
 
     static async delete(business: Business): Promise<void>;
