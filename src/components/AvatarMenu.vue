@@ -57,11 +57,12 @@ async function getBusinesses() {
         console.log("localUser doesn't exist!");
         return;
     }
-    await BusinessServices.getAllForUser(localUser.email)
+    await BusinessServices.getAllForUser(localUser.id)
         .then((result) => {
             usersBusinesses.value = result.map(
                 (business: any): DropdownMenuItem => ({
                     label: business.name,
+                    onSelect: () => BusinessServices.swapBusinesses(business.id)
                 }),
             );
         })

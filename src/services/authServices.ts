@@ -23,13 +23,7 @@ export class AuthServices {
         }
     }
 
-    static async swapBusinesses(businessID: string) {
-        const localUser = ParseLocalStorage.parseUser();
-
-        const business = await apiClient.get(`/employees/${localUser.id}/business/${businessID}`);
-
-        router.push(`nav/dashboard`);
-    }
+    
 
     static async logout() {
         try {
