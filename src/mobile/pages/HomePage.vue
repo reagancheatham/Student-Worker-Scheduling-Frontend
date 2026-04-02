@@ -10,6 +10,7 @@
         Welcome back, {{user?.firstName}}
     </div>
     <div class="flex flex-col gap-1 pt-6 pl-10">
+        <!-- TODO: make badge look better -->
         <UBadge size="lg" color="primary" class="w-75">
             Your Next Shift Starts Soon
         </UBadge>
