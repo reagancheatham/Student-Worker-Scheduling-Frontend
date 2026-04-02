@@ -1,6 +1,7 @@
 import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
+import { ParseLocalStorage } from "@classes/util/parseLocalStorage.ts";
 
 const API_ROOT: string = "authentication/";
 
@@ -15,12 +16,19 @@ export class AuthServices {
             localStorage.setItem("user", JSON.stringify(user));
 
             const business = await apiClient.get(`/employees/${user.id}`); //This gets the business ID, but we def need to check if they actually belong to the business
-            const businessID = business.data.businessID;
 
             router.push(`nav/dashboard`);
         } else {
             console.error("Login failed: invalid credentials");
         }
+    }
+
+    static async swapBusinesses(businessID: string) {
+        const localUser = ParseLocalStorage.parseUser();
+
+        const business = await apiClient.get(`/employees/${localUser.id}/business/${businessID}`);
+
+        router.push(`nav/dashboard`);
     }
 
     static async logout() {
@@ -39,8 +47,6 @@ export class AuthServices {
                     },
                 },
             );
-
-            
         } catch (error) {
             console.error("Logout failed", error);
             localStorage.removeItem("user");
