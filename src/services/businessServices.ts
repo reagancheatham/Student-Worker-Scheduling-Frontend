@@ -1,6 +1,6 @@
 import { Business } from "@classes/database/business";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { ParseLocalStorage } from "@classes/util/parseLocalStorage";
+import { Store } from "@classes/util/store.ts";
 
 const API_ROOT: string = "businesses";
 
@@ -37,11 +37,6 @@ export class BusinessServices {
             `/businesses/${businessID}`,
         );
 
-        const business = {
-            id: newBusiness.id,
-            name: newBusiness.name,
-        };
-
-        localStorage.setItem("business", JSON.stringify(business));
+        Store.setBusiness(newBusiness);
     }
 }

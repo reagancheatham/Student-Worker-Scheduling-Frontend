@@ -1,7 +1,7 @@
 import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
-import { ParseLocalStorage } from "@classes/util/parseLocalStorage.ts";
+import { Store } from "@classes/util/store.ts";
 
 const API_ROOT: string = "authentication/";
 
@@ -13,7 +13,8 @@ export class AuthServices {
         if (result.data.valid) {
             user = result.data.user;
             user.token = result.data.token;
-            localStorage.setItem("user", JSON.stringify(user));
+
+            Store.setUser(user);
 
             const business = await apiClient.get(`/employees/${user.id}`); //This gets the business ID, but we def need to check if they actually belong to the business
 
@@ -22,8 +23,6 @@ export class AuthServices {
             console.error("Login failed: invalid credentials");
         }
     }
-
-    
 
     static async logout() {
         try {

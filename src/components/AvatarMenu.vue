@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ParseLocalStorage } from "@classes/util/parseLocalStorage";
+import { Store } from "@classes/util/store.ts";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, onMounted, ref } from "vue";
 import { AuthServices } from "../services/authServices";
@@ -9,7 +9,7 @@ defineProps<{
     collapsed?: boolean;
 }>();
 
-const localUser = ParseLocalStorage.parseUser();
+const localUser = Store.getUser();
 
 const user = ref({
     name: `${localUser?.firstName} ${localUser?.lastName}`,
