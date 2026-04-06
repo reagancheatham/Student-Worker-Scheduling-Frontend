@@ -1,16 +1,15 @@
 import { Shift } from "@classes/database/shift.ts";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { TaskListServices } from "./taskListServices.ts";
 
 const API_ROOT: string = "shifts";
 
 export class ShiftServices {
     static async create(shift: Shift) {
-        return await DatabaseServices.create(Shift, API_ROOT, shift);
+        return await DatabaseServices.create<Shift>(Shift, API_ROOT, shift);
     }
 
     static async update(shift: Shift) {
-        return await DatabaseServices.update(Shift, API_ROOT, shift);
+        return await DatabaseServices.update<Shift>(Shift, API_ROOT, shift);
     }
 
     static async delete(shift: Shift) {

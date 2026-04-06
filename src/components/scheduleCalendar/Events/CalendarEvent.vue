@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, shallowRef, toRef, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -379,14 +379,14 @@ function getStyle() {
 }
 
 function updateBackendEvent(): void {
-    if (refData.value instanceof ShiftEvent) refData.value.updateBackendEvent();
+    if (refData.value instanceof ShiftEvent) refData.value.updateBackend();
 }
 
 function closeModal(): void {
     isModalOpen.value = false;
 }
 
-function deleted(): void {
+function onEventDeleted(): void {
     props.calendarData.updateRelevantData();
 }
 </script>
@@ -514,7 +514,7 @@ function deleted(): void {
             :model-value="refData"
             :is-open="isModalOpen"
             @close-requested="closeModal()"
-            @event-deleted="deleted()"
+            @event-deleted="onEventDeleted()"
         />
     </UPopover>
 </template>

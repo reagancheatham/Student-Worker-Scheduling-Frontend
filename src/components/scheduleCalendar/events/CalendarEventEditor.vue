@@ -12,7 +12,7 @@ import { Employee } from "@classes/database/employee.ts";
 import { Business } from "@classes/database/business.ts";
 import { TaskList } from "@classes/database/taskList.ts";
 import { TaskListServices } from "../../../services/taskListServices.ts";
-import { Task } from "@classes/database/task.ts";
+import { CompleteStatus, Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 
 const model = defineModel<EventData>({
@@ -99,12 +99,15 @@ const state = shallowReactive<{
 
 const colors = ref<ColorItem[]>([]);
 const taskList = ref<TaskList>();
+const editedTask = ref<Task>(createDefaultTask());
+const isCreatingTask = ref<boolean>(false);
+const isTaskEditorOpen = ref<boolean>(false);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
 });
 
-let taskListPromise: Promise<TaskList>;
+let deletedTasks: Task[] = [];
 
 const taskColumns = [
     {
@@ -156,11 +159,13 @@ onMounted(() => {
                     model.value instanceof ShiftEvent &&
                     model.value.shift.isValid()
                 ) {
-                    TaskListServices.getOrCreateForShift(
-                        model.value.shift.id,
-                    ).then((value) => {
-                        taskList.value = value;
-                    });
+                    if (model.value.shift.isValid()) {
+                        TaskListServices.getOrCreateForShift(
+                            model.value.shift.id,
+                        ).then((value) => {
+                            taskList.value = value;
+                        });
+                    } else taskList.value = new TaskList(0, 0, "Task List", []);
                 }
             }
         },
@@ -181,7 +186,7 @@ function selectDate(date: DateValue): void {
     state.eventDate = date;
 }
 
-function submitModalForm(_: FormSubmitEvent<Schema>): void {
+async function submitModalForm(_: FormSubmitEvent<Schema>) {
     const event = model.value;
     const date = state.eventDate;
     const startTime = new Time(state.startTime.hour, state.startTime.minute);
@@ -209,7 +214,15 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
         event.color = state.color.value;
         event.shift.employee = state.employee;
 
-        event.updateBackendEvent().then(() => emit("formSubmitted"));
+        const taskPromises = deletedTasks.map(async (task) => {
+            return await TaskServices.delete(task);
+        });
+
+        await Promise.all(taskPromises);
+        let updatedShift = await event.updateBackend();
+        await taskList.value.updateBackend(updatedShift);
+
+        emit("formSubmitted");
     }
 
     toggleModal();
@@ -221,18 +234,24 @@ function deleteEvent(): void {
     toggleModal();
 }
 
-function deleteTask(task: Task): void {
-    // Delete task
-    TaskServices.delete(task).then(() => {
-        let shift = (model.value as ShiftEvent).shift;
-        let promise = TaskListServices.getOrCreateForShift(shift.id); // Ask to update task list
-        taskListPromise = promise;
+function editTask(task: Task): void {
+    editedTask.value = task;
+    isCreatingTask.value = false;
+    isTaskEditorOpen.value = true;
+}
 
-        promise.then((newList) => {
-            if (taskListPromise === promise) // If this is the most recent update, then update our task list
-                taskList.value = newList;
-        })
-    });
+function deleteTask(task: Task): void {
+    deletedTasks.push(task);
+    const tasks = taskList.value.tasks;
+    tasks.splice(tasks.indexOf(task));
+}
+
+function closeTaskModal(): void {
+    isTaskEditorOpen.value = false;
+}
+
+function createDefaultTask(): Task {
+    return new Task(0, 0, "", "", CompleteStatus.Incomplete);
 }
 </script>
 
@@ -350,6 +369,7 @@ function deleteTask(task: Task): void {
                                     variant="outline"
                                     icon="i-lucide-pencil"
                                     size="sm"
+                                    @click="editTask(row.original)"
                                 />
                                 <UButton
                                     color="neutral"
@@ -383,6 +403,12 @@ function deleteTask(task: Task): void {
                     </div>
                 </UForm>
             </div>
+            <TaskEditor
+                v-model="editedTask"
+                :is-open="isTaskEditorOpen"
+                :creator="isCreatingTask"
+                @close-requested="closeTaskModal()"
+            />
         </template>
     </UModal>
 </template>

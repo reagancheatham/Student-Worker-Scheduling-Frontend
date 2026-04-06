@@ -30,4 +30,8 @@ export class Task extends DatabaseModel {
             completeStatus,
         );
     }
+
+    public isValid(): boolean {
+        return this.id > 0;
+    }
 }
