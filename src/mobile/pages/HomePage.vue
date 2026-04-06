@@ -1,39 +1,35 @@
 <script setup lang="ts">
-import { Shift } from "@classes/database/shift";
-import { Time } from "@internationalized/date";
-import { description } from "valibot";
 import { ref } from "vue";
+import { ShiftServices } from "../../services/shiftServices";
+import { Shift } from "@classes/database/shift";
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
-console.log(user);
 
-const shifts = [
-    {
-        month: "April",
-        day: "24",
-        time: "9:00 A.M. to 12:00 P.M.",
-    },
-    {
-        month: "April",
-        day: "25",
-        time: "9:00 A.M. to 4:00 P.M.",
-    },
-    {
-        month: "April",
-        day: "26",
-        time: "9:00 A.M. to 2:00 P.M.",
-    },
-    {
-        month: "April",
-        day: "27",
-        time: "9:00 A.M. to 2:00 P.M.",
-    },
-];
+//TODO: get shift info
+let shifts = ref<Shift[]>([]);
+
+let today = new Date();
+let nextWeek = new Date();
+nextWeek.setDate(today.getDate() + 7);
+nextWeek.setHours(24, 59, 59, 99);
+
+console.log(today);
+console.log(nextWeek);
+
+//currlently using user id not employee id
+ShiftServices.getAllInRangeForEmployee(user.value.id, today, nextWeek)
+    .then((result) => {
+        shifts.value = result;
+        console.log(shifts);
+    })
+    .catch((err) => {
+        console.error(err);
+    });
 </script>
 
 <template>
     <div class="h-screen overflow-hidden flex flex-col">
-        <div class="flex-shrink-0">
+        <div class="shrink-0">
             <div class="pl-6 pt-6 font-bold w-full text-xl">
                 Welcome back, {{ user?.firstName }}
             </div>
@@ -81,7 +77,7 @@ const shifts = [
         </div>
 
         <!-- Upcoming Schedule -->
-        <div class="pl-6 pt-5 font-bold text-lg flex-shrink-0">
+        <div class="pl-6 pt-5 font-bold text-lg shrink-0">
             Upcoming Shifts
         </div>
 

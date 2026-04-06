@@ -44,4 +44,18 @@ export class ShiftServices {
             `${API_ROOT}/${businessID}/startTime=${startString}/endTime=${endString}`,
         );
     }
+
+     static async getAllInRangeForEmployee(
+        employeeID: number,
+        startTime: Date,
+        endTime: Date,
+    ) {
+        const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
+        const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
+
+        return await DatabaseServices.getAll<Shift>(
+            Shift,
+            `${API_ROOT}/${employeeID}/startTime=${startString}/endTime=${endString}`,
+        );
+    }
 }
