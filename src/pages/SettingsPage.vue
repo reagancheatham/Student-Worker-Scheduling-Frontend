@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { useColorMode } from "@vueuse/core";
 import { Settings } from "@classes/database/settings.ts";
 import { SettingsServices } from "../services/settingsServices.ts";
 
@@ -19,6 +20,14 @@ const settings = ref<Settings | null>(null);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const statusMessage = ref("");
+const colorMode = useColorMode();
+
+const darkModeEnabled = computed({
+	get: () => colorMode.value === "dark",
+	set: (isDark: boolean) => {
+		colorMode.value = isDark ? "dark" : "light";
+	},
+});
 
 const switchFields: Array<{
 	key: SwitchSettingKey;
@@ -153,9 +162,28 @@ loadSettings();
 <template>
 	<div class="settings-page">
 		<SettingsContainer
-			title="Scheduling Settings"
-			description="Configure behavior for time tracking, shift trades, and approvals."
+			title="Browser Settings"
+			description="Settings unique to this device that will not affect other users."
 		>
+			<SettingSwitchRow
+				label="Dark Mode"
+				description="Theme preference for this device/browser."
+				:model-value="darkModeEnabled"
+				@update:model-value="darkModeEnabled = $event"
+			/>
+		</SettingsContainer>
+
+		<SettingsContainer
+			title="Scheduling Settings"
+			description="Business-level scheduling rules. Changes are staged until you press Save Settings."
+		>
+			<template #header-extra>
+				<div class="save-notice">
+					<UIcon name="i-lucide-save" class="save-notice-icon" />
+					<span>These settings do not apply until you click <strong>Save Settings</strong>.</span>
+				</div>
+			</template>
+
 			<div v-if="isLoading" class="text-sm">Loading settings...</div>
 
 			<template v-else-if="settings">
@@ -198,7 +226,22 @@ loadSettings();
 <style scoped>
 .settings-page {
 	display: grid;
+	gap: 1rem;
 	padding: 1.5rem;
+}
+
+.save-notice {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.625rem 0.75rem;
+	border-radius: 0.5rem;
+	background: color-mix(in srgb, var(--ui-primary) 10%, transparent);
+	font-size: 0.875rem;
+}
+
+.save-notice-icon {
+	color: var(--ui-primary);
 }
 
 .actions {
