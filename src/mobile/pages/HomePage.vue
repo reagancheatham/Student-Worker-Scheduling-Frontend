@@ -1,9 +1,21 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { ShiftServices } from "../../services/shiftServices";
+import { EmployeeServices } from "../../services/employeeServices";
 import { Shift } from "@classes/database/shift";
+import { Employee } from "@classes/database/employee";
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
+const employee = ref<Employee | null>(null);
+
+// EmployeeServices.getForUserID(user.value.id)
+//     .then((result) => {
+//         employee.value = result;
+//         console.log(employee);
+//     })
+//     .catch((err) => {
+//         console.error(err);
+//     });
 
 //TODO: get shift info
 let shifts = ref<Shift[]>([]);
@@ -16,15 +28,27 @@ nextWeek.setHours(24, 59, 59, 99);
 console.log(today);
 console.log(nextWeek);
 
-//currlently using user id not employee id
-ShiftServices.getAllInRangeForEmployee(user.value.id, today, nextWeek)
-    .then((result) => {
+async function loadData() {
+    try {
+        const employeeData = await EmployeeServices.getForUserID(user.value.id);
+        employee.value = employeeData;
+
+        const result = await ShiftServices.getAllInRangeForEmployee(
+            employeeData.id,
+            today,
+            nextWeek,
+        );
+
         shifts.value = result;
-        console.log(shifts);
-    })
-    .catch((err) => {
-        console.error(err);
-    });
+
+        console.log(employee.value);
+        console.log(shifts.value);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+loadData();
 </script>
 
 <template>
@@ -77,9 +101,7 @@ ShiftServices.getAllInRangeForEmployee(user.value.id, today, nextWeek)
         </div>
 
         <!-- Upcoming Schedule -->
-        <div class="pl-6 pt-5 font-bold text-lg shrink-0">
-            Upcoming Shifts
-        </div>
+        <div class="pl-6 pt-5 font-bold text-lg shrink-0">Upcoming Shifts</div>
 
         <div class="flex-1 overflow-y-auto px-1 pb-33">
             <div class="p-3 space-y-3">
@@ -98,9 +120,7 @@ ShiftServices.getAllInRangeForEmployee(user.value.id, today, nextWeek)
                             <div class="font-bold text-center">
                                 {{ shift.time }}
                             </div>
-                            <UButton variant="link">
-                                View Task List
-                            </UButton>
+                            <UButton variant="link"> View Task List </UButton>
                         </div>
                         <div class="col-span-1">
                             <UIcon
