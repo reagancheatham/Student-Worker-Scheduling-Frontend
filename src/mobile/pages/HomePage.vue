@@ -7,17 +7,6 @@ import { Employee } from "@classes/database/employee";
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
 const employee = ref<Employee | null>(null);
-
-// EmployeeServices.getForUserID(user.value.id)
-//     .then((result) => {
-//         employee.value = result;
-//         console.log(employee);
-//     })
-//     .catch((err) => {
-//         console.error(err);
-//     });
-
-//TODO: get shift info
 let shifts = ref<Shift[]>([]);
 
 let today = new Date();
@@ -41,8 +30,8 @@ async function loadData() {
 
         shifts.value = result;
 
-        console.log(employee.value);
-        console.log(shifts.value);
+        console.log(employeeData.id);
+        console.log(`shifts: ${shifts.value}`);
     } catch (err) {
         console.log(err);
     }

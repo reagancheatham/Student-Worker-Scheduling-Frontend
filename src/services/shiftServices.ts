@@ -18,10 +18,7 @@ export class ShiftServices {
     }
 
     static async get(id: number) {
-        return await DatabaseServices.get<Shift>(
-            Shift,
-            `${API_ROOT}/${id}`,
-        );
+        return await DatabaseServices.get<Shift>(Shift, `${API_ROOT}/${id}`);
     }
 
     static async getAllForBusiness(businessID: number) {
@@ -41,21 +38,23 @@ export class ShiftServices {
 
         return await DatabaseServices.getAll<Shift>(
             Shift,
-            `${API_ROOT}/${businessID}/startTime=${startString}/endTime=${endString}`,
+            `${API_ROOT}/business/${businessID}/startTime=${startString}/endTime=${endString}`,
         );
     }
 
-     static async getAllInRangeForEmployee(
+    static async getAllInRangeForEmployee(
         employeeID: number,
         startTime: Date,
         endTime: Date,
     ) {
         const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
         const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
+        console.log("start string ", startString);
+        console.log("end string ", endString);
 
         return await DatabaseServices.getAll<Shift>(
             Shift,
-            `${API_ROOT}/${employeeID}/startTime=${startString}/endTime=${endString}`,
+            `${API_ROOT}/employee/${employeeID}/startTime=${startString}/endTime=${endString}`,
         );
     }
 }
