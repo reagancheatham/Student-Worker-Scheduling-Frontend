@@ -29,7 +29,6 @@ const items = computed(() => [
 </script>
 
 <template>
-    <!-- TODO: fix glitch in tab sizes -->
     <UNavigationMenu
         :items="items"
         :ui="{
