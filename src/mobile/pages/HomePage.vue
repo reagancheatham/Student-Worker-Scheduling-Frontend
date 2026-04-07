@@ -105,7 +105,7 @@ loadData();
                     <UButton
                         variant="outline"
                         class="w-75 items-center justify-center p-3"
-                        label="View Shift Task"
+                        label="View Shift Tasks"
                         size="xl"
                     />
                 </div>
