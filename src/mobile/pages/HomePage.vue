@@ -5,17 +5,21 @@ import { EmployeeServices } from "../../services/employeeServices";
 import { Shift } from "@classes/database/shift";
 import { Employee } from "@classes/database/employee";
 
+//TODO: What happens when there is not shifts this week?
+//TODO: sort shifts in order of nearest, its order of inserted rn
+//TODO: add clock in functionality, (i need to show minutes clocked??)
+
 const user = ref(JSON.parse(localStorage.getItem("user")));
 const employee = ref<Employee | null>(null);
 let shifts = ref<Shift[]>([]);
 
 let today = new Date();
-let nextWeek = new Date();
-nextWeek.setDate(today.getDate() + 7);
-nextWeek.setHours(24, 59, 59, 99);
+let upcoming = new Date();
+upcoming.setDate(today.getDate() + 30);
+upcoming.setHours(24, 59, 59, 99);
 
 console.log(today);
-console.log(nextWeek);
+console.log(upcoming);
 
 async function loadData() {
     try {
@@ -25,13 +29,13 @@ async function loadData() {
         const result = await ShiftServices.getAllInRangeForEmployee(
             employeeData.id,
             today,
-            nextWeek,
+            upcoming,
         );
 
         shifts.value = result;
 
         console.log(employeeData.id);
-        console.log(`shifts: ${shifts.value}`);
+        console.log(`shifts: ${shifts.value.length}`);
     } catch (err) {
         console.log(err);
     }
@@ -47,7 +51,8 @@ loadData();
                 Welcome back, {{ user?.firstName }}
             </div>
 
-            <div class="pt-6 pl-7">
+            <!-- TODO: make badge dynmaic -->
+            <div class="pt-3 pl-7">
                 <UBadge
                     size="lg"
                     color="primary"
@@ -61,15 +66,16 @@ loadData();
             <div class="flex flex-col gap-1 pt-2 pl-10">
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-calendar" class="size-5" />
-                    <div>Thursday, July 25th</div>
+                    <div>{{ shifts[0]?.dateFormatted }}</div>
                 </div>
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-clock" class="size-5" />
-                    <div>9:00 A.M. - 2:00 P.M.</div>
+                    <div>{{ shifts[0]?.shiftTime }}</div>
                 </div>
+                <!-- TODO: will need to get business name, hardcoded for now -->
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-building-2" class="size-5" />
-                    <div>The Brew</div>
+                    <div>Business Name</div>
                 </div>
                 <div class="flex flex-row pt-8">
                     <UButton
