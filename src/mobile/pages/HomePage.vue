@@ -5,9 +5,9 @@ import { EmployeeServices } from "../../services/employeeServices";
 import { Shift } from "@classes/database/shift";
 import { Employee } from "@classes/database/employee";
 
-//TODO: What happens when there is not shifts this week?
-//TODO: sort shifts in order of nearest, its order of inserted rn
+//TODO: What happens when there is not shifts this week? Need UI for empty
 //TODO: add clock in functionality, (i need to show minutes clocked??)
+//TODO: Does Clock In need to be present the whole time?
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
 const employee = ref<Employee | null>(null);
@@ -26,13 +26,30 @@ async function loadData() {
         const employeeData = await EmployeeServices.getForUserID(user.value.id);
         employee.value = employeeData;
 
-        const result = await ShiftServices.getAllInRangeForEmployee(
+        let result = await ShiftServices.getAllInRangeForEmployee(
             employeeData.id,
             today,
             upcoming,
         );
 
-        shifts.value = result;
+        //TODO: test this works
+        //if there are no shifts in 30 days, push search back 120 days.
+        //A terrible way to handle this but ill think about it later
+        if (result.length == 0) {
+            upcoming.setDate(upcoming.getDate() + 120);
+
+            result = await ShiftServices.getAllInRangeForEmployee(
+                employeeData.id,
+                today,
+                upcoming,
+            );
+        }
+
+        const sortedShifts = result.sort((a, b) => {
+            return a.startTime.getTime() - b.startTime.getTime();
+        });
+
+        shifts.value = sortedShifts;
 
         console.log(employeeData.id);
         console.log(`shifts: ${shifts.value.length}`);
@@ -51,13 +68,13 @@ loadData();
                 Welcome back, {{ user?.firstName }}
             </div>
 
-            <!-- TODO: make badge dynmaic -->
             <div class="pt-3 pl-7">
                 <UBadge
                     size="lg"
                     color="primary"
                     variant="soft"
                     class="w-80 pl-4"
+                    v-if="shifts[0]?.isStartingSoon()"
                 >
                     Your Next Shift Starts Soon
                 </UBadge>

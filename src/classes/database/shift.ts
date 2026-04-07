@@ -125,6 +125,12 @@ export class Shift extends DatabaseModel {
         });
     }
 
+    public isStartingSoon(): boolean {
+        const now = new Date();
+        const diff = Math.abs(now.getTime() - this.startTime.getTime());
+        return diff <= 60 * 60 * 1000; // 1 hour in ms
+    }
+
     public toJSON() {
         return {
             id: this.id,
