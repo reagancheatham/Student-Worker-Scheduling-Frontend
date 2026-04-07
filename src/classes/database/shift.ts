@@ -54,6 +54,77 @@ export class Shift extends DatabaseModel {
         if (value) this._employeeID = value.id;
     }
 
+    /* date formatting incase we need it */
+    //1-12
+    public get day(): string {
+        return this.startTime.getDate().toString();
+    }
+
+    //April
+    public get month(): string {
+        return this.startTime.toLocaleString("default", { month: "long" });
+    }
+
+    //apr
+    public get shortMonth(): string {
+        return this.startTime.toLocaleString("default", { month: "short" });
+    }
+
+    //2026
+    public get year(): string {
+        return this.startTime.getFullYear().toString();
+    }
+
+    //Thursday
+    public get weekday(): string {
+        return this.startTime.toLocaleString("default", { weekday: "long" });
+    }
+
+    //Thu
+    public get shortWeekday(): string {
+        return this.startTime.toLocaleString("default", { weekday: "short" });
+    }
+
+    //2:00 PM to 5:00 PM
+    public get shiftTime(): string {
+        const formatTime = (date: Date): string => {
+            return date.toLocaleString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+            });
+        };
+
+        return `${formatTime(this.startTime)} to ${formatTime(this.endTime)}`;
+    }
+
+    //2:00 PM
+    public get startTimeFormatted(): string {
+        return this.startTime.toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
+    }
+
+    //5:00 PM
+    public get endTimeFormatted(): string {
+        return this.endTime.toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
+    }
+
+    //April 9, 2026
+    public get dateFormatted(): string {
+        return this.startTime.toLocaleString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        });
+    }
+
     public toJSON() {
         return {
             id: this.id,
@@ -64,6 +135,16 @@ export class Shift extends DatabaseModel {
             endTime: this.endTime,
             color: this.color,
             employee: this._employee,
+            day: this.day,
+            month: this.month,
+            shortMonth: this.shortMonth,
+            year: this.year,
+            weekday: this.weekday,
+            shortWeekday: this.shortWeekday,
+            shiftTime: this.shiftTime,
+            startTimeFormatted: this.startTimeFormatted,
+            endTimeFormatted: this.endTimeFormatted,
+            dateFormatted: this.dateFormatted,
         };
     }
 

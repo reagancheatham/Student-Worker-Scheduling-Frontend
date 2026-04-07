@@ -107,7 +107,7 @@ loadData();
                         <!-- TODO: make day and time line up on ui -->
                         <div class="grid col-span-4 place-items-center">
                             <div class="font-bold text-center">
-                                {{ shift.time }}
+                                {{ shift.shiftTime }}
                             </div>
                             <UButton variant="link"> View Task List </UButton>
                         </div>
