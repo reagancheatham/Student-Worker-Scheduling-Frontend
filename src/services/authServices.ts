@@ -5,9 +5,9 @@ import { apiClient } from "./services.ts";
 const API_ROOT: string = "authentication/";
 
 export class AuthServices {
-    static async login(token: string) {
+    static async login(token: string, code?: string) {
         let user: User;
-        const result = await apiClient.post(API_ROOT, { credential: token });
+        const result = await apiClient.post(API_ROOT, { credential: token, code: code });
 
         if (result.data.valid) {
             user = result.data.user;
