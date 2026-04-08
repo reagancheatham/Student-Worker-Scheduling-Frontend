@@ -176,7 +176,7 @@ function getAllBisectingEvents(event: EventData): EventData[] {
 
             return (
                 event1.bisects(event2) &&
-                event1.shift.employee.id === event2.shift.employee.id
+                event1.shift.employee?.id === event2.shift.employee?.id
             );
         } else return event.bisects(e);
     });

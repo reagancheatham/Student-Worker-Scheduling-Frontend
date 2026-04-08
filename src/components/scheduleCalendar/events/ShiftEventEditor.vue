@@ -88,7 +88,7 @@ const state = shallowReactive<{
     startTime: Time;
     endTime: Time;
     color: ColorItem;
-    employee: Employee;
+    employee: Employee | undefined;
 }>({
     name: getData().name,
     eventDate: getData().startTime.calendarDate(),
@@ -105,7 +105,7 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
-const taskList = ref<TaskList>();
+const taskList = ref<TaskList>(new TaskList(0, 0, "Taks List", []));
 const editedTask = ref<Task>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
@@ -470,7 +470,9 @@ function createDefaultTask(): Task {
                                 }"
                                 sticky="header"
                                 empty="No Tasks Assigned"
-                                :get-row-id="(task) => (task as any)._uiID"
+                                :get-row-id="
+                                    (task: Task) => (task as any)._uiID
+                                "
                             >
                                 <template #action-cell="{ row }">
                                     <UTooltip
