@@ -6,6 +6,7 @@ import { TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
+import { Store } from "@classes/util/store.ts";
 
 const globalFilter = ref();
 const toast = useToast();
@@ -125,7 +126,7 @@ function deleteEmployee() {
     );
 }
 
-EmployeeServices.getAllForBusiness(1)
+EmployeeServices.getAllForBusiness(Store.getBusiness().id)
     .then((result) => {
         data.value = result;
         console.log(data);
