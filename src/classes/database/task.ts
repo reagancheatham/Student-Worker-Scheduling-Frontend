@@ -2,7 +2,7 @@ import { DatabaseModel } from "./databaseModel.ts";
 
 export enum CompleteStatus {
     Incomplete = "Incomplete",
-    Complete = "Incomplete",
+    Complete = "Complete",
 }
 
 export class Task extends DatabaseModel {

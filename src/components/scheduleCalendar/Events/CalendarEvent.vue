@@ -31,7 +31,7 @@ const FONT_RANGE = new Range(6, 12);
 const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
 const RESIZE_STEP = 5;
 const RESIZE_RATIO = 60 / RESIZE_STEP;
-const DRAG_THRESHOLD = 0.5;
+const DRAG_THRESHOLD = 5;
 
 const refData = defineModel<EventData>({ required: true });
 
@@ -100,9 +100,9 @@ function shouldRender(): boolean {
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
-    if (state == EventState.Resizing || !props.editable) return;
-
     evt.preventDefault();
+
+    if (state == EventState.Resizing || !props.editable) return;
 
     dragStart = new Vector2(evt.clientX, evt.clientY);
 
@@ -131,7 +131,6 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isPopoverOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
-            console.log("z index");
 
             emit("dragBegan", refData.value);
         }
@@ -294,6 +293,7 @@ function stopResize(): void {
 
 function onMouseEnter(): void {
     if (props.canHover && !props.editable) isPopoverOpen.value = true;
+    else isPopoverOpen.value = false;
 }
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
@@ -374,7 +374,7 @@ function getStyle() {
         style["margin-left"] = `${refData.value.leftBisectMargin}%`;
         style["margin-right"] = `${refData.value.rightBisectMargin}%`;
     }
-    
+
     return style;
 }
 
@@ -412,7 +412,11 @@ function onEventDeleted(): void {
 </style>
 
 <template>
-    <UPopover v-model:open="isPopoverOpen" :content="{ side: 'right' }">
+    <UPopover
+        v-model:open="isPopoverOpen"
+        :content="{ side: 'right' }"
+        @update:open="onMouseEnter"
+    >
         <template #content>
             <UCard>
                 <template #header>{{ refData.name }}</template>

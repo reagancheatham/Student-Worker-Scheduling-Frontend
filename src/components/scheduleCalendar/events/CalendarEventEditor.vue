@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import * as v from "valibot";
-import type { ChipProps, FormSubmitEvent, TableColumn } from "@nuxt/ui";
+import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
-import { onMounted, ref, shallowReactive, watch } from "vue";
+import { onMounted, ref, shallowReactive, watch, WatchHandle } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { Business } from "@classes/database/business.ts";
@@ -102,12 +102,12 @@ const taskList = ref<TaskList>();
 const editedTask = ref<Task>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
+const isCancelModalOpen = ref<boolean>(false);
+const isDirty = ref<boolean>(false);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
 });
-
-let deletedTasks: Task[] = [];
 
 const taskColumns = [
     {
@@ -124,6 +124,9 @@ const taskColumns = [
     },
 ];
 
+let deletedTasks: Task[] = [];
+let isDirtyHandle: WatchHandle;
+
 colors.value = EventColor.colors.map((color) => {
     return {
         label: color.name,
@@ -135,6 +138,8 @@ colors.value = EventColor.colors.map((color) => {
 });
 
 onMounted(() => {
+    deletedTasks = [];
+
     watch(
         () => isOpen,
         (value) => {
@@ -155,10 +160,7 @@ onMounted(() => {
                         ? (getData() as ShiftEvent).shift.employee
                         : undefined;
 
-                if (
-                    model.value instanceof ShiftEvent &&
-                    model.value.shift.isValid()
-                ) {
+                if (model.value instanceof ShiftEvent) {
                     if (model.value.shift.isValid()) {
                         TaskListServices.getOrCreateForShift(
                             model.value.shift.id,
@@ -167,6 +169,11 @@ onMounted(() => {
                         });
                     } else taskList.value = new TaskList(0, 0, "Task List", []);
                 }
+
+                isDirty.value = false;
+                isDirtyHandle = watch(state, () => (isDirty.value = true), {
+                    deep: true,
+                });
             }
         },
     );
@@ -178,6 +185,10 @@ function getData() {
 
 function toggleModal(): void {
     if (!isOpen) return;
+
+    deletedTasks = [];
+
+    if (isDirtyHandle) isDirtyHandle();
 
     emit("closeRequested");
 }
@@ -215,7 +226,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
         event.shift.employee = state.employee;
 
         const taskPromises = deletedTasks.map(async (task) => {
-            return await TaskServices.delete(task);
+            if (task.id > 0) return await TaskServices.delete(task);
         });
 
         await Promise.all(taskPromises);
@@ -228,10 +239,36 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     toggleModal();
 }
 
+function cancelEventEdit(): void {
+    if (isDirty.value)
+        isCancelModalOpen.value = true;
+    else
+        toggleModal();
+}
+
 function deleteEvent(): void {
     (model.value as ShiftEvent).destroy().then(() => emit("eventDeleted"));
 
     toggleModal();
+}
+
+function openAddTaskModal(): void {
+    isCreatingTask.value = true;
+
+    editedTask.value = new Task(
+        0,
+        taskList.value.id,
+        "New Task",
+        "",
+        CompleteStatus.Incomplete,
+    );
+
+    isTaskEditorOpen.value = true;
+}
+
+function onTaskAddRequested(): void {
+    taskList.value.tasks.push(editedTask.value);
+    editedTask.value = createDefaultTask();
 }
 
 function editTask(task: Task): void {
@@ -243,7 +280,7 @@ function editTask(task: Task): void {
 function deleteTask(task: Task): void {
     deletedTasks.push(task);
     const tasks = taskList.value.tasks;
-    tasks.splice(tasks.indexOf(task));
+    tasks.splice(tasks.indexOf(task), 1);
 }
 
 function closeTaskModal(): void {
@@ -259,6 +296,7 @@ function createDefaultTask(): Task {
     <UModal
         :open="isOpen"
         :title="creator ? 'Event Creator' : 'Event Editor'"
+        :dismissible="false"
         description="Edit the details of a calendar event."
         @update:open="toggleModal()"
     >
@@ -356,58 +394,135 @@ function createDefaultTask(): Task {
                             @click="state.employee = undefined"
                         />
                     </UFormField>
-                    <UFormField label="Task List" name="taskList">
-                        <UTable
-                            v-if="taskList"
-                            class="overflow-y-auto h-48"
-                            :data="taskList.tasks"
-                            :columns="taskColumns"
+                    <UFormField name="taskList">
+                        <div
+                            class="flex flex-col flex-1 w-full border rounded-md border-accented"
                         >
-                            <template #action-cell="{ row }">
+                            <div
+                                class="flex px-4 py-1 border-b border-accented"
+                            >
+                                <div class="font-medium text-default mt-2">
+                                    Task List
+                                </div>
                                 <UButton
+                                    class="ml-auto"
+                                    label="Add Task"
                                     color="neutral"
                                     variant="outline"
-                                    icon="i-lucide-pencil"
-                                    size="sm"
-                                    @click="editTask(row.original)"
+                                    trailing-icon="i-lucide-list-plus"
+                                    size="md"
+                                    @click="openAddTaskModal"
                                 />
-                                <UButton
-                                    color="neutral"
-                                    variant="outline"
-                                    icon="i-lucide-x"
-                                    size="sm"
-                                    @click="deleteTask(row.original)"
-                                />
-                            </template>
-                        </UTable>
+                            </div>
+                            <UTable
+                                v-if="taskList"
+                                class="overflow-y-auto h-48"
+                                :data="taskList.tasks"
+                                :columns="taskColumns"
+                                :ui="{
+                                    td: 'py-1',
+                                    th: 'py-1',
+                                }"
+                                sticky="header"
+                            >
+                                <template #action-cell="{ row }">
+                                    <UTooltip text="Edit Task" ignore-non-keyboard-focus>
+                                        <UButton
+                                            color="neutral"
+                                            variant="outline"
+                                            icon="i-lucide-pencil"
+                                            size="sm"
+                                            @click="editTask(row.original)"
+                                        />
+                                    </UTooltip>
+                                    <UTooltip text="Delete Task" ignore-non-keyboard-focus>
+                                        <UButton
+                                            color="neutral"
+                                            variant="outline"
+                                            icon="i-lucide-x"
+                                            size="sm"
+                                            @click="deleteTask(row.original)"
+                                        />
+                                    </UTooltip>
+                                </template>
+                            </UTable>
+                        </div>
                     </UFormField>
                     <div class="flex flex-row gap-2">
-                        <UButton class="ml-auto" type="submit">
-                            Submit
-                        </UButton>
-                        <UButton
-                            v-if="!creator"
-                            color="neutral"
-                            variant="outline"
-                            @click="deleteEvent()"
+                        <UTooltip
+                            :text="`Submit ${creator ? 'Creation' : 'Edit'}`"
                         >
-                            Delete
-                        </UButton>
-                        <UButton
-                            variant="outline"
-                            color="neutral"
-                            @click="toggleModal()"
+                            <UButton class="ml-auto" type="submit">
+                                Submit
+                            </UButton>
+                        </UTooltip>
+                        <UTooltip text="Delete Event">
+                            <UModal
+                                title="Delete event?"
+                                description="Deletion can not be undone."
+                                :dismissible="false"
+                                :ui="{ content: 'sm:max-w-xs' }"
+                            >
+                                <UButton
+                                    label="Delete"
+                                    color="neutral"
+                                    variant="outline"
+                                />
+                                <template #footer="{ close }">
+                                    <UButton
+                                        label="Delete"
+                                        class="ml-auto"
+                                        @click="deleteEvent()"
+                                    />
+                                    <UButton
+                                        label="Cancel"
+                                        color="neutral"
+                                        variant="outline"
+                                        class="mr-auto"
+                                        @click="close()"
+                                    />
+                                </template>
+                            </UModal>
+                        </UTooltip>
+                        <UTooltip
+                            :text="`Cancel ${creator ? 'Creation' : 'Edit'}`"
                         >
-                            Cancel
-                        </UButton>
+                            <UButton
+                                label="Cancel"
+                                variant="outline"
+                                color="neutral"
+                                @click="cancelEventEdit()"
+                            />
+                            <UModal
+                                title="Discard unsaved changes?"
+                                description="Discarded changes can not be undone."
+                                :dismissable="false"
+                                :ui="{ content: 'sm:max-w-xs' }"
+                                :open="isCancelModalOpen"
+                            >
+                                <template #footer>
+                                    <UButton
+                                        label="Discard"
+                                        @click="toggleModal()"
+                                    />
+                                    <UButton
+                                        label="Cancel"
+                                        variant="outline"
+                                        color="neutral"
+                                        @click="isCancelModalOpen = false"
+                                    />
+                                </template>
+                            </UModal>
+                        </UTooltip>
                     </div>
                 </UForm>
             </div>
-            <TaskEditor
+            <CalendarTaskEditor
                 v-model="editedTask"
                 :is-open="isTaskEditorOpen"
                 :creator="isCreatingTask"
                 @close-requested="closeTaskModal()"
+                @add-requested="onTaskAddRequested()"
             />
         </template>
     </UModal>

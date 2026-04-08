@@ -15,6 +15,7 @@ const { isOpen, creator = false } = defineProps<{
 
 const emit = defineEmits({
     closeRequested: () => true,
+    addRequested: () => true,
 });
 
 const schema = v.pipe(
@@ -35,6 +36,13 @@ const state = shallowReactive<{
     description: model.value.description,
     completeStatus: model.value.completeStatus,
 });
+
+const completeStatusOptions = Object.entries(CompleteStatus).map(
+    ([value, label]) => ({
+        label,
+        value,
+    }),
+);
 
 onMounted(() => {
     watch(
@@ -65,6 +73,9 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
     task.description = description;
     task.completeStatus = completeStatus;
 
+    if (creator)
+        emit("addRequested");
+
     toggleModal();
 }
 </script>
@@ -94,6 +105,16 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                     </UFormField>
                     <UFormField label="Description" name="description">
                         <UInput v-model="state.description" />
+                    </UFormField>
+                    <UFormField label="Complete Status" name="completeStatus">
+                        <USelectMenu
+                            v-model="state.completeStatus"
+                            :items="completeStatusOptions"
+                            label-key="label"
+                            value-key="value"
+                            :multiple="false"
+                            :search-input="false"
+                        />
                     </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">
