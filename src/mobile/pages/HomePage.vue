@@ -73,6 +73,13 @@ loadData();
                 >
                     Your Next Shift Starts Soon
                 </UBadge>
+                <UBadge 
+                    size="lg"
+                    color="primary"
+                    class="w-80 pl-4"
+                    v-if="shifts[0]?.isLate()">
+                    You are Late to Your Shift
+                </UBadge>
             </div>
 
             <div class="flex flex-col gap-1 pt-2 pl-10">
