@@ -116,6 +116,42 @@ export class Shift extends DatabaseModel {
         });
     }
 
+    public get shiftLengthHours(): string {
+        const diffMs = this.endTime.getTime() - this.startTime.getTime();
+        const totalSeconds = Math.floor(diffMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+
+        return `${hours}`;
+    }
+
+    public get shiftLengthMinutes(): string {
+        const diffMs = this.endTime.getTime() - this.startTime.getTime();
+        const totalSeconds = Math.floor(diffMs / 1000);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        return `${minutes}`;
+    }
+
+    public getShiftLength(): string {
+        const hours = parseInt(this.shiftLengthHours) || 0;
+        const minutes = parseInt(this.shiftLengthMinutes) || 0;
+
+        const parts: string[] = [];
+
+        if (hours > 0) {
+            parts.push(`${hours} hour${hours !== 1 ? "s" : ""}`);
+        }
+        if (minutes > 0) {
+            parts.push(`${minutes} minute${minutes !== 1 ? "s" : ""}`);
+        }
+
+        if (parts.length === 0) {
+            return "0 minutes";
+        }
+
+        return parts.join(" and ");
+    }
+
     //April 9, 2026
     public get dateFormatted(): string {
         return this.startTime.toLocaleString("en-US", {
