@@ -49,8 +49,6 @@ export class ShiftServices {
     ) {
         const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
         const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
-        console.log("start string ", startString);
-        console.log("end string ", endString);
 
         return await DatabaseServices.getAll<Shift>(
             Shift,
