@@ -13,6 +13,8 @@ export class Employee extends DatabaseModel {
     }
 
     public static createFromData(data: any): Employee {
+        console.log("Data: " + JSON.stringify(data));
+
         let user = data["User"];
         let studentID = user ? user.studentID : ("" as string);
         let firstName = user ? user.firstName : ("" as string);
@@ -35,7 +37,7 @@ export class Employee extends DatabaseModel {
     }
 
     public get formattedPhoneNumber(): string {
-        const match = this.phoneNumber.match(/^(\d{3})(\d{3})(\d{4})$/);
+        const match = this.phoneNumber.match(/^(\d{3})(\d{3})(\d{4})$/)!;
 
         return `(${match[1]}) ${match[2]}-${match[3]}`;
     }

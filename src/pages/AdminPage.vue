@@ -10,7 +10,6 @@ import { BusinessServices } from "../services/businessServices.ts";
 
 const UButton = resolveComponent("UButton");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
-
 type BusinessRow = {
     id: number;
     name: string;
@@ -18,17 +17,22 @@ type BusinessRow = {
     ownerPhoneNumber: string;
     ownerEmail: string;
 };
-let data = ref<BusinessRow[]>([]);
-const toastNotification = useToast();
-const globalFilter = ref("");
 
-//MODAL STUFF-----------------
+const data = ref<BusinessRow[]>([]);
+const globalFilter = ref("");
 const isEditOpen = ref(false);
 const selectedBusiness = ref<BusinessRow | null>(null);
+const isAddOpen = ref(false);
+const toastNotification = useToast();
+const addState = shallowReactive({
+    name: "",
+    email: "",
+});
 const editState = shallowReactive({
     name: "",
     email: "",
 });
+
 const editValidationSchema = valibot.object({
     name: valibot.pipe(valibot.string(), valibot.nonEmpty("Name is required")),
     email: valibot.pipe(
@@ -38,11 +42,7 @@ const editValidationSchema = valibot.object({
     ),
 });
 type EditValidationSchema = valibot.InferOutput<typeof editValidationSchema>;
-const isAddOpen = ref(false);
-const addState = shallowReactive({
-    name: "",
-    email: "",
-});
+
 const addValidationSchema = valibot.object({
     name: valibot.pipe(valibot.string(), valibot.nonEmpty("Name is required")),
     email: valibot.pipe(
@@ -51,9 +51,9 @@ const addValidationSchema = valibot.object({
         valibot.email("Invalid email address"),
     ),
 });
+
 type AddValidationSchema = valibot.InferOutput<typeof editValidationSchema>;
 
-//TABLE ITEMS--------------------
 const columns: TableColumn<BusinessRow>[] = [
     {
         accessorKey: "id",
@@ -158,7 +158,6 @@ function getRowItems(row: Row<BusinessRow>) {
     ];
 }
 
-//DELETE BUSINESS----------------------------
 async function deleteBusiness(business: Business) {
     await BusinessServices.delete(business)
         .then(async () => {
@@ -178,8 +177,7 @@ async function deleteBusiness(business: Business) {
         );
 }
 
-//EDIT BUSINESS-----------------------------
-async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
+async function submitEdit(_: FormSubmitEvent<EditValidationSchema>) {
     if (!selectedBusiness.value) return;
     await BusinessServices.update(
         new Business(selectedBusiness.value.id, editState.name),
@@ -202,7 +200,7 @@ async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
             });
         });
 }
-//ADD BUSINESS-------------------------
+
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
     await BusinessServices.create(
         new Business(-1, addState.name),
@@ -210,35 +208,25 @@ async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
     );
 }
 
-//GET DATA----------
 async function getData() {
-    await EmployeeServices.getAllOwners()
-        .then((owners: any[]) => {
-            const rows = owners.map((owner) => {
-                const ownerEmployee = new Employee(
-                    owner.id,
-                    owner.User.studentID,
-                    owner.User.firstName,
-                    owner.User.lastName,
-                    owner.User.email,
-                    owner.User.phoneNumber,
-                );
-
-                return {
-                    id: owner.Business.id,
-                    name: owner.Business.name,
-                    ownerName: ownerEmployee.fullName,
-                    ownerPhoneNumber: ownerEmployee.formattedPhoneNumber,
-                    ownerEmail: ownerEmployee.email,
-                };
-            });
-
-            data.value = rows;
-        })
-        .catch((err) => {
-            console.error(err);
+    try {
+        const owners = await EmployeeServices.getAllOwners();
+        const rows = owners.map((owner) => {
+            return {
+                id: owner.business.id,
+                name: owner.business.name,
+                ownerName: owner.employee.fullName,
+                ownerPhoneNumber: owner.employee.formattedPhoneNumber,
+                ownerEmail: owner.employee.email,
+            };
         });
+
+        data.value = rows;
+    } catch (error) {
+        console.error(`Error getting owners: ${error}`);
+    }
 }
+
 getData();
 </script>
 
