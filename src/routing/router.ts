@@ -23,8 +23,10 @@ router.beforeEach((to, from, next) => {
             token = null;
         }
     }
+    const inviteCode = !!to.params.code;
 
     if (to.meta.requiresAuth && !token) next("/login");
-    else if (to.path === "/login" && token) next("/nav/dashboard");
+    else if (to.path.startsWith("/login") && token && !inviteCode)
+        next("/nav/dashboard");
     else next();
 });

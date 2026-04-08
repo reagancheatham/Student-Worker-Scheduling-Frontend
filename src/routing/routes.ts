@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import AdminPage from "../pages/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
@@ -48,7 +49,7 @@ class Route {
 
 export const routes = {
     Default: Route.createRedirect("/", "Default", "/login"),
-    Login: Route.create("/login", LoginPage, "Login", false),
+    Login: Route.create("/login/:code?", LoginPage, "Login", false),
     NavbarLayout: Route.create("/nav", NavbarLayout, "NavbarLayout", true, [
         Route.create("dashboard", DashboardPage, "Dashboard", true),
         Route.create("schedule", SchedulePage, "Schedule", true),
@@ -61,4 +62,5 @@ export const routes = {
         Route.create("scheduleMobile", SchedulePageMobile, "Calendar", false),
         Route.create("tradeBoard", TradeBoardPage, "Trade Board", false),
     ]),
+    Admin: new Route("/admin", AdminPage, "Admin", "", true)
 };
