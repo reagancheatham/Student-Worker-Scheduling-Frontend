@@ -11,31 +11,31 @@ const items = computed(() => [
         label: "Dashboard",
         icon: "i-lucide-house",
         to: routes.NavbarLayout.children![0].path,
-        active: route.path.startsWith(routes.NavbarLayout.children![0].path),
+        active: route.path.includes(routes.NavbarLayout.children![0].path),
     },
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
         to: routes.NavbarLayout.children![1].path,
-        active: route.path.startsWith(routes.NavbarLayout.children![1].path),
+        active: route.path.includes(routes.NavbarLayout.children![1].path),
     },
     {
         label: "Open Shifts",
         icon: "i-lucide-briefcase",
         to: routes.NavbarLayout.children![2].path,
-        active: route.path.startsWith(routes.NavbarLayout.children![2].path),
+        active: route.path.includes(routes.NavbarLayout.children![2].path),
     },
     {
         label: "Employees",
         icon: "i-lucide-users",
         to: routes.NavbarLayout.children![3].path,
-        active: route.path.startsWith(routes.NavbarLayout.children![3].path),
+        active: route.path.includes(routes.NavbarLayout.children![3].path),
     },
     {
         label: "Settings",
         icon: "i-lucide-settings",
         to: routes.NavbarLayout.children![4].path,
-        active: route.path.startsWith(routes.NavbarLayout.children![4].path),
+        active: route.path.includes(routes.NavbarLayout.children![4].path),
     },
 ]);
 

@@ -10,7 +10,6 @@ import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { EmployeeServices } from "../../services/employeeServices.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
 
 type CalendarRange = {
