@@ -9,6 +9,7 @@ export class Task extends DatabaseModel {
     public constructor(
         public readonly id: number,
         public readonly taskListID: number,
+        public listOrder: number,
         public name: string,
         public description: string,
         public completeStatus: CompleteStatus,
@@ -25,6 +26,7 @@ export class Task extends DatabaseModel {
         return new Task(
             data["id"] ?? 0,
             data["taskListID"] ?? 0,
+            data["listOrder"] ?? 0,
             data["name"] ?? 0,
             data["description"] ?? "",
             completeStatus,

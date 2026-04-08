@@ -8,20 +8,22 @@ export class TaskList extends DatabaseModel {
         public readonly id: number,
         public shiftID: number,
         public readonly name: string,
-        public readonly tasks: Task[],
+        public tasks: Task[],
     ) {
         super();
     }
 
     public static createFromData(data: any): TaskList {
         let tasksJSON = data["Tasks"];
-        let tasks = [];
+        let tasks: Task[] = [];
 
         if (tasksJSON) {
             tasksJSON.forEach((taskJSON: any) => {
                 tasks.push(Task.createFromData(taskJSON));
             });
         }
+
+        tasks.sort((a, b) => a.listOrder - b.listOrder);
 
         return new TaskList(
             data["id"] ?? 0,
@@ -31,15 +33,13 @@ export class TaskList extends DatabaseModel {
         );
     }
 
-    public async updateBackend(shift: Shift) : Promise<TaskList> {
+    public async updateBackend(shift: Shift): Promise<TaskList> {
         if (this.id < 1) {
             this.shiftID = shift.id;
             const response = await TaskListServices.create(this);
 
             return response;
-        }
-        else
-        {
+        } else {
             const response = await TaskListServices.update(this);
 
             return response;
