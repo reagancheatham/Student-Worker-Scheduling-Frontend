@@ -2,7 +2,6 @@
 import { ref, h, resolveComponent, shallowReactive } from "vue";
 import type { Row } from "@tanstack/vue-table";
 import { Business } from "@classes/database/business";
-import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
 import * as valibot from "valibot";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
@@ -238,12 +237,14 @@ getData();
 
         <template #body class="overflow-hidden!">
             <div class="h-screen flex flex-col">
-                <UInput
-                    v-model="globalFilter"
-                    class="max-w-sm"
-                    placeholder="Search all columns..."
-                />
-                <UButton label="Add Business" @click="isAddOpen = true" />
+                <div class="flex flex-row">
+                    <UInput
+                        v-model="globalFilter"
+                        class="max-w-sm"
+                        placeholder="Search all columns..."
+                    />
+                    <UButton label="Add Business" @click="isAddOpen = true" />
+                </div>
                 <UTable
                     sticky
                     class="flex-1"
