@@ -120,6 +120,11 @@ const taskColumns = [
     {
         accessorKey: "name",
         header: "Name",
+        meta: {
+            class: {
+                td: "max-w-[200px] truncate whitespace-normal",
+            },
+        },
     },
     {
         accessorKey: "completeStatus",

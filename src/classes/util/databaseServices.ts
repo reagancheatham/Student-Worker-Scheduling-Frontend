@@ -2,7 +2,7 @@ import { DatabaseModelStatic } from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
 
 export class DatabaseServices {
-    static async create<T>(
+    public static async create<T>(
         model: DatabaseModelStatic<T>,
         path: string,
         object: any,
@@ -25,7 +25,7 @@ export class DatabaseServices {
         else return finalResult;
     }
 
-    static async update<T>(
+    public static async update<T>(
         model: DatabaseModelStatic<T>,
         path: string,
         object: any,
@@ -45,7 +45,7 @@ export class DatabaseServices {
         return finalResult;
     }
 
-    static async delete(path: string) {
+    public static async delete(path: string) {
         await apiClient
             .delete(path)
             .then(() => {
@@ -56,7 +56,7 @@ export class DatabaseServices {
             });
     }
 
-    static async get<T>(
+    public static async get<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T> {
@@ -78,7 +78,7 @@ export class DatabaseServices {
         else return finalResult;
     }
 
-    static async getAll<T>(
+    public static async getAll<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T[]> {
