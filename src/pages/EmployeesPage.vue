@@ -170,7 +170,7 @@ EmployeeServices.getAllForBusiness(Store.getBusiness().id)
             v-model:global-filter="globalFilter"
         >
             <template #name-cell="{ row }">
-                <div class="flex items-center gap-3">
+                <div class="flex items-c>enter gap-3">
                     <UAvatar />
                     <div>
                         <p class="font-medium">

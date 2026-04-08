@@ -1,5 +1,6 @@
 import { Employee } from "@classes/database/employee";
 import { DatabaseServices } from "@classes/util/databaseServices";
+import { apiClient } from "./services";
 
 const API_ROOT: string = "employees";
 
@@ -28,5 +29,24 @@ export class EmployeeServices {
             Employee,
             `${API_ROOT}/business/${businessID}`,
         );
+    }
+
+    static async getAllOwners() {
+        let finalResult: Object | null = null;
+
+        await apiClient
+            .get(`${API_ROOT}/owners`)
+            .then((result) => {
+                finalResult = result.data;
+                console.log(`Fetched Owners`);
+            })
+            .catch((err) => {
+                console.error(`Error fetching owners`);
+                return null;
+            });
+
+        if (finalResult === null)
+            throw Error(`Error fetching owners`);
+        else return finalResult;
     }
 }
