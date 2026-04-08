@@ -17,7 +17,9 @@ let shifts = ref<Shift[]>([]);
 let today = new Date();
 let upcoming = new Date();
 upcoming.setDate(today.getDate() + 30);
-upcoming.setHours(24, 59, 59, 99);
+upcoming.setHours(23, 59, 59, 99);
+
+console.log(today);
 
 async function loadData() {
     try {
@@ -54,6 +56,8 @@ async function loadData() {
 }
 
 loadData();
+
+
 </script>
 
 <template>
@@ -73,13 +77,7 @@ loadData();
                 >
                     Your Next Shift Starts Soon
                 </UBadge>
-                <UBadge 
-                    size="lg"
-                    color="primary"
-                    class="w-80 pl-4"
-                    v-if="shifts[0]?.isLate()">
-                    You are Late to Your Shift
-                </UBadge>
+                <!-- TODO: add late badge -->
             </div>
 
             <div class="flex flex-col gap-1 pt-2 pl-10">
