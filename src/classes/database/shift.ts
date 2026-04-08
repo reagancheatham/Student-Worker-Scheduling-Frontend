@@ -131,6 +131,11 @@ export class Shift extends DatabaseModel {
         return diff <= 60 * 60 * 1000; // 1 hour in ms
     }
 
+    public isLate(): boolean {
+        const now = new Date();
+        return now.getTime() > this.startTime.getTime();
+    }
+
     public toJSON() {
         return {
             id: this.id,

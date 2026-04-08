@@ -19,9 +19,6 @@ let upcoming = new Date();
 upcoming.setDate(today.getDate() + 30);
 upcoming.setHours(24, 59, 59, 99);
 
-console.log(today);
-console.log(upcoming);
-
 async function loadData() {
     try {
         const employeeData = await EmployeeServices.getForUserID(user.value.id);
@@ -51,9 +48,6 @@ async function loadData() {
         });
 
         shifts.value = sortedShifts;
-
-        console.log(employeeData.id);
-        console.log(`shifts: ${shifts.value.length}`);
     } catch (err) {
         console.log(err);
     }
@@ -82,6 +76,9 @@ loadData();
             </div>
 
             <div class="flex flex-col gap-1 pt-2 pl-10">
+                <div class="flex flex-row font-semibold">
+                    Your Next Shift...
+                </div>
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-calendar" class="size-5" />
                     <div>{{ shifts[0]?.dateFormatted }}</div>
@@ -118,7 +115,10 @@ loadData();
 
         <div class="flex-1 overflow-y-auto px-1 pb-33">
             <div class="p-3 space-y-3">
-                <UPageCard v-for="shift in shifts" orientation="horizontal">
+                <UPageCard
+                    v-for="shift in shifts.slice(1)"
+                    orientation="horizontal"
+                >
                     <div class="grid grid-cols-6 place-items-center">
                         <div class="col-span-1">
                             <div class="text-center text-lg font-bold">
