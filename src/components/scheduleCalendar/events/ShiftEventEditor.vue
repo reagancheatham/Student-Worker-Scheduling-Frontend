@@ -24,6 +24,8 @@ import { TaskList } from "@classes/database/taskList.ts";
 import { TaskListServices } from "../../../services/taskListServices.ts";
 import { CompleteStatus, Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
+import { EmployeeServices } from "../../../services/employeeServices.ts";
+import { Store } from "@classes/util/store.ts";
 
 const model = defineModel<ShiftEvent>({
     required: true,
@@ -112,6 +114,7 @@ const isTaskEditorOpen = ref<boolean>(false);
 const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
+const employees = ref<Employee[]>([]);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
@@ -176,6 +179,10 @@ onMounted(() => {
                     );
                 } else taskList.value = new TaskList(0, 0, "Task List", []);
 
+                employees.value = await EmployeeServices.getAllForBusiness(
+                    Store.getBusiness().id,
+                );
+
                 initializeTaskUIIDs();
 
                 isDirty.value = false;
@@ -223,7 +230,7 @@ function toggleModal(): void {
     emit("closeRequested");
 }
 
-function selectDate(date: DateValue): void {
+function selectDate(date: DateValue | any): void {
     state.eventDate = date;
 }
 
@@ -425,7 +432,7 @@ function createDefaultTask(): Task {
                         <USelectMenu
                             class="min-w-36"
                             v-model="state.employee"
-                            :items="Business.current.refEmployees.value"
+                            :items="employees"
                             label-key="fullName"
                         ></USelectMenu>
                         <UButton

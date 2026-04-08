@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import {
-    ref,
-    h,
-    resolveComponent,
-    shallowReactive,
-} from "vue";
+import { ref, h, resolveComponent, shallowReactive } from "vue";
 import type { Row } from "@tanstack/vue-table";
 import { Business } from "@classes/database/business";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
-import { BusinessServices } from "../services/businessService";
 import * as valibot from "valibot";
-import { FormSubmitEvent } from "@nuxt/ui";
+import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
+import { BusinessServices } from "../services/businessServices.ts";
 
 const UButton = resolveComponent("UButton");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
@@ -46,7 +41,7 @@ type EditValidationSchema = valibot.InferOutput<typeof editValidationSchema>;
 const isAddOpen = ref(false);
 const addState = shallowReactive({
     name: "",
-    email: ""
+    email: "",
 });
 const addValidationSchema = valibot.object({
     name: valibot.pipe(valibot.string(), valibot.nonEmpty("Name is required")),
@@ -59,37 +54,59 @@ const addValidationSchema = valibot.object({
 type AddValidationSchema = valibot.InferOutput<typeof editValidationSchema>;
 
 //TABLE ITEMS--------------------
-const columns = [
+const columns: TableColumn<BusinessRow>[] = [
     {
         accessorKey: "id",
         header: "ID",
-        meta: { class: "w-[20%] whitespace-normal" },
+        meta: {
+            class: {
+                th: "w-[20%]",
+                td: "whitespace-normal",
+            },
+        },
     },
     {
         accessorKey: "name",
         header: "Name",
-        meta: { style: "w-[60%] whitespace-normal" },
+        meta: {
+            class: {
+                th: "w-[60%]",
+                td: "whitespace-normal",
+            },
+        },
     },
     {
         accessorKey: "ownerName",
         header: "Owner Name",
-        width: "5%",
+        meta: {
+            class: {
+                th: "w-[5%]",
+            },
+        },
     },
     {
         accessorKey: "ownerPhoneNumber",
         header: "Owner Phone Number",
-        width: "5%",
+        meta: {
+            class: {
+                th: "w-[5%]",
+            },
+        },
     },
     {
         accessorKey: "ownerEmail",
         header: "Owner Email",
-        width: "5%",
+        meta: {
+            class: {
+                th: "w-[5%]",
+            },
+        },
     },
     {
         id: "actions",
-        width: "5%",
         meta: {
             class: {
+                th: "w-[5%]",
                 td: "text-right",
             },
         },
@@ -132,7 +149,9 @@ function getRowItems(row: Row<BusinessRow>) {
         {
             label: "Delete Business",
             async onSelect() {
-                await deleteBusiness(row.original.id);
+                await deleteBusiness(
+                    new Business(row.original.id, row.original.name),
+                );
                 getData();
             },
         },
@@ -140,12 +159,12 @@ function getRowItems(row: Row<BusinessRow>) {
 }
 
 //DELETE BUSINESS----------------------------
-async function deleteBusiness(id: number) {
-    await BusinessServices.delete(id)
+async function deleteBusiness(business: Business) {
+    await BusinessServices.delete(business)
         .then(async () => {
             toastNotification.add({
                 title: "Deleted Business",
-                description: `Successfully deleted business ${id}`,
+                description: `Successfully deleted business ${JSON.stringify(business)}`,
             });
         })
         .catch((err) =>
@@ -158,11 +177,13 @@ async function deleteBusiness(id: number) {
             }),
         );
 }
+
 //EDIT BUSINESS-----------------------------
 async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
     if (!selectedBusiness.value) return;
     await BusinessServices.update(
-        new Business(selectedBusiness.value.id, editState.name), editState.email
+        new Business(selectedBusiness.value.id, editState.name),
+        editState.email,
     )
         .then(() => {
             toastNotification.add({
@@ -183,7 +204,10 @@ async function submitEdit(event: FormSubmitEvent<EditValidationSchema>) {
 }
 //ADD BUSINESS-------------------------
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
-    await BusinessServices.create(new Business(-1, addState.name), addState.email)
+    await BusinessServices.create(
+        new Business(-1, addState.name),
+        addState.email,
+    );
 }
 
 //GET DATA----------
@@ -236,8 +260,8 @@ getData();
                     sticky
                     class="flex-1"
                     v-model:global-filter="globalFilter"
-                    :data="data"
                     ref="table"
+                    :data="data"
                     :columns="columns"
                 />
             </div>

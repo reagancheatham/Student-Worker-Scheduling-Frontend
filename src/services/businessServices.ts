@@ -5,12 +5,12 @@ import { Store } from "@classes/util/store.ts";
 const API_ROOT: string = "businesses";
 
 export class BusinessServices {
-    static async create(business: Business) {
-        await DatabaseServices.create(Business, API_ROOT, business);
+    static async create(business: Business, email: string) {
+        await DatabaseServices.create(Business, API_ROOT, { business, email });
     }
 
-    static async update(business: Business) {
-        await DatabaseServices.update(Business, API_ROOT, business);
+    static async update(business: Business, email: string) {
+        await DatabaseServices.update(Business, API_ROOT, { business, email });
     }
 
     static async delete(business: Business) {
@@ -27,11 +27,11 @@ export class BusinessServices {
     static async getAllForUser(id: number) {
         return await DatabaseServices.getAll<Business>(
             Business,
-            `${API_ROOT}/user/${id}`,
+            `${API_ROOT}/users/${id}`,
         );
     }
 
-    static async swapBusinesses(businessID: number) {
+    static async swapCurrentBusiness(businessID: number) {
         const newBusiness = await DatabaseServices.get<Business>(
             Business,
             `/businesses/${businessID}`,

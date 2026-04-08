@@ -19,23 +19,19 @@ const user = ref({
     },
 });
 
-const usersBusinesses = ref<DropdownMenuItem[]>([
-    { label: "Loading..." },
-]);
+const usersBusinesses = ref<DropdownMenuItem[]>([{ label: "Loading..." }]);
 
 const items = computed(() => [
     [
         {
             type: "label",
             label: user.value.name,
-            avatar: user.value.avatar,
         },
     ],
     [
         {
             label: "Businesses",
             icon: "i-lucide-users",
-            type: "submenu",
             children: usersBusinesses.value,
         },
     ],
@@ -57,19 +53,20 @@ async function getBusinesses() {
         console.log("localUser doesn't exist!");
         return;
     }
-    await BusinessServices.getAllForUser(localUser.id)
-        .then((result) => {
-            usersBusinesses.value = result.map(
-                (business: any): DropdownMenuItem => ({
-                    label: business.name,
-                    onSelect: () => BusinessServices.swapBusinesses(business.id)
-                }),
-            );
-        })
-        .catch((error: any) => {
-            console.log(`Error catching businesses: ${error}`);
-        });
-    console.log(usersBusinesses.value);
+
+    try {
+        const result = await BusinessServices.getAllForUser(localUser.id);
+
+        usersBusinesses.value = result.map(
+            (business: any): DropdownMenuItem => ({
+                label: business.name,
+                onSelect: () =>
+                    BusinessServices.swapCurrentBusiness(business.id),
+            }),
+        );
+    } catch (error) {
+        console.log(`Error catching businesses: ${error}`);
+    }
 }
 
 onMounted(() => getBusinesses());
@@ -77,7 +74,7 @@ onMounted(() => getBusinesses());
 
 <template>
     <UDropdownMenu
-        :items="items"
+        :items="items as DropdownMenuItem[][]"
         :content="{ align: 'center', collisionPadding: 12 }"
         :ui="{
             content: collapsed
