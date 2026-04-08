@@ -4,7 +4,6 @@ import { EmployeeServices } from "../../services/employeeServices.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 
 export class Business extends DatabaseModel{
-    public static current = new Business(1, "My Business");
 
     constructor(
         public readonly id: number,
