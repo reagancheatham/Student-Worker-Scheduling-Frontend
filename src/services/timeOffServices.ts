@@ -1,3 +1,4 @@
+import { Business } from "@classes/database/business";
 import { TimeOffRequest } from "@classes/database/timeOffRequest";
 import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseServices } from "@classes/util/databaseServices";
@@ -24,10 +25,10 @@ export class TimeOffRequestServices {
     );
   }
 
-  static async getAllForBusiness(businessID: number) {
+  static async getAllForBusiness(business: Business) {
     return await DatabaseServices.getAll<TimeOffRequest>(
       TimeOffRequest,
-      `${API_ROOT}/business/${businessID}`,
+      `${API_ROOT}/business/${business.id}`,
     );
   }
 
