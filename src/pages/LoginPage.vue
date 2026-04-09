@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useHead } from "@nuxt/ui/runtime/vue/stubs/base.js";
 import { onMounted } from "vue";
+import { AuthServices } from "../services/authServices.ts";
 
 useHead({
     script: [
@@ -22,6 +23,15 @@ onMounted(() => {
 });
 
 function createLoginButton() {
+    window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: AuthServices.handleCredentialResponse,
+        hosted_domain: "oc.edu",
+        ux_mode: "popup",
+        prompt_parent_id: "googleButton",
+        auto_select: false,
+    });
+
     window.google.accounts.id.renderButton(
         document.getElementById("googleButton"),
         {

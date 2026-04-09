@@ -2,6 +2,7 @@ import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store.ts";
+import { BusinessServices } from "./businessServices.ts";
 
 const API_ROOT: string = "authentication/";
 
@@ -18,6 +19,9 @@ export class AuthServices {
             user.token = result.data.token;
 
             Store.setUser(user);
+
+            const businesses = await BusinessServices.getAllForUser(user.id);
+            Store.setBusiness(businesses[0]);
 
             router.push(`nav/dashboard`);
         } else {

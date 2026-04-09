@@ -7,7 +7,7 @@ const business = Store.getBusiness();
 
 <template>
     <UDashboardNavbar
-        :title="`${business.name} - ${route.name}`"
+        :title="business ? `${business.name} - ${route.name}` : `${route.name}`"
         :ui="{
             root: 'px-0!',
             title: 'px-5!',

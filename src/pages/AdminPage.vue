@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, h, resolveComponent, shallowReactive } from "vue";
+import { ref, h, resolveComponent, shallowReactive, onMounted } from "vue";
 import type { Row } from "@tanstack/vue-table";
 import { Business } from "@classes/database/business";
 import { EmployeeServices } from "../services/employeeServices";
@@ -131,6 +131,10 @@ const columns: TableColumn<BusinessRow>[] = [
     },
 ];
 
+onMounted(() => {
+    getData();
+});
+
 function getRowItems(row: Row<BusinessRow>) {
     return [
         {
@@ -205,11 +209,14 @@ async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
         new Business(-1, addState.name),
         addState.email,
     );
+
+    isAddOpen.value = false;
 }
 
 async function getData() {
     try {
         const owners = await EmployeeServices.getAllOwners();
+
         const rows = owners.map((owner) => {
             return {
                 id: owner.business.id,
@@ -225,8 +232,6 @@ async function getData() {
         console.error(`Error getting owners: ${error}`);
     }
 }
-
-getData();
 </script>
 
 <template>
