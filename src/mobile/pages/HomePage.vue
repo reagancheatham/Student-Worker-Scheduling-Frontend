@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { ShiftServices } from "../../services/shiftServices";
 import { EmployeeServices } from "../../services/employeeServices";
 import { Shift } from "@classes/database/shift";
 import { Employee } from "@classes/database/employee";
+import { Timesheet } from "@classes/database/timesheet";
+import { TimeSheetsServices } from "../../services/timesheetsServices";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 //TODO: add clock in functionality, timeSheets service.
-//TODO: Does Clock In need to be present the whole time? maybe make it so it says view shift when it isnt time to clock?
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
 const employee = ref<Employee | null>(null);
@@ -55,6 +56,46 @@ async function loadData() {
 }
 
 loadData();
+
+const currentShift = computed(() => shifts.value[0]);
+
+//this function will need to be hooked up to settings somehow
+//for now i will just make this wrap shift.isStartingSoon()
+const canClockIn = computed(() => shifts.value[0]?.isStartingSoon());
+
+const clockedIn = ref(false);
+let timesheet = ref<Timesheet | null>(null);
+
+async function clockIn() {
+    try {
+        const newTimesheet = new Timesheet(
+            0,
+            currentShift.value.id,
+            new Date(),
+            undefined,
+        );
+
+        const data = await TimeSheetsServices.create(newTimesheet);
+        timesheet.value = data;
+        clockedIn.value = true;
+    } catch (err) {
+        console.error("Failed to clock in: ", err);
+    }
+}
+
+async function clockOut() {
+    try {
+        const activeTimesheet = timesheet.value;
+        activeTimesheet.clockOut = new Date();
+
+        await TimeSheetsServices.update(activeTimesheet);
+
+        clockedIn.value = false;
+        timesheet.value = null;
+    } catch (err) {
+        console.error("Failed to clock out: ", err);
+    }
+}
 </script>
 
 <template>
@@ -98,9 +139,21 @@ loadData();
                 </div>
                 <div class="flex flex-row pt-8">
                     <UButton
+                        v-if="!clockedIn"
                         class="w-75 items-center justify-center p-3"
                         label="Clock In"
                         size="xl"
+                        :icon="!canClockIn ? 'i-lucide-lock' : undefined"
+                        :disabled="!canClockIn"
+                        @click="clockIn"
+                    />
+                    <UButton
+                        v-if="clockedIn"
+                        class="w-75 items-center justify-center p-3"
+                        label="Clock Out"
+                        variant="subtle"
+                        size="xl"
+                        @click="clockOut"
                     />
                 </div>
                 <div class="flex flex-row pt-3">
