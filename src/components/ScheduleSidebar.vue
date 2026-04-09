@@ -78,7 +78,7 @@ const searchGroups = computed(() => [
             body: 'bg-maroon-500',
             toggle: 'text-neutral-100 hover:text-primary',
         }"
-        :default-size="10"
+        :default-size="15"
     >
         <template #header="{ collapsed }">
             <AvatarMenu :collapsed="collapsed" />

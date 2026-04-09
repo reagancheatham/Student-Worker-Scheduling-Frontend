@@ -40,14 +40,6 @@ function getStyle() {
 <template>
     <div class="employeeContainer" :style="getStyle()">
         <div v-for="employee in data.relevantEmployees" class="employeeAvatar">
-            <!-- <UTooltip :text="employee.fullName">
-                <UAvatar
-                    :alt="employee.firstName"
-                    :ui="{ fallback: 'text-neutral-100' }"
-                    class="employeePicture bg-maroon-500 pointer-events-auto"
-                    size="lg"
-                />
-            </UTooltip> -->
             <UPopover mode="hover" :content="{ side: 'top' }">
                 <UButton
                     size="icon"
