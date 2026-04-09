@@ -1,6 +1,5 @@
 import { Shift } from "@classes/database/shift.ts";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { TaskListServices } from "./taskListServices.ts";
 
 const API_ROOT: string = "shifts";
 
