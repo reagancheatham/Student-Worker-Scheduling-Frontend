@@ -1,11 +1,13 @@
 <script setup>
+import { Store } from "@classes/util/store.ts";
 import { useRoute } from "vue-router";
 const route = useRoute();
+const business = Store.getBusiness();
 </script>
 
 <template>
     <UDashboardNavbar
-        :title="route.name"
+        :title="`${business.name} - ${route.name}`"
         :ui="{
             root: 'px-0!',
             title: 'px-5!',

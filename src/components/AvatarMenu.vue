@@ -4,6 +4,7 @@ import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, onMounted, ref } from "vue";
 import { AuthServices } from "../services/authServices";
 import { BusinessServices } from "../services/businessServices";
+import { router } from "../routing/router.ts";
 
 defineProps<{
     collapsed?: boolean;
@@ -60,8 +61,10 @@ async function getBusinesses() {
         usersBusinesses.value = result.map(
             (business: any): DropdownMenuItem => ({
                 label: business.name,
-                onSelect: () =>
-                    BusinessServices.swapCurrentBusiness(business.id),
+                onSelect: async () => {
+                    await BusinessServices.swapCurrentBusiness(business.id);
+                    router.go(0);
+                },
             }),
         );
     } catch (error) {
