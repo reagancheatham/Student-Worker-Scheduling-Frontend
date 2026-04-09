@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import AdminPage from "../pages/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
@@ -24,14 +25,10 @@ class Route {
         path: string,
         component: any,
         name: string,
-        requiresAuth: boolean = true,
         children?: Route[],
-    ) {
-        return new Route(path, component, name, null, requiresAuth, children);
-    }
-
-    static createRedirect(path: string, name: string, redirect: string): Route {
-        return new Route(path, null, name, redirect);
+        redirect?: string,
+    ): Route {
+        return new Route(path, component, name, redirect, true, children);
     }
 
     unwrap(): RouteRecordRaw {
@@ -44,21 +41,50 @@ class Route {
             redirect: this.redirect,
         };
     }
+
+    noAuth(): Route {
+        this.requiresAuth = false;
+
+        return this;
+    }
 }
 
 export const routes = {
-    Default: Route.createRedirect("/", "Default", "/login"),
-    Login: Route.create("/login", LoginPage, "Login", false),
-    NavbarLayout: Route.create("/nav", NavbarLayout, "NavbarLayout", true, [
-        Route.create("dashboard", DashboardPage, "Dashboard", true),
-        Route.create("schedule", SchedulePage, "Schedule", true),
-        Route.create("openShifts", OpenShiftsPage, "Open Shifts", true),
-        Route.create("employees", EmployeesPage, "Employees", true),
-        Route.create("settings", SettingsPage, "Settings", true),
-    ]),
-    MobileLayout: Route.create("/mobile", NavbarLayout, "MobileLayout", false, [
-        Route.create("homePage", HomePage, "Home Page", false),
-        Route.create("scheduleMobile", SchedulePageMobile, "Calendar", false),
-        Route.create("tradeBoard", TradeBoardPage, "Trade Board", false),
-    ]),
+    Default: Route.create(
+        "/",
+        undefined,
+        "Default",
+        undefined,
+        "/login",
+    ).noAuth(),
+    Login: Route.create("/login/:code?", LoginPage, "Login").noAuth(),
+    NavbarLayout: Route.create(
+        "/nav",
+        NavbarLayout,
+        "NavbarLayout",
+        [
+            Route.create("dashboard", DashboardPage, "Dashboard"),
+            Route.create("schedule", SchedulePage, "Schedule"),
+            Route.create("openShifts", OpenShiftsPage, "Open Shifts"),
+            Route.create("employees", EmployeesPage, "Employees"),
+            Route.create("settings", SettingsPage, "Settings"),
+        ],
+        "/nav/dashboard",
+    ),
+    MobileLayout: Route.create(
+        "/mobile",
+        NavbarLayout,
+        "MobileNavbarLayout",
+        [
+            Route.create("homePage", HomePage, "Home Page").noAuth(),
+            Route.create(
+                "scheduleMobile",
+                SchedulePageMobile,
+                "Calendar",
+            ).noAuth(),
+            Route.create("tradeBoard", TradeBoardPage, "Trade Board").noAuth(),
+        ],
+        "/mobile/homePage",
+    ),
+    Admin: Route.create("/admin", AdminPage, "Admin"),
 };

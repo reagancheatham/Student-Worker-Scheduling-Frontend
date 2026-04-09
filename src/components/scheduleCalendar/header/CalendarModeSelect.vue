@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 
-const modes = Object.keys(CalendarMode).filter((k) => isNaN(Number(k)));
+const modes = Object.keys(CalendarMode).filter((k) => isNaN(Number(k)) && k != "Month");
 const selectedView = defineModel<CalendarMode>();
 </script>
 
@@ -13,5 +13,5 @@ const selectedView = defineModel<CalendarMode>();
 </style>
 
 <template>
-    <USelectMenu class="selectMenu" v-model="selectedView" :items="modes" />
+    <USelectMenu class="selectMenu" v-model="selectedView" :items="modes" :search-input="false" />
 </template>

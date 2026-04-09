@@ -14,7 +14,6 @@ const isMobile = isMobileApp();
             </template>
 
             <template #body class="overflow-hidden!">
-                <!-- <ScheduleCalendar /> -->
                 <RouterView />
             </template>
         </UDashboardPanel>

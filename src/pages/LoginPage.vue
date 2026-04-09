@@ -2,6 +2,10 @@
 import { useHead } from "@nuxt/ui/runtime/vue/stubs/base.js";
 import { onMounted } from "vue";
 import { AuthServices } from "../services/authServices";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+const inviteCode = route.params.code as string | undefined;
 
 useHead({
   script: [
@@ -30,8 +34,7 @@ onMounted(() => {
 
 const handleCredentialResponse = async (response: any) => {
   const idToken = response.credential;
-
-  await AuthServices.login(idToken);
+  await AuthServices.login(idToken, inviteCode);
 };
 
 function handleLogin() {

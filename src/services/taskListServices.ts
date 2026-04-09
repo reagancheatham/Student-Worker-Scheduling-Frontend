@@ -5,11 +5,11 @@ const API_ROOT: string = "taskLists";
 
 export class TaskListServices {
     static async create(taskList: TaskList) {
-        return await DatabaseServices.create(TaskList, API_ROOT, taskList);
+        return await DatabaseServices.create<TaskList>(TaskList, API_ROOT, taskList);
     }
 
     static async update(taskList: TaskList) {
-        return await DatabaseServices.update(TaskList, API_ROOT, taskList);
+        return await DatabaseServices.update<TaskList>(TaskList, API_ROOT, taskList);
     }
 
     static async delete(taskList: TaskList) {

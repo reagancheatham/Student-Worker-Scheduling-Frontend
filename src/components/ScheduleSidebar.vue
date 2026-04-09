@@ -64,15 +64,17 @@ const searchGroups = computed(() => [
             body: 'bg-maroon-500',
             toggle: 'text-neutral-100 hover:text-primary',
         }"
+        :default-size="10"
     >
         <template #header="{ collapsed }">
-            <AvatarMenu />
+            <AvatarMenu :collapsed="collapsed" />
         </template>
 
         <template #default="{ collapsed }">
             <UDashboardSearchButton
                 :collapsed="collapsed"
                 class="bg-transparent ring-default text-neutral-200 hover:text-black"
+                :kbds="[]"
             />
 
             <UNavigationMenu orientation="vertical" :items="items">

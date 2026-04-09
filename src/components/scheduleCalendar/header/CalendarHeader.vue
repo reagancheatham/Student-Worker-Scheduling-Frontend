@@ -6,6 +6,7 @@ import { EventData } from "@classes/calendar/eventData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { Business } from "@classes/database/business.ts";
 import { Shift } from "@classes/database/shift.ts";
+import { Store } from "@classes/util/store.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { ref } from "vue";
@@ -70,7 +71,7 @@ function createDefaultShift(): Shift {
 
     return new Shift(
         0,
-        Business.current.id,
+        Store.getBusiness().id,
         "New Shift",
         startTime,
         endTime,

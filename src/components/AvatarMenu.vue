@@ -1,28 +1,38 @@
 <script setup lang="ts">
-import { ParseLocalStorage } from "@classes/util/parseLocalStorage";
+import { Store } from "@classes/util/store.ts";
 import type { DropdownMenuItem } from "@nuxt/ui";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { AuthServices } from "../services/authServices";
+import { BusinessServices } from "../services/businessServices";
 
 defineProps<{
     collapsed?: boolean;
 }>();
 
-const localUser = ParseLocalStorage.parseUser()
+const localUser = Store.getUser();
+
 const user = ref({
-    name: `${localUser?.firstName} ${localUser?.lastName}` ,
+    name: `${localUser?.firstName} ${localUser?.lastName}`,
     avatar: {
         src: localUser?.profilePicture,
         alt: "User",
     },
 });
 
-const items = computed<DropdownMenuItem[][]>(() => [
+const usersBusinesses = ref<DropdownMenuItem[]>([{ label: "Loading..." }]);
+
+const items = computed(() => [
     [
         {
             type: "label",
             label: user.value.name,
-            avatar: user.value.avatar,
+        },
+    ],
+    [
+        {
+            label: "Businesses",
+            icon: "i-lucide-users",
+            children: usersBusinesses.value,
         },
     ],
     [
@@ -37,11 +47,34 @@ const items = computed<DropdownMenuItem[][]>(() => [
         },
     ],
 ]);
+
+async function getBusinesses() {
+    if (localUser == null) {
+        console.log("localUser doesn't exist!");
+        return;
+    }
+
+    try {
+        const result = await BusinessServices.getAllForUser(localUser.id);
+
+        usersBusinesses.value = result.map(
+            (business: any): DropdownMenuItem => ({
+                label: business.name,
+                onSelect: () =>
+                    BusinessServices.swapCurrentBusiness(business.id),
+            }),
+        );
+    } catch (error) {
+        console.log(`Error fetching businesses: ${error}`);
+    }
+}
+
+onMounted(() => getBusinesses());
 </script>
 
 <template>
     <UDropdownMenu
-        :items="items"
+        :items="items as DropdownMenuItem[][]"
         :content="{ align: 'center', collisionPadding: 12 }"
         :ui="{
             content: collapsed
@@ -61,11 +94,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
             variant="ghost"
             block
             :square="collapsed"
-            class="
-            data-[state=open]:bg-elevated 
-            data-[state=open]:text-black
-            text-neutral-100
-            hover:text-black"
+            class="data-[state=open]:bg-elevated data-[state=open]:text-black text-neutral-100 hover:text-black"
             :ui="{
                 trailingIcon: 'text-neutral',
             }"

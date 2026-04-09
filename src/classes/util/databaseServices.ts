@@ -2,7 +2,7 @@ import { DatabaseModelStatic } from "@classes/database/databaseModel.ts";
 import { apiClient } from "../../services/services";
 
 export class DatabaseServices {
-    static async create<T>(
+    public static async create<T>(
         model: DatabaseModelStatic<T>,
         path: string,
         object: any,
@@ -15,8 +15,8 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} created successfully`);
             })
-            .catch((err) => {
-                console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
+            .catch((error) => {
+                console.error(`Error creating ${path}: ${error.message}`);
                 return null;
             });
 
@@ -25,12 +25,13 @@ export class DatabaseServices {
         else return finalResult;
     }
 
-    static async update<T>(
+    public static async update<T>(
         model: DatabaseModelStatic<T>,
         path: string,
         object: any,
     ): Promise<T> {
         let finalResult: T | null = null;
+        let error = "";
 
         await apiClient
             .put(path, object)
@@ -38,25 +39,32 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} updated successfully`);
             })
-            .catch((err) => {
-                console.error(`Error updating ${path}: ${JSON.stringify(err)}`);
+            .catch((error) => {
+                error =
+                    error?.response?.data?.message ??
+                    error?.response?.data ??
+                    error?.message ??
+                    "Unknown error";
+                console.error(`Error updating ${path}: ${error}`);
             });
 
-        return finalResult;
+        if (finalResult === null)
+            throw Error(`Error editing ${path}: ${error}`);
+        else return finalResult;
     }
 
-    static async delete(path: string) {
+    public static async delete(path: string) {
         await apiClient
             .delete(path)
             .then(() => {
                 console.log(`${path} deleted successfully`);
             })
-            .catch((err) => {
-                console.error(`Error deleting ${path}: ${JSON.stringify(err)}`);
+            .catch((error) => {
+                console.error(`Error deleting ${path}: ${error.message}`);
             });
     }
 
-    static async get<T>(
+    public static async get<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T> {
@@ -68,9 +76,9 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} found successfully`);
             })
-            .catch((err) => {
-                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
-                throw err;
+            .catch((error) => {
+                console.error(`Error finding ${path}: ${error.message}`);
+                throw error;
             });
 
         if (finalResult === null)
@@ -78,7 +86,7 @@ export class DatabaseServices {
         else return finalResult;
     }
 
-    static async getAll<T>(
+    public static async getAll<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T[]> {
@@ -95,9 +103,9 @@ export class DatabaseServices {
 
                 console.log(`${path} found successfully`);
             })
-            .catch((err) => {
-                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
-                throw err;
+            .catch((error) => {
+                console.error(`Error finding ${path}: ${error.message}`);
+                throw error;
             });
 
         return finalResult;
