@@ -2,9 +2,8 @@ import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
 
 export class Store {
-    public static getUser(): User {
+    public static getUser(): User | undefined {
         const storedUser = localStorage.getItem("user");
-        let token: string | null = null;
 
         if (storedUser) {
             try {
@@ -20,34 +19,39 @@ export class Store {
                     user.token,
                     user.profilePicture,
                 );
-            } catch (err) {
-                console.error("Error parsing user from localStorage:", err);
-                return null;
+            } catch (error) {
+                console.error(`Error parsing user from localStorage: ${error}`);
+                return undefined;
             }
         }
 
-        return null;
+        return undefined;
     }
 
     public static setUser(user: User): void {
         localStorage.setItem("user", JSON.stringify(user));
     }
 
-    public static getBusiness(): Business {
-        const storedBusiness = localStorage.getItem("user");
-        let token: string | null = null;
+    public static clearUser(): void {
+        localStorage.removeItem("user");
+    }
+
+    public static getBusiness(): Business | undefined {
+        const storedBusiness = localStorage.getItem("business");
 
         if (storedBusiness) {
             try {
                 const business = JSON.parse(storedBusiness);
                 return new Business(business.id, business.name);
-            } catch (err) {
-                console.error("Error parsing business from localStorage:", err);
-                return null;
+            } catch (error) {
+                console.error(
+                    `Error parsing business from localStorage: ${error}`,
+                );
+                return undefined;
             }
         }
 
-        return null;
+        return undefined;
     }
 
     public static setBusiness(business: Business): void {

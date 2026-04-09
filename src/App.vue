@@ -1,4 +1,14 @@
 <script setup lang="ts">
+import { useColorMode } from "@nuxt/ui/runtime/vue/stubs/base.js";
+
+const colorMode = useColorMode();
+colorMode.preference = "light";
+
+declare global {
+    interface Window {
+        google: any;
+    }
+}
 </script>
 
 <template>
@@ -8,5 +18,4 @@
         </UMain>
         <UFooter />
     </UApp>
-    <UNotifications />
 </template>

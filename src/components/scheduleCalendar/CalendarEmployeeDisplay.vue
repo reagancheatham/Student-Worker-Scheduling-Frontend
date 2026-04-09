@@ -31,10 +31,8 @@ function getStyle() {
 }
 
 .employeePicture {
-    flex-shrink: 1;
     min-width: 0px;
     max-width: 100%;
-    height: auto;
     align-self: center;
 }
 </style>
@@ -42,7 +40,25 @@ function getStyle() {
 <template>
     <div class="employeeContainer" :style="getStyle()">
         <div v-for="employee in data.relevantEmployees" class="employeeAvatar">
-            <UAvatar class="employeePicture" src="avatar.png" />
+            <UPopover mode="hover" :content="{ side: 'top' }">
+                <UButton
+                    size="icon"
+                    class="employeePicture p-0 rounded-full overflow-hidden"
+                    variant="ghost"
+                >
+                    <UAvatar
+                        :alt="employee.firstName"
+                        :ui="{ fallback: 'text-neutral-100' }"
+                        class="employeePicture bg-maroon-500 pointer-events-auto"
+                        size="lg"
+                    />
+                </UButton>
+                <template #content>
+                    <div class="p-2">
+                        {{ employee.fullName }}
+                    </div>
+                </template>
+            </UPopover>
         </div>
     </div>
 </template>

@@ -16,7 +16,6 @@ const isSettingsOpen = ref(false);
             </template>
 
             <template #body class="overflow-hidden!">
-                <!-- <ScheduleCalendar /> -->
                 <RouterView />
             </template>
         </UDashboardPanel>

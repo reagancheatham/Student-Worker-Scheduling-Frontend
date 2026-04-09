@@ -1,33 +1,39 @@
 import { DatabaseModel } from "./databaseModel.ts";
-
-export enum CompleteStatus {
-    Incomplete = "Incomplete",
-    Complete = "Incomplete",
-}
+import { TaskCheckOff } from "./taskCheckOff.ts";
 
 export class Task extends DatabaseModel {
     public constructor(
         public readonly id: number,
         public readonly taskListID: number,
-        public readonly name: string,
-        public readonly description: string,
-        public readonly completeStatus: CompleteStatus,
+        public listOrder: number,
+        public name: string,
+        public description: string,
+        public checkOffs: TaskCheckOff[],
     ) {
         super();
     }
 
     public static createFromData(data: any): Task {
-        let completeStatus = CompleteStatus.Incomplete;
+        let checkOffsJSON = data["TaskCheckOffs"];
+        let checkOffs: TaskCheckOff[] = [];
 
-        if (data["completeStatus"] == "COMPLETE")
-            completeStatus = CompleteStatus.Complete;
+        if (checkOffsJSON) {
+            checkOffsJSON.forEach((checkOffJSON: any) => {
+                checkOffs.push(TaskCheckOff.createFromData(checkOffJSON));
+            });
+        }
 
         return new Task(
             data["id"] ?? 0,
             data["taskListID"] ?? 0,
+            data["listOrder"] ?? 0,
             data["name"] ?? 0,
             data["description"] ?? "",
-            completeStatus,
+            checkOffs,
         );
+    }
+
+    public isValid(): boolean {
+        return this.id > 0;
     }
 }

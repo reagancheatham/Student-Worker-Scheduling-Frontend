@@ -4,6 +4,7 @@ import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, onMounted, ref } from "vue";
 import { AuthServices } from "../services/authServices";
 import { BusinessServices } from "../services/businessServices";
+import { router } from "../routing/router.ts";
 
 defineProps<{
     collapsed?: boolean;
@@ -15,27 +16,23 @@ const user = ref({
     name: `${localUser?.firstName} ${localUser?.lastName}`,
     avatar: {
         src: localUser?.profilePicture,
-        alt: "User",
+        alt: localUser?.firstName,
     },
 });
 
-const usersBusinesses = ref<DropdownMenuItem[]>([
-    { label: "Loading..." },
-]);
+const usersBusinesses = ref<DropdownMenuItem[]>([{ label: "Loading..." }]);
 
 const items = computed(() => [
     [
         {
             type: "label",
             label: user.value.name,
-            avatar: user.value.avatar,
         },
     ],
     [
         {
             label: "Businesses",
             icon: "i-lucide-users",
-            type: "submenu",
             children: usersBusinesses.value,
         },
     ],
@@ -57,19 +54,22 @@ async function getBusinesses() {
         console.log("localUser doesn't exist!");
         return;
     }
-    await BusinessServices.getAllForUser(localUser.id)
-        .then((result) => {
-            usersBusinesses.value = result.map(
-                (business: any): DropdownMenuItem => ({
-                    label: business.name,
-                    onSelect: () => BusinessServices.swapBusinesses(business.id)
-                }),
-            );
-        })
-        .catch((error: any) => {
-            console.log(`Error catching businesses: ${error}`);
-        });
-    console.log(usersBusinesses.value);
+
+    try {
+        const result = await BusinessServices.getAllForUser(localUser.id);
+
+        usersBusinesses.value = result.map(
+            (business: any): DropdownMenuItem => ({
+                label: business.name,
+                onSelect: async () => {
+                    await BusinessServices.swapCurrentBusiness(business.id);
+                    router.go(0);
+                },
+            }),
+        );
+    } catch (error) {
+        console.log(`Error fetching businesses: ${error}`);
+    }
 }
 
 onMounted(() => getBusinesses());
@@ -77,7 +77,7 @@ onMounted(() => getBusinesses());
 
 <template>
     <UDropdownMenu
-        :items="items"
+        :items="items as DropdownMenuItem[][]"
         :content="{ align: 'center', collisionPadding: 12 }"
         :ui="{
             content: collapsed

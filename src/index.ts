@@ -4,4 +4,7 @@ import ui from "@nuxt/ui/vue-plugin";
 import App from "./App.vue";
 import "../css/main.css";
 
-createApp(App).use(router).use(ui).mount("#app");
+createApp(App)
+    .use(router)
+    .use(ui)
+    .mount("#app");
