@@ -15,7 +15,7 @@ const user = ref({
     name: `${localUser?.firstName} ${localUser?.lastName}`,
     avatar: {
         src: localUser?.profilePicture,
-        alt: "User",
+        alt: localUser?.firstName,
     },
 });
 
