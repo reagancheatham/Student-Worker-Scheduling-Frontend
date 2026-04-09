@@ -54,9 +54,15 @@ export class EmployeeServices {
         }
     }
 
-    public static async getEmployeeForUserAndBusiness(user: User, business: Business): Promise<Employee | undefined> {
+    public static async getEmployeeForUserAndBusiness(
+        user: User,
+        business: Business,
+    ): Promise<Employee | undefined> {
         try {
-            const employee = DatabaseServices.get<Employee>(Employee, `${API_ROOT}/user/${user.id}/business/${business.id}`);
+            const employee = DatabaseServices.get<Employee>(
+                Employee,
+                `${API_ROOT}/user/${user.id}/business/${business.id}`,
+            );
 
             return employee;
         } catch (error: any) {

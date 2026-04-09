@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
-import { TableColumn } from "@nuxt/ui";
+import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store.ts";
+import * as valibot from "valibot";
 
 const globalFilter = ref();
 const toast = useToast();
@@ -16,6 +17,20 @@ const UDropdownMenu = resolveComponent("UDropdownMenu");
 
 const deleteDoubleConfirm = ref(false); //ask rag for better ways to handle the double confirm modal???
 const selectedEmployee = ref<Employee>();
+
+    const isAddOpen = ref(false);
+    const addState = shallowReactive({
+    email: "",
+});
+const addValidationSchema = valibot.object({
+    email: valibot.pipe(
+        valibot.string(),
+        valibot.nonEmpty("Email is required"),
+        valibot.email("Invalid email address"),
+    ),
+});
+type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
+const toastNotification = useToast();
 
 let data = ref<Employee[]>([]);
 
@@ -127,6 +142,12 @@ function deleteEmployee() {
     );
 }
 
+async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
+    await Employee.create(
+        addState.email,
+    );
+}
+
 EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
     .then((result) => {
         data.value = result;
@@ -197,4 +218,35 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
             </template>
         </UTable>
     </div>
+    <UModal v-model:open="isAddOpen" title="Add Business">
+        <template #content>
+            <div class="p-4">
+                <UForm
+                    :schema="addValidationSchema"
+                    :state="addState"
+                    class="flex flex-col gap-4"
+                    @submit="submitAdd"
+                >
+                    <UFormField label="Business Name" name="name">
+                        <UInput v-model="addState.name" />
+                    </UFormField>
+                    <UFormField label="Business Owner Email" name="email">
+                        <UInput v-model="addState.email" />
+                    </UFormField>
+
+                    <div class="flex gap-2 justify-end">
+                        <UButton type="submit"> Save </UButton>
+
+                        <UButton
+                            variant="outline"
+                            color="neutral"
+                            @click="isAddOpen = false"
+                        >
+                            Cancel
+                        </UButton>
+                    </div>
+                </UForm>
+            </div>
+        </template>
+    </UModal>
 </template>
