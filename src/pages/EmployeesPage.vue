@@ -8,33 +8,30 @@ import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store.ts";
 
-const globalFilter = ref();
 const toast = useToast();
 const { copy } = useClipboard();
 const UButton = resolveComponent("UButton");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
 
-const deleteDoubleConfirm = ref(false); //ask rag for better ways to handle the double confirm modal???
+const globalFilter = ref();
+const deleteDoubleConfirm = ref(false);
 const selectedEmployee = ref<Employee>();
 
 let data = ref<Employee[]>([]);
 
-// "Nonsensical" be warned
 const columns: TableColumn<Employee>[] = [
     {
         accessorKey: "studentID",
-        header: "Id",
-        cell: ({ row }) => `${row.getValue("studentID")}`,
+        header: "ID",
     },
     {
         id: "name",
+        accessorKey: "fullName",
         header: "Name",
-        cell: ({ row }) => row.original.fullName,
     },
     {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => `${row.getValue("email")}`,
     },
     {
         accessorKey: "phoneNumber",
@@ -138,11 +135,10 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
 </script>
 
 <template>
-    <!-- TODO: figure out how to get an x instead of arrow -->
     <UModal
         v-model:open="deleteDoubleConfirm"
         title="Are you sure?"
-        close-icon="i-lucide-arrow-right"
+        close-icon="i-lucide-x"
     >
         <template #body>
             <div class="text-center text-2xl font-medium">
