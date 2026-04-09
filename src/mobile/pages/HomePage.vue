@@ -100,9 +100,9 @@ async function clockOut() {
 </script>
 
 <template>
-    <div class="h-screen w-full overflow-hidden flex flex-col items-center">
+    <div class="h-screen w-full overflow-hidden flex flex-col">
         <div class="shrink-0">
-            <div class="pt-6 font-bold w-full text-xl">
+            <div class="pl-[5%] pt-6 font-bold w-full text-xl">
                 Welcome back, {{ user?.firstName }}
             </div>
 
@@ -118,7 +118,7 @@ async function clockOut() {
                 <!-- TODO: add late badge -->
             </div>
 
-            <div class="flex flex-col gap-1 pt-2">
+            <div class="flex flex-col gap-1 pt-2 pl-[8%]">
                 <div class="flex flex-row font-semibold">
                     Your Next Shift...
                 </div>
