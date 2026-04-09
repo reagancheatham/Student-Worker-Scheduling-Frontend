@@ -67,7 +67,7 @@ const searchGroups = computed(() => [
         :default-size="10"
     >
         <template #header="{ collapsed }">
-            <AvatarMenu />
+            <AvatarMenu :collapsed="collapsed" />
         </template>
 
         <template #default="{ collapsed }">

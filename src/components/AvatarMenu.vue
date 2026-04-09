@@ -65,7 +65,7 @@ async function getBusinesses() {
             }),
         );
     } catch (error) {
-        console.log(`Error catching businesses: ${error}`);
+        console.log(`Error fetching businesses: ${error}`);
     }
 }
 
