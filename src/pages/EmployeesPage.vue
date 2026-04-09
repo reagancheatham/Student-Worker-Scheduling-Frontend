@@ -135,7 +135,6 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
 </script>
 
 <template>
-    <!-- TODO: figure out how to get an x instead of arrow -->
     <UModal
         v-model:open="deleteDoubleConfirm"
         title="Are you sure?"
