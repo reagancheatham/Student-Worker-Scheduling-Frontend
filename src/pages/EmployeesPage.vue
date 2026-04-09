@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
-import { TableColumn } from "@nuxt/ui";
+import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store.ts";
+import * as valibot from "valibot";
 
 const toast = useToast();
 const { copy } = useClipboard();
@@ -16,6 +17,22 @@ const UDropdownMenu = resolveComponent("UDropdownMenu");
 const globalFilter = ref();
 const deleteDoubleConfirm = ref(false);
 const selectedEmployee = ref<Employee>();
+
+const isAddOpen = ref(false);
+const addState = shallowReactive({
+    email: "",
+    isManager: false,
+});
+const addValidationSchema = valibot.object({
+    email: valibot.pipe(
+        valibot.string(),
+        valibot.nonEmpty("Email is required"),
+        valibot.email("Invalid email address"),
+    ),
+    isManager: valibot.boolean(),
+});
+type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
+const toastNotification = useToast();
 
 let data = ref<Employee[]>([]);
 
@@ -124,14 +141,28 @@ function deleteEmployee() {
     );
 }
 
-EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
-    .then((result) => {
-        data.value = result;
-        console.log(data);
-    })
-    .catch((err) => {
-        console.error(err);
-    });
+async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
+    await EmployeeServices.create(addState.email, addState.isManager).then(
+        () => {
+            getData();
+            isAddOpen.value = false;
+        },
+    );
+}
+
+function getData() {
+    EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
+        .then((result) => {
+            data.value = result;
+            console.log(data);
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+}
+onMounted(() => {
+    getData();
+});
 </script>
 
 <template>
@@ -170,7 +201,11 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
                 placeholder="Filter..."
             />
 
-            <UButton label="Add Employee" color="primary" />
+            <UButton
+                label="Add Employee"
+                color="primary"
+                @click="isAddOpen = true"
+            />
         </div>
         <UTable
             class="flex-1"
@@ -193,4 +228,37 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
             </template>
         </UTable>
     </div>
+    <UModal v-model:open="isAddOpen" title="Add Business">
+        <template #content>
+            <div class="p-4">
+                <UForm
+                    :schema="addValidationSchema"
+                    :state="addState"
+                    class="flex flex-col gap-4"
+                    @submit="submitAdd"
+                >
+                    <UFormField label="Employee Email" name="email">
+                        <UInput v-model="addState.email" />
+                    </UFormField>
+                    <UFormField name="isManager">
+                        <div class="flex items-center gap-2">
+                            <USwitch v-model="addState.isManager" />
+                            <span class="text-sm">Make Manager</span>
+                        </div>
+                    </UFormField>
+                    <div class="flex gap-2 justify-end">
+                        <UButton type="submit"> Add </UButton>
+
+                        <UButton
+                            variant="outline"
+                            color="neutral"
+                            @click="isAddOpen = false"
+                        >
+                            Cancel
+                        </UButton>
+                    </div>
+                </UForm>
+            </div>
+        </template>
+    </UModal>
 </template>
