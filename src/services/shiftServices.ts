@@ -27,7 +27,7 @@ export class ShiftServices {
         );
     }
 
-    static async getAllInRange(
+    static async getAllInRangeForBusiness(
         businessID: number,
         startTime: Date,
         endTime: Date,

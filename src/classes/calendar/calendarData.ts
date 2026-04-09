@@ -79,7 +79,7 @@ export class CalendarData {
 
         let events: EventData[] = [];
 
-        await ShiftServices.getAllInRange(1, beginningOfDay, endOfDay).then(
+        await ShiftServices.getAllInRangeForBusiness(1, beginningOfDay, endOfDay).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },
@@ -99,7 +99,7 @@ export class CalendarData {
 
         let events: EventData[] = [];
 
-        await ShiftServices.getAllInRange(1, startDate, endDate).then(
+        await ShiftServices.getAllInRangeForBusiness(1, startDate, endDate).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },

@@ -6,28 +6,39 @@ import { Shift } from "@classes/database/shift";
 import { Employee } from "@classes/database/employee";
 import { Timesheet } from "@classes/database/timesheet";
 import { TimeSheetsServices } from "../../services/timesheetsServices";
+import { Store } from "@classes/util/store.ts";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 //TODO: add clock in functionality, timeSheets service.
 
-const user = ref(JSON.parse(localStorage.getItem("user")));
+const user = ref(Store.getUser());
+const business = ref(Store.getBusiness());
 const employee = ref<Employee | null>(null);
-let shifts = ref<Shift[]>([]);
+const currentShift = computed(() => shifts.value[0]);
+//this function will need to be hooked up to settings somehow
+//for now i will just make this wrap shift.isStartingSoon()
+const canClockIn = computed(() => shifts.value[0]?.isStartingSoon());
+const clockedIn = ref(false);
+const shifts = ref<Shift[]>([]);
+const timesheet = ref<Timesheet | null>(null);
 
 let today = new Date();
 let upcoming = new Date();
 upcoming.setDate(today.getDate() + 30);
 upcoming.setHours(23, 59, 59, 99);
 
-console.log(today);
-
 async function loadData() {
     try {
-        const employeeData = await EmployeeServices.getForUserID(user.value.id);
-        employee.value = employeeData;
+        const employeeData =
+            await EmployeeServices.getEmployeeForUserAndBusiness(
+                user.value!,
+                business.value!,
+            );
+
+        employee.value = employeeData!;
 
         let result = await ShiftServices.getAllInRangeForEmployee(
-            employeeData.id,
+            employee.value.id,
             today,
             upcoming,
         );
@@ -39,7 +50,7 @@ async function loadData() {
             upcoming.setDate(upcoming.getDate() + 120);
 
             result = await ShiftServices.getAllInRangeForEmployee(
-                employeeData.id,
+                employee.value.id,
                 today,
                 upcoming,
             );
@@ -56,15 +67,6 @@ async function loadData() {
 }
 
 loadData();
-
-const currentShift = computed(() => shifts.value[0]);
-
-//this function will need to be hooked up to settings somehow
-//for now i will just make this wrap shift.isStartingSoon()
-const canClockIn = computed(() => shifts.value[0]?.isStartingSoon());
-
-const clockedIn = ref(false);
-let timesheet = ref<Timesheet | null>(null);
 
 async function clockIn() {
     try {
@@ -85,7 +87,7 @@ async function clockIn() {
 
 async function clockOut() {
     try {
-        const activeTimesheet = timesheet.value;
+        const activeTimesheet = timesheet.value!;
         activeTimesheet.clockOut = new Date();
 
         await TimeSheetsServices.update(activeTimesheet);
@@ -99,13 +101,13 @@ async function clockOut() {
 </script>
 
 <template>
-    <div class="h-screen overflow-hidden flex flex-col">
+    <div class="h-screen w-full overflow-hidden flex flex-col items-center">
         <div class="shrink-0">
-            <div class="pl-6 pt-6 font-bold w-full text-xl">
+            <div class="pt-6 font-bold w-full text-xl">
                 Welcome back, {{ user?.firstName }}
             </div>
 
-            <div class="pt-3 pl-7">
+            <div class="pt-3">
                 <UBadge
                     size="lg"
                     color="primary"
@@ -118,7 +120,7 @@ async function clockOut() {
                 <!-- TODO: add late badge -->
             </div>
 
-            <div class="flex flex-col gap-1 pt-2 pl-10">
+            <div class="flex flex-col gap-1 pt-2">
                 <div class="flex flex-row font-semibold">
                     Your Next Shift...
                 </div>
@@ -168,7 +170,7 @@ async function clockOut() {
         </div>
 
         <!-- Upcoming Schedule -->
-        <div class="pl-6 pt-5 font-bold text-lg shrink-0">Upcoming Shifts</div>
+        <div class="pt-5 font-bold text-lg shrink-0">Upcoming Shifts</div>
 
         <div class="flex-1 overflow-y-auto px-1 pb-33">
             <div class="p-3 space-y-3">

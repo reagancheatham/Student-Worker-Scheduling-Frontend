@@ -28,7 +28,7 @@ onMounted(async () => {
     const future = new Date(now);
     future.setDate(future.getDate() + 30);
 
-    const shiftsResponse = await ShiftServices.getAllInRange(1, now, future);
+    const shiftsResponse = await ShiftServices.getAllInRangeForBusiness(1, now, future);
     const shifts = Array.isArray(shiftsResponse) ? shiftsResponse : [shiftsResponse];
 
     data.value = shifts
