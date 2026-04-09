@@ -11,6 +11,7 @@ import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
+import { Store } from "@classes/util/store.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -78,8 +79,11 @@ export class CalendarData {
         endOfDay.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
+        const business = Store.getBusiness();
 
-        await ShiftServices.getAllInRangeForBusiness(1, beginningOfDay, endOfDay).then(
+        console.log("requesting with business" + JSON.stringify(business))
+
+        await ShiftServices.getAllInRangeForBusiness(business!.id, beginningOfDay, endOfDay).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },
@@ -98,8 +102,9 @@ export class CalendarData {
         endDate.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
+        const business = Store.getBusiness();
 
-        await ShiftServices.getAllInRangeForBusiness(1, startDate, endDate).then(
+        await ShiftServices.getAllInRangeForBusiness(business!.id, startDate, endDate).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },

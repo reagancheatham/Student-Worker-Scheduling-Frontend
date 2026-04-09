@@ -37,7 +37,7 @@ export class Store {
     }
 
     public static getBusiness(): Business | undefined {
-        const storedBusiness = localStorage.getItem("user");
+        const storedBusiness = localStorage.getItem("business");
 
         if (storedBusiness) {
             try {
