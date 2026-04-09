@@ -1,3 +1,4 @@
+import { Store } from "@classes/util/store.ts";
 import axios from "axios";
 
 var baseURL: string = "";
@@ -6,7 +7,7 @@ if (import.meta.env.MODE === "development")
     baseURL = "http://localhost:3136/workerscheduling-t6/";
 else baseURL = "/workerscheduling-t6/";
 
-export const apiClient = axios.create({
+const apiClient = axios.create({
     baseURL,
     headers: {
         Accept: "application/json",
@@ -28,3 +29,13 @@ export const apiClient = axios.create({
         }
     },
 });
+
+apiClient.interceptors.request.use((config) => {
+    const user = Store.getUser();
+    if (user)
+        config.headers.Authorization = `Bearer ${user.token}`;
+    
+    return config;
+});
+
+export { apiClient };

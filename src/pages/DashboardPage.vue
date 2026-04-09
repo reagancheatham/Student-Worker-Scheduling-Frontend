@@ -1,10 +1,7 @@
-<script>
-import WorkingCurrently from "../components/dashboardCards/WorkingCurrently.vue";
-import OpenShifts from "../components/dashboardCards/OpenShifts.vue";
-import NotificationCenter from "../components/dashboardCards/NotificationCenter.vue";
-</script>
+<script setup lang="ts">
+import { CalendarMode } from '@classes/calendar/calendarMode.ts';
 
-<style></style>
+</script>
 
 <template>
     <div class="grid grid-cols-5 gap-4 h-screen min-h-0">
@@ -23,7 +20,7 @@ import NotificationCenter from "../components/dashboardCards/NotificationCenter.
                     <div class="text-base font-semibold">Today's Schedule</div>
                 </template>
                 <div class="w-full h-full min-h-0 mt-5">
-                    <ScheduleCalendar default-view="Day" />
+                    <ScheduleCalendar :default-view="CalendarMode.Day" />
                 </div>
             </UPageCard>
             <WorkingCurrently

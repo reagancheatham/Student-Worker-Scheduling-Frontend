@@ -12,7 +12,7 @@ export class Shift extends DatabaseModel {
         public startTime: Date,
         public endTime: Date,
         public color: EventColor,
-        private _employee: Employee,
+        private _employee: Employee | undefined,
     ) {
         super();
 
@@ -44,11 +44,11 @@ export class Shift extends DatabaseModel {
         );
     }
 
-    public get employee(): Employee {
+    public get employee(): Employee | undefined {
         return this._employee;
     }
 
-    public set employee(value: Employee) {
+    public set employee(value: Employee | undefined) {
         this._employee = value;
 
         if (value) this._employeeID = value.id;

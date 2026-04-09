@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, shallowRef, toRef, watch } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -7,17 +7,11 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
-import { ShiftServices } from "../../../services/shiftServices.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import {
-    CalendarDate,
-    DateFormatter,
     isSameDay,
     startOfWeek,
-    Time,
 } from "@internationalized/date";
-import { Employee } from "@classes/database/employee.ts";
-import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 //#region Variables
 enum EventState {
@@ -31,7 +25,7 @@ const FONT_RANGE = new Range(6, 12);
 const TITLE_MARGIN_RANGE = new Range(-13.0, -0.1);
 const RESIZE_STEP = 5;
 const RESIZE_RATIO = 60 / RESIZE_STEP;
-const DRAG_THRESHOLD = 0.5;
+const DRAG_THRESHOLD = 5;
 
 const refData = defineModel<EventData>({ required: true });
 
@@ -100,9 +94,9 @@ function shouldRender(): boolean {
 
 //#region Resize Callbacks
 function onPointerDown(evt: PointerEvent): void {
-    if (state == EventState.Resizing || !props.editable) return;
-
     evt.preventDefault();
+
+    if (state == EventState.Resizing || !props.editable) return;
 
     dragStart = new Vector2(evt.clientX, evt.clientY);
 
@@ -131,7 +125,6 @@ function onPointerMove(evt: PointerEvent): void {
             dragEndTime = refData.value.endTime.clone();
             isPopoverOpen.value = false;
             refData.value.zIndex = MAX_Z_INDEX;
-            console.log("z index");
 
             emit("dragBegan", refData.value);
         }
@@ -294,6 +287,7 @@ function stopResize(): void {
 
 function onMouseEnter(): void {
     if (props.canHover && !props.editable) isPopoverOpen.value = true;
+    else isPopoverOpen.value = false;
 }
 
 function calculateTimeChange(hour: number, minute: number): [number, number] {
@@ -337,10 +331,11 @@ function getGridArea(): string {
         if (refData.value instanceof ShiftEvent) {
             const employee = refData.value.shift.employee;
 
-            row =
-                props.calendarData.relevantEmployees.findIndex(
-                    (relEmployee) => relEmployee.id === employee.id,
-                ) + 1;
+            if (employee)
+                row =
+                    props.calendarData.relevantEmployees.findIndex(
+                        (relEmployee) => relEmployee.id === employee.id,
+                    ) + 1;
         }
 
         return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
@@ -374,19 +369,19 @@ function getStyle() {
         style["margin-left"] = `${refData.value.leftBisectMargin}%`;
         style["margin-right"] = `${refData.value.rightBisectMargin}%`;
     }
-    
+
     return style;
 }
 
 function updateBackendEvent(): void {
-    if (refData.value instanceof ShiftEvent) refData.value.updateBackendEvent();
+    if (refData.value instanceof ShiftEvent) refData.value.updateBackend();
 }
 
 function closeModal(): void {
     isModalOpen.value = false;
 }
 
-function deleted(): void {
+function onEventDeleted(): void {
     props.calendarData.updateRelevantData();
 }
 </script>
@@ -412,7 +407,11 @@ function deleted(): void {
 </style>
 
 <template>
-    <UPopover v-model:open="isPopoverOpen" :content="{ side: 'right' }">
+    <UPopover
+        v-model:open="isPopoverOpen"
+        :content="{ side: 'right' }"
+        @update:open="onMouseEnter"
+    >
         <template #content>
             <UCard>
                 <template #header>{{ refData.name }}</template>
@@ -514,7 +513,7 @@ function deleted(): void {
             :model-value="refData"
             :is-open="isModalOpen"
             @close-requested="closeModal()"
-            @event-deleted="deleted()"
+            @event-deleted="onEventDeleted()"
         />
     </UPopover>
 </template>
