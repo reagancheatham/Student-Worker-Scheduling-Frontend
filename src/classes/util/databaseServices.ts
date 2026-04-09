@@ -31,6 +31,7 @@ export class DatabaseServices {
         object: any,
     ): Promise<T> {
         let finalResult: T | null = null;
+        let error = "";
 
         await apiClient
             .put(path, object)
@@ -39,10 +40,17 @@ export class DatabaseServices {
                 console.log(`${path} updated successfully`);
             })
             .catch((err) => {
-                console.error(`Error updating ${path}: ${JSON.stringify(err)}`);
+                error =
+                    err?.response?.data?.message ??
+                    err?.response?.data ??
+                    err?.message ??
+                    "Unknown error";
+                console.error(`Error updating ${path}: ${error}`);
             });
 
-        return finalResult;
+        if (finalResult === null)
+            throw Error(`Error editing ${path}: ${error}`);
+        else return finalResult;
     }
 
     static async delete(path: string) {

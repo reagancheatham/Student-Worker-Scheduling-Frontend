@@ -1,21 +1,22 @@
 import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
+import { Store } from "@classes/util/store.ts";
 
 const API_ROOT: string = "authentication/";
 
 export class AuthServices {
-    static async login(token: string) {
+    static async login(token: string, code?: string) {
         let user: User;
-        const result = await apiClient.post(API_ROOT, { credential: token });
+        const result = await apiClient.post(API_ROOT, { credential: token, code: code });
 
         if (result.data.valid) {
             user = result.data.user;
             user.token = result.data.token;
-            localStorage.setItem("user", JSON.stringify(user));
+
+            Store.setUser(user);
 
             const business = await apiClient.get(`/employees/${user.id}`); //This gets the business ID, but we def need to check if they actually belong to the business
-            const businessID = business.data.businessID;
 
             router.push(`nav/dashboard`);
         } else {
@@ -39,8 +40,6 @@ export class AuthServices {
                     },
                 },
             );
-
-            
         } catch (error) {
             console.error("Logout failed", error);
             localStorage.removeItem("user");
