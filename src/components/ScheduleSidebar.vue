@@ -3,10 +3,11 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { routes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
+import { AuthServices } from "../services/authServices.ts";
 
 const route = useRoute();
 
-const items = computed(() => [
+const links = computed(() => [
     {
         label: "Dashboard",
         icon: "i-lucide-house",
@@ -39,11 +40,24 @@ const items = computed(() => [
     },
 ]);
 
+const actions = computed(() => [
+    {
+        label: "Log Out",
+        icon: "i-lucide-log-out",
+        onSelect: () => AuthServices.logout(),
+    },
+]);
+
 const searchGroups = computed(() => [
     {
         id: "links",
         label: "Go to",
-        items: items.value.flat(),
+        items: links.value.flat(),
+    },
+    {
+        id: "actions",
+        label: "Actions",
+        items: actions.value.flat(),
     },
 ]);
 </script>
@@ -77,7 +91,7 @@ const searchGroups = computed(() => [
                 :kbds="[]"
             />
 
-            <UNavigationMenu orientation="vertical" :items="items">
+            <UNavigationMenu orientation="vertical" :items="links">
                 <template #item="{ item, active }">
                     <div
                         :class="[
@@ -108,5 +122,5 @@ const searchGroups = computed(() => [
         </template>
     </UDashboardSidebar>
 
-    <UDashboardSearch :groups="searchGroups" />
+    <UDashboardSearch :groups="searchGroups" :color-mode="false" />
 </template>
