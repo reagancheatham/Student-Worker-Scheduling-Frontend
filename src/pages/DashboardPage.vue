@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { CalendarMode } from '@classes/calendar/calendarMode.ts';
-
+import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 </script>
 
 <template>
@@ -9,24 +8,26 @@ import { CalendarMode } from '@classes/calendar/calendarMode.ts';
         <div
             class="col-span-4 grid grid-cols-7 grid-rows-[3fr_2fr] gap-4 h-full min-h-0"
         >
-            <UPageCard
-                class="col-span-7 min-h-0 h-full overflow-clip"
+            <UCard
+                class="col-span-7 min-h-0 h-full overflow-clip flex-col"
                 :ui="{
-                    wrapper: 'flex flex-col items-start min-h-0 flex-none',
-                    header: 'mb-0',
+                    root: 'flex flex-col h-full',
+                    header: 'mb-0 flex-none',
+                    body: 'flex-1 min-h-0'
                 }"
             >
                 <template #header>
                     <div class="text-base font-semibold">Today's Schedule</div>
                 </template>
-                <div class="w-full h-full min-h-0 mt-5">
+                <div class="w-full h-full min-h-0">
                     <ScheduleCalendar :default-view="CalendarMode.Day" />
                 </div>
-            </UPageCard>
-            <WorkingCurrently
-                class="col-span-4 min-h-0 h-full"
-            ></WorkingCurrently>
-            <OpenShifts class="col-span-3 min-h-0 h-full" title="Open Shifts"></OpenShifts>
+            </UCard>
+            <WorkingCurrently class="col-span-4 min-h-0 h-full" />
+            <OpenShifts
+                class="col-span-3 min-h-0 h-full"
+                title="Open Shifts"
+            ></OpenShifts>
         </div>
 
         <!-- Little Side -->

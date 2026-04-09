@@ -145,7 +145,7 @@ export class CalendarData {
 
             if (
                 relevantEmployees.find(
-                    (employee) => employee.id === event.shift.employee.id,
+                    (employee) => employee.id === event.shift.employee!.id,
                 )
             )
                 continue;
