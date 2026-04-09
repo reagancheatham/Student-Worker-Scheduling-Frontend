@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { isMobileApp } from "@classes/util/isMobile";
 import MobileTabs from "@components/MobileTabs.vue";
+import { ref } from "vue";
 
 const isMobile = isMobileApp();
+const isSettingsOpen = ref(false);
 </script>
 
 <template>
