@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowReactive } from "vue";
+import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
@@ -18,9 +18,10 @@ const UDropdownMenu = resolveComponent("UDropdownMenu");
 const deleteDoubleConfirm = ref(false); //ask rag for better ways to handle the double confirm modal???
 const selectedEmployee = ref<Employee>();
 
-    const isAddOpen = ref(false);
-    const addState = shallowReactive({
+const isAddOpen = ref(false);
+const addState = shallowReactive({
     email: "",
+    isManager: false,
 });
 const addValidationSchema = valibot.object({
     email: valibot.pipe(
@@ -28,6 +29,7 @@ const addValidationSchema = valibot.object({
         valibot.nonEmpty("Email is required"),
         valibot.email("Invalid email address"),
     ),
+    isManager: valibot.boolean(),
 });
 type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
 const toastNotification = useToast();
@@ -143,19 +145,27 @@ function deleteEmployee() {
 }
 
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
-    await Employee.create(
-        addState.email,
+    await EmployeeServices.create(addState.email, addState.isManager).then(
+        () => {
+            getData();
+            isAddOpen.value = false;
+        },
     );
 }
 
-EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
-    .then((result) => {
-        data.value = result;
-        console.log(data);
-    })
-    .catch((err) => {
-        console.error(err);
-    });
+function getData() {
+    EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
+        .then((result) => {
+            data.value = result;
+            console.log(data);
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+}
+onMounted(() => {
+    getData();
+});
 </script>
 
 <template>
@@ -195,7 +205,11 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
                 placeholder="Filter..."
             />
 
-            <UButton label="Add Employee" color="primary" />
+            <UButton
+                label="Add Employee"
+                color="primary"
+                @click="isAddOpen = true"
+            />
         </div>
         <UTable
             class="flex-1"
@@ -227,15 +241,17 @@ EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
                     class="flex flex-col gap-4"
                     @submit="submitAdd"
                 >
-                    <UFormField label="Business Name" name="name">
-                        <UInput v-model="addState.name" />
-                    </UFormField>
-                    <UFormField label="Business Owner Email" name="email">
+                    <UFormField label="Employee Email" name="email">
                         <UInput v-model="addState.email" />
                     </UFormField>
-
+                    <UFormField name="isManager">
+                        <div class="flex items-center gap-2">
+                            <USwitch v-model="addState.isManager" />
+                            <span class="text-sm">Make Manager</span>
+                        </div>
+                    </UFormField>
                     <div class="flex gap-2 justify-end">
-                        <UButton type="submit"> Save </UButton>
+                        <UButton type="submit"> Add </UButton>
 
                         <UButton
                             variant="outline"
