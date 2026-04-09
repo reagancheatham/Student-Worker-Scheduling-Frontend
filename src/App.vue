@@ -8,5 +8,4 @@
         </UMain>
         <UFooter />
     </UApp>
-    <UNotifications />
 </template>

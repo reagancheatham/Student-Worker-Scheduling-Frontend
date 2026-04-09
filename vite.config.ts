@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
                         "event-purple": "purple",
                     },
                 },
+                autoImport: true,
             }),
         ],
         server: {
