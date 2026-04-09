@@ -4,7 +4,6 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import { Business } from "@classes/database/business.ts";
 import { Shift } from "@classes/database/shift.ts";
 import { Store } from "@classes/util/store.ts";
 import { Vector2 } from "@classes/util/vector.ts";
@@ -71,7 +70,7 @@ function createDefaultShift(): Shift {
 
     return new Shift(
         0,
-        Store.getBusiness().id,
+        Store.getBusiness()!.id,
         "New Shift",
         startTime,
         endTime,

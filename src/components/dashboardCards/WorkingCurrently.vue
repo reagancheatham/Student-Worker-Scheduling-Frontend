@@ -79,7 +79,7 @@ const columns: TableColumn<ShiftInfo>[] = [
     class="h-full min-h-0 flex flex-col"
     :ui="{
       header: 'font-semibold text-black shrink-0',
-      body: '!px-0 !pt-0 !pb-3 flex-1 overflow-y-auto min-h-0',
+      body: 'px-0! pt-0! pb-3! flex-1 overflow-y-auto min-h-0',
     }"
   >
     <template #header>

@@ -32,8 +32,12 @@ export class Store {
         localStorage.setItem("user", JSON.stringify(user));
     }
 
+    public static clearUser(): void {
+        localStorage.removeItem("user");
+    }
+
     public static getBusiness(): Business | undefined {
-        const storedBusiness = localStorage.getItem("user");
+        const storedBusiness = localStorage.getItem("business");
 
         if (storedBusiness) {
             try {

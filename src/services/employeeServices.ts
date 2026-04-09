@@ -4,12 +4,23 @@ import { apiClient } from "./services";
 import { Owner } from "@classes/database/owner.ts";
 import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
+import { Store } from "@classes/util/store";
 
 const API_ROOT: string = "employees";
 
 export class EmployeeServices {
-    public static async create(employee: Employee) {
-        await DatabaseServices.create(Employee, API_ROOT, employee);
+    public static async create(email: string, isManager: boolean) {
+        try {
+            let business = Store.getBusiness();
+            if (business)
+                await apiClient.post(`${API_ROOT}/business/${business.id}`, {
+                    email: email,
+                    isManager: isManager,
+                });
+        } catch (error) {
+            console.error(`Error adding employee: ${error}`);
+            return;
+        }
     }
 
     public static async update(employee: Employee) {
@@ -54,9 +65,15 @@ export class EmployeeServices {
         }
     }
 
-    public static async getEmployeeForUserAndBusiness(user: User, business: Business): Promise<Employee | undefined> {
+    public static async getEmployeeForUserAndBusiness(
+        user: User,
+        business: Business,
+    ): Promise<Employee | undefined> {
         try {
-            const employee = DatabaseServices.get<Employee>(Employee, `${API_ROOT}/user/${user.id}/business/${business.id}`);
+            const employee = DatabaseServices.get<Employee>(
+                Employee,
+                `${API_ROOT}/user/${user.id}/business/${business.id}`,
+            );
 
             return employee;
         } catch (error: any) {

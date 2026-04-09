@@ -3,12 +3,13 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { routes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
+import { AuthServices } from "../services/authServices.ts";
 
 const route = useRoute();
 const settingsPath = routes.NavbarLayout.children![4].path;
 const searchTerm = ref("");
 
-const items = computed(() => [
+const links = computed(() => [
     {
         label: "Dashboard",
         icon: "i-lucide-house",
@@ -117,7 +118,12 @@ const searchGroups = computed(() => [
     {
         id: "links",
         label: "Go to",
-        items: items.value.flat(),
+        items: links.value.flat(),
+    },
+    {
+        id: "actions",
+        label: "Actions",
+        items: actions.value.flat(),
     },
     ...(filteredSettingsSearchItems.value.length
         ? [
@@ -147,7 +153,7 @@ const searchGroups = computed(() => [
             body: 'bg-maroon-500',
             toggle: 'text-neutral-100 hover:text-primary',
         }"
-        :default-size="10"
+        :default-size="15"
     >
         <template #header="{ collapsed }">
             <AvatarMenu :collapsed="collapsed" />
@@ -160,7 +166,7 @@ const searchGroups = computed(() => [
                 :kbds="[]"
             />
 
-            <UNavigationMenu orientation="vertical" :items="items">
+            <UNavigationMenu orientation="vertical" :items="links">
                 <template #item="{ item, active }">
                     <div
                         :class="[
