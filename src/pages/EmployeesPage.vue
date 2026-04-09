@@ -15,7 +15,7 @@ const UButton = resolveComponent("UButton");
 const UDropdownMenu = resolveComponent("UDropdownMenu");
 
 const deleteDoubleConfirm = ref(false); //ask rag for better ways to handle the double confirm modal???
-const selectedEmployee = ref(<Employee | null>null);
+const selectedEmployee = ref<Employee>();
 
 let data = ref<Employee[]>([]);
 
@@ -117,16 +117,17 @@ function openDoubleConfirm(employee: Employee) {
 }
 
 function deleteEmployee() {
+    if (!selectedEmployee.value) return;
+
     EmployeeServices.delete(selectedEmployee.value);
     deleteDoubleConfirm.value = false;
 
-    //chatGPT table update solution
     data.value = data.value.filter(
-        e => e.studentID !== selectedEmployee.value!.studentID
+        (e) => e.studentID !== selectedEmployee.value!.studentID,
     );
 }
 
-EmployeeServices.getAllForBusiness(Store.getBusiness().id)
+EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
     .then((result) => {
         data.value = result;
         console.log(data);
@@ -138,16 +139,29 @@ EmployeeServices.getAllForBusiness(Store.getBusiness().id)
 
 <template>
     <!-- TODO: figure out how to get an x instead of arrow -->
-    <UModal v-model:open="deleteDoubleConfirm" title="Are you sure?" close-icon="i-lucide-arrow-right">
+    <UModal
+        v-model:open="deleteDoubleConfirm"
+        title="Are you sure?"
+        close-icon="i-lucide-arrow-right"
+    >
         <template #body>
             <div class="text-center text-2xl font-medium">
-                Are you sure you want to delete 
-                <br>
-                {{ selectedEmployee.fullName }}?
+                Are you sure you want to delete
+                <br />
+                {{ selectedEmployee!.fullName }}?
             </div>
             <div class="flex justify-center gap-4 pt-4">
-                <UButton label="Yes" color="primary" @click="deleteEmployee()"/>
-                <UButton label="No" color="neutral" variant="outline" @click="deleteDoubleConfirm = false" />
+                <UButton
+                    label="Yes"
+                    color="primary"
+                    @click="deleteEmployee()"
+                />
+                <UButton
+                    label="No"
+                    color="neutral"
+                    variant="outline"
+                    @click="deleteDoubleConfirm = false"
+                />
             </div>
         </template>
     </UModal>
@@ -171,11 +185,13 @@ EmployeeServices.getAllForBusiness(Store.getBusiness().id)
         >
             <template #name-cell="{ row }">
                 <div class="flex items-c>enter gap-3">
-                    <UAvatar />
-                    <div>
-                        <p class="font-medium">
-                            {{ row.original.fullName }}
-                        </p>
+                    <UAvatar
+                        class="bg-maroon-500"
+                        :ui="{ fallback: 'text-neutral-100' }"
+                        :alt="row.original.firstName"
+                    />
+                    <div class="font-medium pt-1.5">
+                        {{ row.original.fullName }}
                     </div>
                 </div>
             </template>

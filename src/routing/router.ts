@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routes } from "./routes.ts";
+import { Store } from "@classes/util/store.ts";
 
 const unwrappedRoutes = Object.entries(routes).map((r) => r[1].unwrap());
 
@@ -9,20 +10,9 @@ export const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    const storedUser = localStorage.getItem("user");
-    let token: string | null = null;
+    const user = Store.getUser();
+    const token = user?.token;
 
-    if (storedUser) {
-        try {
-            const parsedUser = JSON.parse(storedUser);
-            token = parsedUser.token;
-        } catch (err) {
-            console.error(
-                "Error parsing user from localStorage: " + JSON.stringify(err),
-            );
-            token = null;
-        }
-    }
     const inviteCode = !!to.params.code;
 
     if (to.meta.requiresAuth && !token) next("/login");
