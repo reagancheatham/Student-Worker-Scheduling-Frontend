@@ -27,7 +27,7 @@ export class BusinessServices {
     static async getAllForUser(id: number) {
         return await DatabaseServices.getAll<Business>(
             Business,
-            `${API_ROOT}/users/${id}`,
+            `${API_ROOT}/user/${id}`,
         );
     }
 
