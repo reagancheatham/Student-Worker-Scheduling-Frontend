@@ -8,7 +8,6 @@ import { Employee } from "@classes/database/employee";
 //TODO: What happens when there is not shifts this week? Need UI for empty
 //TODO: add clock in functionality, timeSheets service.
 //TODO: Does Clock In need to be present the whole time? maybe make it so it says view shift when it isnt time to clock?
-//TODO: prob find better solution to fill space then that link
 
 const user = ref(JSON.parse(localStorage.getItem("user")));
 const employee = ref<Employee | null>(null);
@@ -56,8 +55,6 @@ async function loadData() {
 }
 
 loadData();
-
-
 </script>
 
 <template>
@@ -86,7 +83,9 @@ loadData();
                 </div>
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-calendar" class="size-5" />
-                    <div>{{ shifts[0]?.weekday }} {{ shifts[0]?.dateFormatted }}</div>
+                    <div>
+                        {{ shifts[0]?.weekday }} {{ shifts[0]?.dateFormatted }}
+                    </div>
                 </div>
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-clock" class="size-5" />
@@ -138,7 +137,9 @@ loadData();
                                 {{ shift.shiftTime }}
                             </div>
                             <div class="text-center text-sm">
-                                You are scheduled for {{ shift.getShiftLength() }} on {{ shift.weekday }}
+                                You are scheduled for
+                                {{ shift.getShiftLength() }} on
+                                {{ shift.weekday }}
                             </div>
                         </div>
                         <div class="col-span-1">
