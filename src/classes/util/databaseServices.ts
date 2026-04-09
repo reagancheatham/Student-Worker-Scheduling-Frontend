@@ -15,8 +15,8 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} created successfully`);
             })
-            .catch((err) => {
-                console.error(`Error creating ${path}: ${JSON.stringify(err)}`);
+            .catch((error) => {
+                console.error(`Error creating ${path}: ${error.message}`);
                 return null;
             });
 
@@ -39,11 +39,11 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} updated successfully`);
             })
-            .catch((err) => {
+            .catch((error) => {
                 error =
-                    err?.response?.data?.message ??
-                    err?.response?.data ??
-                    err?.message ??
+                    error?.response?.data?.message ??
+                    error?.response?.data ??
+                    error?.message ??
                     "Unknown error";
                 console.error(`Error updating ${path}: ${error}`);
             });
@@ -59,8 +59,8 @@ export class DatabaseServices {
             .then(() => {
                 console.log(`${path} deleted successfully`);
             })
-            .catch((err) => {
-                console.error(`Error deleting ${path}: ${JSON.stringify(err)}`);
+            .catch((error) => {
+                console.error(`Error deleting ${path}: ${error.message}`);
             });
     }
 
@@ -76,9 +76,9 @@ export class DatabaseServices {
                 finalResult = model.create(result.data);
                 console.log(`${path} found successfully`);
             })
-            .catch((err) => {
-                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
-                throw err;
+            .catch((error) => {
+                console.error(`Error finding ${path}: ${error.message}`);
+                throw error;
             });
 
         if (finalResult === null)
@@ -103,9 +103,9 @@ export class DatabaseServices {
 
                 console.log(`${path} found successfully`);
             })
-            .catch((err) => {
-                console.error(`Error finding ${path}: ${JSON.stringify(err)}`);
-                throw err;
+            .catch((error) => {
+                console.error(`Error finding ${path}: ${error.message}`);
+                throw error;
             });
 
         return finalResult;

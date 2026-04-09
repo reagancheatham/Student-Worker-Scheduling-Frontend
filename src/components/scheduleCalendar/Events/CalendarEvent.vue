@@ -7,17 +7,11 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
-import { ShiftServices } from "../../../services/shiftServices.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import {
-    CalendarDate,
-    DateFormatter,
     isSameDay,
     startOfWeek,
-    Time,
 } from "@internationalized/date";
-import { Employee } from "@classes/database/employee.ts";
-import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 //#region Variables
 enum EventState {

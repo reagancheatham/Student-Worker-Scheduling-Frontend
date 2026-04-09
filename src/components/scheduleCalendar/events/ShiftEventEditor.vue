@@ -14,18 +14,20 @@ import {
     onMounted,
     ref,
     shallowReactive,
+    useTemplateRef,
     watch,
     WatchHandle,
 } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { Business } from "@classes/database/business.ts";
 import { TaskList } from "@classes/database/taskList.ts";
 import { TaskListServices } from "../../../services/taskListServices.ts";
-import { CompleteStatus, Task } from "@classes/database/task.ts";
+import { Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
 import { Store } from "@classes/util/store.ts";
+import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
+import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 
 const model = defineModel<ShiftEvent>({
     required: true,
@@ -41,6 +43,8 @@ const emit = defineEmits({
     formSubmitted: () => true,
     eventDeleted: () => true,
 });
+
+const tableElement = useTemplateRef("table");
 
 const vTime = v.object({
     hour: v.number(),
@@ -107,7 +111,7 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
-const taskList = ref<TaskList>(new TaskList(0, 0, "Taks List", []));
+const taskList = ref<TaskList>(new TaskList(0, 0, "Task List", []));
 const editedTask = ref<Task>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
@@ -130,8 +134,8 @@ const taskColumns = [
         },
     },
     {
-        accessorKey: "completeStatus",
-        header: "Complete Status",
+        accessorFn: (task: Task) => task.checkOffs.length,
+        header: "Check Offs",
     },
     {
         id: "action",
@@ -140,6 +144,7 @@ const taskColumns = [
 ];
 
 let deletedTasks: Task[] = [];
+let removedCheckOffs: TaskCheckOff[] = [];
 let isDirtyHandle: WatchHandle;
 let sortableInstance: UseSortableReturn;
 
@@ -155,65 +160,78 @@ colors.value = EventColor.colors.map((color) => {
 
 onMounted(() => {
     deletedTasks = [];
+    removedCheckOffs = [];
 
-    watch(
-        () => isOpen,
-        async (value) => {
-            if (value) {
-                state.name = getData().name;
-                state.eventDate = getData().startTime.calendarDate();
-                state.startTime = getData().startTime.toTime();
-                state.endTime = getData().endTime.toTime();
-                state.color = {
-                    label: getData().color.name,
-                    value: getData().color,
-                    chip: {
-                        color: getData().color.semantic,
+    watch(() => isOpen, initializeState);
+
+    if (isOpen) initializeState();
+
+    watch(tableElement, (element) => {
+        if (element && isOpen) {
+            if (!(element.$el instanceof HTMLElement)) return;
+
+            const el = element.$el as HTMLElement;
+            if (sortableInstance) sortableInstance.stop();
+
+            sortableInstance = useSortable(
+                el.querySelector("tbody"),
+                taskList.value.tasks,
+                {
+                    animation: 150,
+                    onUpdate: (e: any) => {
+                        const tasks = taskList.value.tasks;
+                        const movedItem = tasks.splice(e.oldIndex, 1)[0];
+
+                        tasks.splice(e.newIndex, 0, movedItem);
+
+                        // force Vue to redraw
+                        taskList.value.tasks = [...tasks];
                     },
-                };
-                state.employee = getData().shift.employee;
-
-                if (model.value.shift.isValid()) {
-                    taskList.value = await TaskListServices.getOrCreateForShift(
-                        model.value.shift.id,
-                    );
-                } else taskList.value = new TaskList(0, 0, "Task List", []);
-
-                employees.value = await EmployeeServices.getAllForBusiness(
-                    Store.getBusiness().id,
-                );
-
-                initializeTaskUIIDs();
-
-                isDirty.value = false;
-                isDirtyHandle = watch(state, () => (isDirty.value = true), {
-                    deep: true,
-                });
-
-                if (sortableInstance) sortableInstance.stop();
-
-                await nextTick();
-
-                sortableInstance = useSortable(
-                    ".my-table-tbody",
-                    taskList.value.tasks,
-                    {
-                        animation: 150,
-                        onUpdate: (e: any) => {
-                            const tasks = taskList.value.tasks;
-                            const movedItem = tasks.splice(e.oldIndex, 1)[0];
-
-                            tasks.splice(e.newIndex, 0, movedItem);
-
-                            // force Vue to redraw
-                            taskList.value.tasks = [...tasks];
-                        },
-                    } as any,
-                );
-            }
-        },
-    );
+                } as any,
+            );
+        }
+    });
 });
+
+async function initializeState() {
+    if (!isOpen) return;
+
+    state.name = getData().name;
+    state.eventDate = getData().startTime.calendarDate();
+    state.startTime = getData().startTime.toTime();
+    state.endTime = getData().endTime.toTime();
+    state.color = {
+        label: getData().color.name,
+        value: getData().color,
+        chip: {
+            color: getData().color.semantic,
+        },
+    };
+    state.employee = getData().shift.employee;
+
+    if (model.value.shift.isValid()) {
+        taskList.value = await TaskListServices.getOrCreateForShift(
+            model.value.shift.id,
+        );
+    } else taskList.value = new TaskList(0, 0, "Task List", []);
+
+    employees.value = await EmployeeServices.getAllForBusiness(
+        Store.getBusiness()!.id,
+    );
+
+    initializeTaskUIIDs();
+
+    isDirty.value = false;
+    isDirtyHandle = watch(state, () => (isDirty.value = true), {
+        deep: true,
+    });
+}
+
+function initializeTaskUIIDs() {
+    taskList.value.tasks.forEach((task) => {
+        if (!(task as any)._uiID) UIIDUtil.attachUUID(task, "task");
+    });
+}
 
 function getData() {
     return model.value;
@@ -223,6 +241,7 @@ function toggleModal(): void {
     if (!isOpen) return;
 
     deletedTasks = [];
+    removedCheckOffs = [];
     if (isDirtyHandle) isDirtyHandle();
     isSubmitting.value = false;
     isCancelModalOpen.value = false;
@@ -263,28 +282,22 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     event.color = state.color.value;
     event.shift.employee = state.employee;
 
-    const taskPromises = deletedTasks.map(async (task) => {
-        if (task.id > 0) return await TaskServices.delete(task);
+    const removeCheckPromises = removedCheckOffs.map(async (check) => {
+        if (check.id > 0) return await TaskServices.deleteCheckOff(check);
     });
 
-    await Promise.all(taskPromises);
+    const taskPromises = deletedTasks.map(async (task) => {
+        if (task.isValid()) return await TaskServices.delete(task);
+    });
+
+    const totalPromises = [...removeCheckPromises, ...taskPromises];
+    await Promise.all(totalPromises);
     let updatedShift = await event.updateBackend();
     await taskList.value.updateBackend(updatedShift);
 
     emit("formSubmitted");
 
     toggleModal();
-}
-
-function initializeTaskUIIDs() {
-    taskList.value.tasks.forEach((task) => {
-        if (!(task as any)._uiID) {
-            (task as any)._uiID =
-                task.id > 0
-                    ? `task-${task.id}`
-                    : `new-task-${crypto.randomUUID()}`;
-        }
-    });
 }
 
 function cancelEventEdit(): void {
@@ -300,26 +313,21 @@ function deleteEvent(): void {
 
 function openAddTaskModal(): void {
     isCreatingTask.value = true;
-
-    editedTask.value = new Task(
-        0,
-        taskList.value.id,
-        0,
-        "New Task",
-        "",
-        CompleteStatus.Incomplete,
-    );
-
+    editedTask.value = createDefaultTask();
     isTaskEditorOpen.value = true;
 }
 
 function onTaskAddRequested(): void {
-    (editedTask.value as any)._uiID = `new-task-${crypto.randomUUID()}`;
+    UIIDUtil.attachUUID(editedTask.value, "task");
 
     editedTask.value.listOrder = taskList.value.tasks.length;
     taskList.value.tasks.push(editedTask.value);
     editedTask.value = createDefaultTask();
     isDirty.value = true;
+}
+
+function removeCheckOffs(checkOffs: TaskCheckOff[]): void {
+    removedCheckOffs = [...removedCheckOffs, ...checkOffs];
 }
 
 function editTask(task: Task): void {
@@ -339,7 +347,7 @@ function closeTaskModal(): void {
 }
 
 function createDefaultTask(): Task {
-    return new Task(0, 0, 0, "", "", CompleteStatus.Incomplete);
+    return new Task(0, taskList.value.id, 0, "New Task", "", []);
 }
 </script>
 
@@ -467,6 +475,7 @@ function createDefaultTask(): Task {
                             </div>
                             <UTable
                                 v-if="taskList"
+                                ref="table"
                                 class="overflow-y-auto h-48 flex-1 max-h-64"
                                 :data="taskList.tasks"
                                 :columns="taskColumns"
@@ -593,6 +602,7 @@ function createDefaultTask(): Task {
                 :creator="isCreatingTask"
                 @close-requested="closeTaskModal()"
                 @add-requested="onTaskAddRequested()"
+                @remove-checks="removeCheckOffs"
             />
         </template>
     </UModal>

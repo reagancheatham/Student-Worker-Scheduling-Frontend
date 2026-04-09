@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { CompleteStatus, Task } from "@classes/database/task.ts";
+import { Task } from "@classes/database/task.ts";
+import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 import { FormSubmitEvent } from "@nuxt/ui";
 import * as v from "valibot";
 import { onMounted, shallowReactive, watch } from "vue";
+import { Store } from "@classes/util/store.ts";
+import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 const model = defineModel<Task>({
     required: true,
@@ -16,13 +19,13 @@ const { isOpen, creator = false } = defineProps<{
 const emit = defineEmits({
     closeRequested: () => true,
     addRequested: () => true,
+    removeChecks: (checkOffs: TaskCheckOff[]) => true,
 });
 
 const schema = v.pipe(
     v.object({
         name: v.pipe(v.string(), v.nonEmpty("Name is required")),
         description: v.string(),
-        completeStatus: v.enum(CompleteStatus),
     }),
 );
 type Schema = v.InferOutput<typeof schema>;
@@ -30,32 +33,42 @@ type Schema = v.InferOutput<typeof schema>;
 const state = shallowReactive<{
     name: string;
     description: string;
-    completeStatus: CompleteStatus;
 }>({
     name: model.value.name,
     description: model.value.description,
-    completeStatus: model.value.completeStatus,
 });
 
-const completeStatusOptions = Object.entries(CompleteStatus).map(
-    ([value, label]) => ({
-        label,
-        value,
-    }),
-);
+const checkOffColumns = [
+    {
+        header: "Checked Off By:",
+        accessorFn: (value: TaskCheckOff) => value.employee?.fullName,
+        meta: {
+            class: {
+                td: "max-w-[200px] truncate whitespace-normal",
+            },
+        },
+    },
+];
+
+let removedCheckOffs: TaskCheckOff[] = [];
 
 onMounted(() => {
-    watch(
-        () => isOpen,
-        (value) => {
-            if (value) {
-                state.name = model.value.name;
-                state.description = model.value.description;
-                state.completeStatus = model.value.completeStatus;
-            }
-        },
-    );
+    watch(() => isOpen, initializeState);
+
+    if (isOpen) initializeState();
 });
+
+async function initializeState() {
+    if (!isOpen) return;
+
+    removedCheckOffs = [];
+
+    state.name = model.value.name;
+    state.description = model.value.description;
+
+    if (model.value.isValid()) model.value.checkOffs = model.value.checkOffs;
+    else model.value.checkOffs = [];
+}
 
 function toggleModal(): void {
     if (!isOpen) return;
@@ -67,16 +80,73 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
     const task = model.value;
     const name = state.name;
     const description = state.description;
-    const completeStatus = state.completeStatus;
 
     task.name = name;
     task.description = description;
-    task.completeStatus = completeStatus;
 
-    if (creator)
-        emit("addRequested");
+    if (creator) emit("addRequested");
+    else emit("removeChecks", removedCheckOffs);
 
     toggleModal();
+}
+
+function shouldShowCheckOffButton(): boolean {
+    if (!model) return false;
+
+    const user = Store.getUser();
+
+    if (!user) return false;
+
+    return !model.value.checkOffs.find(
+        (checkOff) => checkOff.employee.email == user.email,
+    );
+}
+
+async function checkOff(): Promise<void> {
+    const user = Store.getUser();
+    const business = Store.getBusiness();
+
+    if (!user || !business) {
+        console.error("User or business is invalid!");
+        return;
+    }
+
+    const employee = await EmployeeServices.getEmployeeForUserAndBusiness(
+        user,
+        business,
+    );
+
+    if (employee)
+        model.value.checkOffs.push(
+            new TaskCheckOff(0, model.value.id, employee),
+        );
+    else console.error("Could not find employee for user and business!");
+}
+
+async function removeCheckOff(): Promise<void> {
+    const user = Store.getUser();
+    const business = Store.getBusiness();
+
+    if (!user || !business) {
+        console.error("User or business is invalid!");
+        return;
+    }
+
+    const employee = await EmployeeServices.getEmployeeForUserAndBusiness(
+        user,
+        business,
+    );
+
+    if (employee) {
+        const index = model.value.checkOffs.findIndex(
+            (c) => c.employee.id === employee.id,
+        );
+
+        if (index !== -1) {
+            let checkOff = model.value.checkOffs.splice(index, 1)[0];
+            removedCheckOffs.push(checkOff);
+        }
+    } else console.error("Could not find employee for user and business!");
 }
 </script>
 
@@ -85,6 +155,7 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
         :open="isOpen"
         :title="creator ? 'Task Creator' : 'Task Editor'"
         description="Edit the details of a shift task."
+        :ui="{ content: 'sm:max-w-xs' }"
         @update:open="toggleModal()"
     >
         <template #content>
@@ -106,15 +177,40 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
                     <UFormField label="Description" name="description">
                         <UInput v-model="state.description" />
                     </UFormField>
-                    <UFormField label="Complete Status" name="completeStatus">
-                        <USelectMenu
-                            v-model="state.completeStatus"
-                            :items="completeStatusOptions"
-                            label-key="label"
-                            value-key="value"
-                            :multiple="false"
-                            :search-input="false"
-                        />
+                    <UFormField name="checkOffs">
+                        <UTable
+                            class="overflow-y-auto flex-1 h-3/12 max-h-48"
+                            :data="model.checkOffs"
+                            :columns="checkOffColumns"
+                            :ui="{
+                                td: 'py-1',
+                                th: 'py-1',
+                            }"
+                            :sticky="true"
+                            empty="No Check Offs"
+                        >
+                            <template #body-bottom>
+                                <UButton
+                                    v-if="shouldShowCheckOffButton()"
+                                    class="w-full mt-1"
+                                    block
+                                    label="Check Off"
+                                    variant="soft"
+                                    size="sm"
+                                    color="neutral"
+                                    @click="checkOff()"
+                                />
+                                <UButton
+                                    v-if="!shouldShowCheckOffButton()"
+                                    class="w-full mt-1"
+                                    block
+                                    label="Remove Check Off"
+                                    variant="soft"
+                                    size="sm"
+                                    @click="removeCheckOff()"
+                                />
+                            </template>
+                        </UTable>
                     </UFormField>
                     <div class="flex flex-row gap-2">
                         <UButton class="ml-auto" type="submit">
