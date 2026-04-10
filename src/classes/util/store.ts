@@ -57,4 +57,13 @@ export class Store {
     public static setBusiness(business: Business): void {
         localStorage.setItem("business", JSON.stringify(business));
     }
+    
+    public static clearBusiness(): void {
+        localStorage.removeItem("business");
+    }
+
+    public static clear(): void {
+        Store.clearUser();
+        Store.clearBusiness();
+    }
 }

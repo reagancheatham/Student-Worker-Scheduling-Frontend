@@ -9,23 +9,30 @@ const API_ROOT: string = "authentication/";
 export class AuthServices {
     public static async login(token: string, code?: string) {
         let user: User;
-        const result = await apiClient.post(API_ROOT, {
-            credential: token,
-            code: code,
-        });
 
-        if (result.data.valid) {
-            user = result.data.user;
-            user.token = result.data.token;
+        try {
+            const result = await apiClient.post(API_ROOT, {
+                credential: token,
+                code: code,
+            });
 
-            Store.setUser(user);
+            if (result.data.valid) {
+                user = result.data.user;
+                user.token = result.data.token;
 
-            const businesses = await BusinessServices.getAllForUser(user.id);
-            Store.setBusiness(businesses[0]);
+                Store.setUser(user);
 
-            router.push(`nav/dashboard`);
-        } else {
-            console.error("Login failed: invalid credentials");
+                const businesses = await BusinessServices.getAllForUser(
+                    user.id,
+                );
+                Store.setBusiness(businesses[0]);
+
+                router.push(`nav/dashboard`);
+            } else {
+                console.error("Login failed: invalid credentials");
+            }
+        } catch (error) {
+            console.error(`Error logging in: ${error}`);
         }
     }
 
@@ -36,9 +43,21 @@ export class AuthServices {
 
             await apiClient.post("/authentication/logout");
         } catch (error) {
-            console.error("Logout failed", error);
+            console.error("Logout failed: ", error);
             Store.clearUser();
             router.push("/login");
+        }
+    }
+
+    public static async validateSession(): Promise<boolean> {
+        try {
+            const result = await apiClient.post(`${API_ROOT}/validate`);
+
+            return result.data.valid;
+        } catch (error) {
+            console.error(`Error validating session: ${error}`);
+
+            return false;
         }
     }
 
