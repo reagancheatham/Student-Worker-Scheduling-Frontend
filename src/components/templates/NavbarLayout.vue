@@ -3,6 +3,9 @@ import { isMobileApp } from "@classes/util/isMobile";
 import MobileTabs from "@components/MobileTabs.vue";
 import { ref } from "vue";
 import ProfileSettingsModal from "../../mobile/modals/ProfileSettingsModal.vue";
+import { Store } from "@classes/util/store";
+
+const user = Store.getUser();
 
 const isMobile = isMobileApp();
 const isSettingsOpen = ref(false);
@@ -12,7 +15,9 @@ const overlay = useOverlay();
 const modal = overlay.create(ProfileSettingsModal);
 
 async function openSettings() {
-    const instance = modal.open();
+    const instance = modal.open({
+        user: user,
+    });
 }
 </script>
 
