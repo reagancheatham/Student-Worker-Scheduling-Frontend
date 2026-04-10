@@ -9,7 +9,6 @@ import { TimeSheetsServices } from "../../services/timesheetsServices";
 import { Store } from "@classes/util/store.ts";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
-//TODO: add clock in functionality, timeSheets service.
 
 const user = ref(Store.getUser());
 const business = ref(Store.getBusiness());

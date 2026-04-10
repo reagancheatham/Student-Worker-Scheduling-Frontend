@@ -2,9 +2,18 @@
 import { isMobileApp } from "@classes/util/isMobile";
 import MobileTabs from "@components/MobileTabs.vue";
 import { ref } from "vue";
+import ProfileSettingsModal from "../../mobile/modals/ProfileSettingsModal.vue";
 
 const isMobile = isMobileApp();
 const isSettingsOpen = ref(false);
+
+const overlay = useOverlay();
+
+const modal = overlay.create(ProfileSettingsModal);
+
+async function openSettings() {
+    const instance = modal.open();
+}
 </script>
 
 <template>
@@ -27,7 +36,7 @@ const isSettingsOpen = ref(false);
                 <img class="h-10 w-65" src="/mobileOC.png" alt="OC Logo" />
             </template>
             <template #right>
-                <UAvatar alt="Davey Clonts" />
+                <UAvatar alt="Davey Clonts" @click="openSettings" />
             </template>
         </UHeader>
 
