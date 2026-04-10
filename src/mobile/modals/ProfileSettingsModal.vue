@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { User } from "@classes/database/user";
+import { UserServices } from "../../services/userServices";
 import { reactive, watchEffect } from "vue";
 import type { FormSubmitEvent } from "@nuxt/ui";
 import * as v from "valibot";
@@ -13,7 +14,8 @@ const props = defineProps({
 
 const schema = v.object({
     studentID: v.pipe(v.string(), v.length(7, "Must be a valid Student ID")),
-    name: v.pipe(v.string()),
+    firstName: v.pipe(v.string()),
+    lastName: v.pipe(v.string()),
     email: v.pipe(v.string(), v.email("Invalid Email")),
     phoneNumber: v.pipe(
         v.string(),
@@ -26,19 +28,53 @@ type Schema = v.InferOutput<typeof schema>;
 //only initialized once during setup, meaning watchEffect() is needed
 const data = reactive({
     studentID: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phoneNumber: "",
 });
 
 watchEffect(() => {
     data.studentID = String(props.user.studentID ?? "");
-    data.name = props.user.fullName ?? "";
+    data.firstName = props.user.firstName ?? "";
+    data.lastName = props.user.lastName ?? "";
     data.email = props.user.email ?? "";
     data.phoneNumber = props.user.phoneNumber?.replace(/\D/g, "") ?? "";
 });
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {}
+const emit = defineEmits<{
+  close: []
+  updated: [user: User]
+}>();
+
+const toast = useToast();
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+
+    //Schema already validates inputs
+    const payload = new User(
+        props.user.id,
+        Number(data.studentID),
+        props.user.permissionRoleID,
+        data.firstName,
+        data.lastName,
+        data.email,
+        data.phoneNumber, 
+    );
+
+    try {
+        await UserServices.update(payload);
+
+        toast.add({title: "User info updated!", color: 'green'});
+
+
+        emit("updated", payload);
+        emit("close");
+    } catch (err) {
+        console.error(err);
+        toast.add({title: "Update failed... Sorry, please try again later", color: 'red'});
+    }
+}
 </script>
 
 <template>
@@ -57,8 +93,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {}
                     <UFormField label="Student ID" name="studentID">
                         <UInput v-model="data.studentID" class="w-full" />
                     </UFormField>
-                    <UFormField label="Name" name="name">
-                        <UInput v-model="data.name" class="w-full" />
+                    <UFormField label="First Name" name="firstName">
+                        <UInput v-model="data.firstName" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Last Name" name="lastName">
+                        <UInput v-model="data.lastName" class="w-full" />
                     </UFormField>
                     <UFormField label="Email" name="email">
                         <UInput v-model="data.email" class="w-full" />

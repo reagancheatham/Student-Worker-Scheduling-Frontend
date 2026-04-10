@@ -8,7 +8,6 @@ import { Store } from "@classes/util/store";
 const user = Store.getUser();
 
 const isMobile = isMobileApp();
-const isSettingsOpen = ref(false);
 
 const overlay = useOverlay();
 
