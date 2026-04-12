@@ -10,7 +10,6 @@ import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
 import {
-    nextTick,
     onMounted,
     ref,
     shallowReactive,
@@ -46,6 +45,7 @@ const emit = defineEmits({
 });
 
 const tableElement = useTemplateRef("table");
+const formElement = useTemplateRef("form");
 
 const vTime = v.object({
     hour: v.number(),
@@ -379,6 +379,7 @@ function publishShift(): void {
             </div>
             <div class="p-4">
                 <UForm
+                    ref="form"
                     :schema="schema"
                     :state="state"
                     class="flex flex-col gap-4"
@@ -532,21 +533,44 @@ function publishShift(): void {
                         </div>
                     </UFormField>
                     <div class="flex flex-row gap-2">
-                        <UTooltip
+                        <UModal
                             v-if="!creator && !alreadyPublished"
-                            :text="
-                                state.employee
-                                    ? 'Publish Shift to Employees'
-                                    : 'Employee Must Be Assigned to Publish'
-                            "
+                            class="pointer-events-auto"
+                            title="Publish Shift?"
+                            description="This will notify relevant employees."
+                            :dismissible="false"
+                            :ui="{ content: `sm:max-w-xs` }"
                         >
-                            <UButton
-                                label="Publish"
-                                type="submit"
-                                :disabled="!state.employee"
-                                @click="publishShift"
-                            />
-                        </UTooltip>
+                            <UTooltip
+                                :text="
+                                    state.employee
+                                        ? 'Publish Shift to Employees'
+                                        : 'Employee Must Be Assigned to Publish'
+                                "
+                                ignore-non-keyboard-focus
+                            >
+                                <UButton
+                                    label="Publish"
+                                    :disabled="!state.employee"
+                                    @click="publishShift"
+                                />
+                            </UTooltip>
+                            <template #footer="{ close }">
+                                <UButton
+                                    label="Publish"
+                                    class="ml-auto"
+                                    type="submit"
+                                    @click="formElement?.submit()"
+                                />
+                                <UButton
+                                    label="Cancel"
+                                    color="neutral"
+                                    variant="outline"
+                                    class="mr-auto"
+                                    @click="close()"
+                                />
+                            </template>
+                        </UModal>
                         <UTooltip
                             :text="`Submit ${creator ? 'Creation' : 'Edit'}`"
                         >
@@ -558,35 +582,36 @@ function publishShift(): void {
                                 Submit
                             </UButton>
                         </UTooltip>
-                        <UTooltip text="Delete Shift">
-                            <UModal
-                                title="Delete shift?"
-                                description="Deletion can not be undone."
-                                :dismissible="false"
-                                :ui="{ content: 'sm:max-w-xs' }"
-                            >
+                        <UModal
+                            title="Delete shift?"
+                            description="Deletion can not be undone."
+                            :dismissible="false"
+                            :ui="{ content: 'sm:max-w-xs' }"
+                        >
+                            <UTooltip text="Delete Shift">
                                 <UButton
                                     label="Delete"
                                     color="neutral"
                                     variant="outline"
                                     :disabled="isSubmitting"
                                 />
-                                <template #footer="{ close }">
-                                    <UButton
-                                        label="Delete"
-                                        class="ml-auto"
-                                        @click="deleteEvent()"
-                                    />
-                                    <UButton
-                                        label="Cancel"
-                                        color="neutral"
-                                        variant="outline"
-                                        class="mr-auto"
-                                        @click="close()"
-                                    />
-                                </template>
-                            </UModal>
-                        </UTooltip>
+                            </UTooltip>
+
+                            <template #footer="{ close }">
+                                <UButton
+                                    label="Delete"
+                                    class="ml-auto"
+                                    @click="deleteEvent()"
+                                />
+                                <UButton
+                                    label="Cancel"
+                                    color="neutral"
+                                    variant="outline"
+                                    class="mr-auto"
+                                    @click="close()"
+                                />
+                            </template>
+                        </UModal>
                         <UTooltip
                             :text="`Cancel ${creator ? 'Creation' : 'Edit'}`"
                         >
