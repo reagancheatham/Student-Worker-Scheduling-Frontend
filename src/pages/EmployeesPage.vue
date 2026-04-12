@@ -49,7 +49,6 @@ const refreshValidationSchema = valibot.object({
 type RefreshValidationSchema = valibot.InferOutput<
     typeof refreshValidationSchema
 >;
-const toastNotification = useToast();
 
 let data = ref<Employee[]>([]);
 
@@ -161,10 +160,10 @@ function deleteEmployee() {
 async function submitRefreshSchoolUnavailabilities(
     event: FormSubmitEvent<RefreshValidationSchema>,
 ) {
-    const business = Store.getBusiness();
+    const business = await Store.getBusiness();
 
     if (!business) {
-        toastNotification.add({
+        toast.add({
             title: "Business not found",
             description: "Unable to refresh school unavailabilities.",
             color: "error",
@@ -181,7 +180,7 @@ async function submitRefreshSchoolUnavailabilities(
             event.data.termCode.trim(),
         );
 
-        toastNotification.add({
+        toast.add({
             title: "School unavailabilities refreshed",
             description: "Student schedules were imported successfully.",
             color: "success",
@@ -197,7 +196,7 @@ async function submitRefreshSchoolUnavailabilities(
             responseData?.message ??
             responseData?.Message ??
             "Could not import student schedules.";
-        toastNotification.add({
+        toast.add({
             title: "Refresh failed",
             description: responseMessage,
             color: "error",
@@ -217,29 +216,19 @@ async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
     );
 }
 
-function getData() {
-    const business = Store.getBusiness();
+async function getData() {
+    const business = await Store.getBusiness();
 
-    if (!business) {
-        toastNotification.add({
-            title: "Business not found",
-            description: "Unable to load employees.",
-            color: "error",
-            icon: "i-lucide-circle-alert",
-        });
-        data.value = [];
-        return;
+    if (!business) return;
+
+    try {
+        const result = await EmployeeServices.getAllForBusiness(business.id);
+        data.value = result;
+    } catch (error) {
+        console.error(`Error getting employees: ${error}`);
     }
-
-    EmployeeServices.getAllForBusiness(business.id)
-        .then((result) => {
-            data.value = result;
-            console.log(data);
-        })
-        .catch((err) => {
-            console.error(err);
-        });
 }
+
 onMounted(() => {
     getData();
 });

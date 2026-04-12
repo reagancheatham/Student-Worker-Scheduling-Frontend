@@ -121,7 +121,7 @@ function hasEmployeesToDisplay(): boolean {
     >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div :class="gridClasses.get(data.selectedView)!">
+            <div class="mb-10" :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
