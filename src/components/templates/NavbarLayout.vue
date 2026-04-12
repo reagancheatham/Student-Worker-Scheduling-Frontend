@@ -5,7 +5,7 @@ import { ref } from "vue";
 import ProfileSettingsModal from "../../mobile/modals/ProfileSettingsModal.vue";
 import { Store } from "@classes/util/store";
 
-const user = Store.getUser();
+const user = ref(Store.getUser());
 
 const isMobile = isMobileApp();
 
@@ -15,8 +15,12 @@ const modal = overlay.create(ProfileSettingsModal);
 
 async function openSettings() {
     const instance = modal.open({
-        user: user,
+        user: user.value,
     });
+}
+
+function updateUserInfo(updatedUserInfo) {
+    user.value = updateUserInfo;
 }
 </script>
 
@@ -40,7 +44,7 @@ async function openSettings() {
                 <img class="h-10 w-65" src="/mobileOC.png" alt="OC Logo" />
             </template>
             <template #right>
-                <UAvatar alt="Davey Clonts" @click="openSettings" />
+                <UAvatar alt="Davey Clonts" @click="openSettings" @updated="" />
             </template>
         </UHeader>
 
