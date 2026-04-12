@@ -18,7 +18,7 @@ const { data, cellSize } = defineProps<{
 
 const editedEvent = ref<EventData>(
     new ShiftEvent(
-        new Shift(0, 0, "", new Date(), new Date(), EventColor.blue, undefined),
+        new Shift(0, 0, "", new Date(), new Date(), EventColor.blue, false),
     ),
 );
 const isModalOpen = ref(false);
@@ -86,7 +86,7 @@ function createDefaultShift(): Shift {
         startTime,
         endTime,
         EventColor.blue,
-        undefined,
+        false,
     );
 }
 
