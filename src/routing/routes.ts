@@ -15,21 +15,21 @@ import NoBusinessPage from "../pages/NoBusinessPage.vue";
 class Route {
     constructor(
         public path: string,
-        public component?: any,
-        public name?: string,
+        public component: any,
+        public name: string,
+        public children: Route[],
         public redirect?: string,
         public requiresAuth: boolean = true,
-        public children?: Route[],
     ) {}
 
     static create(
         path: string,
         component: any,
         name: string,
-        children?: Route[],
+        children: Route[] = [],
         redirect?: string,
     ): Route {
-        return new Route(path, component, name, redirect, true, children);
+        return new Route(path, component, name, children, redirect, true);
     }
 
     unwrap(): RouteRecordRaw {
@@ -65,11 +65,11 @@ export const routes = {
         NavbarLayout,
         "NavbarLayout",
         [
-            Route.create("dashboard", DashboardPage, "Dashboard"),
-            Route.create("schedule", SchedulePage, "Schedule"),
-            Route.create("openShifts", OpenShiftsPage, "Open Shifts"),
-            Route.create("employees", EmployeesPage, "Employees"),
-            Route.create("settings", SettingsPage, "Settings"),
+            Route.create("dashboard", DashboardPage, "Dashboard").noAuth(),
+            Route.create("schedule", SchedulePage, "Schedule").noAuth(),
+            Route.create("openShifts", OpenShiftsPage, "Open Shifts").noAuth(),
+            Route.create("employees", EmployeesPage, "Employees").noAuth(),
+            Route.create("settings", SettingsPage, "Settings").noAuth(),
         ],
         "/nav/dashboard",
     ),

@@ -11,7 +11,7 @@ const API_ROOT: string = "employees";
 export class EmployeeServices {
     public static async create(email: string, isManager: boolean) {
         try {
-            let business = Store.getBusiness();
+            let business = await Store.getBusiness();
             if (business)
                 await apiClient.post(`${API_ROOT}/business/${business.id}`, {
                     email: email,

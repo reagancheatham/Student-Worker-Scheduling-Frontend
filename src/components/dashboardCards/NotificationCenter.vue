@@ -9,7 +9,14 @@ const notifications = ref<Notification<NotificationModel>[]>([]);
 
 //this function will more likely than not just service call each type of notification backend model, unify them, then put em in an array of notification classes
 async function getNotifications() {
-    const businessID = Store.getBusiness().id;
+    const business = await Store.getBusiness();
+
+    if (!business) {
+        notifications.value = [];
+        return;
+    }
+    
+    const businessID = business.id;
 
     const timeOffRequests = await TimeOffRequestServices.getAllForBusiness(
         Number(businessID),

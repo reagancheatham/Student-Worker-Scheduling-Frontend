@@ -6,7 +6,7 @@ import { BusinessServices } from "./businessServices.ts";
 import { Admin } from "@classes/database/permissionRole.ts";
 import { routes } from "../routing/routes.ts";
 
-const API_ROOT: string = "authentication/";
+const API_ROOT: string = "authentication";
 
 export class AuthServices {
     public static async login(token: string, code?: string) {
@@ -53,19 +53,19 @@ export class AuthServices {
     public static async logout() {
         try {
             Store.clearUser();
-            router.push("/login");
+            router.push(routes.Login.path);
 
-            await apiClient.post("/authentication/logout");
+            await apiClient.post(`${API_ROOT}/logout`);
         } catch (error) {
             console.error("Logout failed: ", error);
             Store.clearUser();
-            router.push("/login");
+            router.push(routes.Login.path);
         }
     }
 
     public static async validateSession(): Promise<boolean> {
         try {
-            const result = await apiClient.post(`${API_ROOT}/validate`);
+            const result = await apiClient.post(`authentication/validate`);
 
             return result.data.valid;
         } catch (error) {

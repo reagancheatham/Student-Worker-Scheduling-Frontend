@@ -8,10 +8,7 @@ import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import {
-    isSameDay,
-    startOfWeek,
-} from "@internationalized/date";
+import { isSameDay, startOfWeek } from "@internationalized/date";
 
 //#region Variables
 enum EventState {

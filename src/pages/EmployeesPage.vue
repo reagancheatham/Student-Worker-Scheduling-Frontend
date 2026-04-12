@@ -32,7 +32,6 @@ const addValidationSchema = valibot.object({
     isManager: valibot.boolean(),
 });
 type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
-const toastNotification = useToast();
 
 let data = ref<Employee[]>([]);
 
@@ -150,16 +149,19 @@ async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
     );
 }
 
-function getData() {
-    EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
-        .then((result) => {
-            data.value = result;
-            console.log(data);
-        })
-        .catch((err) => {
-            console.error(err);
-        });
+async function getData() {
+    const business = await Store.getBusiness();
+
+    if (!business) return;
+
+    try {
+        const result = await EmployeeServices.getAllForBusiness(business.id);
+        data.value = result;
+    } catch (error) {
+        console.error(`Error getting employees: ${error}`);
+    }
 }
+
 onMounted(() => {
     getData();
 });
