@@ -29,6 +29,7 @@ import { Store } from "@classes/util/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 
+//#region
 const model = defineModel<ShiftEvent>({
     required: true,
 });
@@ -119,6 +120,7 @@ const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
+const alreadyPublished = ref<boolean>(false);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
@@ -157,6 +159,7 @@ colors.value = EventColor.colors.map((color) => {
         },
     };
 });
+//#endregion
 
 onMounted(() => {
     deletedTasks = [];
@@ -200,6 +203,7 @@ async function initializeState() {
 
     if (!business) return;
 
+    alreadyPublished.value = getData().shift.published;
     state.name = getData().name;
     state.eventDate = getData().startTime.calendarDate();
     state.startTime = getData().startTime.toTime();
@@ -257,6 +261,8 @@ function selectDate(date: DateValue | any): void {
 
 async function submitModalForm(_: FormSubmitEvent<Schema>) {
     isSubmitting.value = true;
+
+    console.log("submitting!");
 
     const event = model.value;
     const date = state.eventDate;
@@ -350,6 +356,10 @@ function closeTaskModal(): void {
 
 function createDefaultTask(): Task {
     return new Task(0, taskList.value.id, 0, "New Task", "", []);
+}
+
+function publishShift(): void {
+    model.value.shift.published = true;
 }
 </script>
 
@@ -522,6 +532,21 @@ function createDefaultTask(): Task {
                         </div>
                     </UFormField>
                     <div class="flex flex-row gap-2">
+                        <UTooltip
+                            v-if="!creator && !alreadyPublished"
+                            :text="
+                                state.employee
+                                    ? 'Publish Shift to Employees'
+                                    : 'Employee Must Be Assigned to Publish'
+                            "
+                        >
+                            <UButton
+                                label="Publish"
+                                type="submit"
+                                :disabled="!state.employee"
+                                @click="publishShift"
+                            />
+                        </UTooltip>
                         <UTooltip
                             :text="`Submit ${creator ? 'Creation' : 'Edit'}`"
                         >

@@ -340,6 +340,12 @@ function getGridArea(): string {
         return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
 }
 
+function getClass() {
+    if (!(refData.value instanceof ShiftEvent) || refData.value.shift.published)
+        return "event";
+    else return `event ring-2 ${refData.value.color.ring}`;
+}
+
 function getStyle() {
     if (!shouldRender())
         return {
@@ -350,12 +356,17 @@ function getStyle() {
         "grid-area": getGridArea(),
         "background-color": `var(${refData.value.color.tailwind})`,
         "z-index": `${refData.value.zIndex}`,
+        "border-color": `var(${refData.value.color.border})`,
         "margin-top": `0`,
         "margin-bottom": `0`,
         "margin-left": `0`,
         "margin-right": `0`,
         cursor: props.editable ? "pointer" : "cursor",
     };
+
+    if (refData.value instanceof ShiftEvent && !refData.value.shift.published)
+        style["background-color"] =
+            `color-mix(in srgb, var(${refData.value.color.tailwind}), transparent 50%)`;
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
         style["margin-top"] =
@@ -387,7 +398,6 @@ function onEventDeleted(): void {
 .event {
     pointer-events: all;
     border-left-width: 4px;
-    border-color: var(--color-sky-600);
     display: flex;
     flex-direction: column;
     padding-left: 10px;
@@ -431,8 +441,8 @@ function onEventDeleted(): void {
 
         <UCard
             ref="element"
-            class="event"
             variant="ghost"
+            :class="getClass()"
             :style="getStyle()"
             :ui="{
                 footer: 'mt-auto',

@@ -12,7 +12,8 @@ export class Shift extends DatabaseModel {
         public startTime: Date,
         public endTime: Date,
         public color: EventColor,
-        private _employee: Employee | undefined,
+        public published: boolean,
+        private _employee: Employee | undefined = undefined,
     ) {
         super();
 
@@ -40,6 +41,7 @@ export class Shift extends DatabaseModel {
             startTime,
             endTime,
             color,
+            data["published"] ?? false,
             employee,
         );
     }
@@ -182,16 +184,7 @@ export class Shift extends DatabaseModel {
             endTime: this.endTime,
             color: this.color,
             employee: this._employee,
-            day: this.day,
-            month: this.month,
-            shortMonth: this.shortMonth,
-            year: this.year,
-            weekday: this.weekday,
-            shortWeekday: this.shortWeekday,
-            shiftTime: this.shiftTime,
-            startTimeFormatted: this.startTimeFormatted,
-            endTimeFormatted: this.endTimeFormatted,
-            dateFormatted: this.dateFormatted,
+            published: this.published,
         };
     }
 
