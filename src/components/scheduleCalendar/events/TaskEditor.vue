@@ -104,7 +104,7 @@ function shouldShowCheckOffButton(): boolean {
 
 async function checkOff(): Promise<void> {
     const user = Store.getUser();
-    const business = Store.getBusiness();
+    const business = await Store.getBusiness();
 
     if (!user || !business) {
         console.error("User or business is invalid!");
@@ -125,7 +125,7 @@ async function checkOff(): Promise<void> {
 
 async function removeCheckOff(): Promise<void> {
     const user = Store.getUser();
-    const business = Store.getBusiness();
+    const business = await Store.getBusiness();
 
     if (!user || !business) {
         console.error("User or business is invalid!");

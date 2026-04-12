@@ -205,12 +205,12 @@ async function submitEdit(_: FormSubmitEvent<EditValidationSchema>) {
 }
 
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
+    isAddOpen.value = false;
+
     await BusinessServices.create(
         new Business(-1, addState.name),
         addState.email,
     );
-
-    isAddOpen.value = false;
 }
 
 async function getData() {

@@ -196,6 +196,10 @@ onMounted(() => {
 async function initializeState() {
     if (!isOpen) return;
 
+    const business = await Store.getBusiness();
+
+    if (!business) return;
+
     state.name = getData().name;
     state.eventDate = getData().startTime.calendarDate();
     state.startTime = getData().startTime.toTime();
@@ -215,9 +219,7 @@ async function initializeState() {
         );
     } else taskList.value = new TaskList(0, 0, "Task List", []);
 
-    employees.value = await EmployeeServices.getAllForBusiness(
-        Store.getBusiness()!.id,
-    );
+    employees.value = await EmployeeServices.getAllForBusiness(business.id);
 
     initializeTaskUIIDs();
 

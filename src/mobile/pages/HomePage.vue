@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ShiftServices } from "../../services/shiftServices";
 import { EmployeeServices } from "../../services/employeeServices";
 import { Shift } from "@classes/database/shift";
@@ -7,12 +7,13 @@ import { Employee } from "@classes/database/employee";
 import { Timesheet } from "@classes/database/timesheet";
 import { TimeSheetsServices } from "../../services/timesheetsServices";
 import { Store } from "@classes/util/store.ts";
+import { Business } from "@classes/database/business.ts";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 //TODO: add clock in functionality, timeSheets service.
 
 const user = ref(Store.getUser());
-const business = ref(Store.getBusiness());
+const business = ref<Business>();
 const employee = ref<Employee | null>(null);
 const currentShift = computed(() => shifts.value[0]);
 //this function will need to be hooked up to settings somehow
@@ -26,6 +27,11 @@ let today = new Date();
 let upcoming = new Date();
 upcoming.setDate(today.getDate() + 30);
 upcoming.setHours(23, 59, 59, 99);
+
+onMounted(async () => {
+    business.value = await Store.getBusiness();
+    loadData();
+});
 
 async function loadData() {
     try {
@@ -65,8 +71,6 @@ async function loadData() {
         console.log(err);
     }
 }
-
-loadData();
 
 async function clockIn() {
     try {
