@@ -10,6 +10,7 @@ import AdminPage from "../pages/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
+import NoBusinessPage from "../pages/NoBusinessPage.vue";
 
 class Route {
     constructor(
@@ -58,6 +59,7 @@ export const routes = {
         "/login",
     ).noAuth(),
     Login: Route.create("/login/:code?", LoginPage, "Login").noAuth(),
+    NoBusiness: Route.create("/noBusiness", NoBusinessPage, "No Business"),
     NavbarLayout: Route.create(
         "/nav",
         NavbarLayout,

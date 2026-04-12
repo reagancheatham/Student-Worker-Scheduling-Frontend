@@ -3,6 +3,8 @@ import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store.ts";
 import { BusinessServices } from "./businessServices.ts";
+import { Admin } from "@classes/database/permissionRole.ts";
+import { routes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication/";
 
@@ -22,12 +24,24 @@ export class AuthServices {
 
                 Store.setUser(user);
 
-                const businesses = await BusinessServices.getAllForUser(
-                    user.id,
-                );
-                Store.setBusiness(businesses[0]);
+                if (user.permissionRoleID == Admin.id) {
+                    router.push(routes.Admin.path);
+                    return;
+                } else {
+                    const businesses = await BusinessServices.getAllForUser(
+                        user.id,
+                    );
 
-                router.push(`nav/dashboard`);
+                    if (businesses && businesses.length > 0) {
+                        const firstBusiness = businesses[0];
+                        Store.setBusiness(firstBusiness);
+
+                        router.push(routes.NavbarLayout.children![0].path);
+                    } else {
+                        Store.clearBusiness();
+                        router.push(routes.NoBusiness.path);
+                    }
+                }
             } else {
                 console.error("Login failed: invalid credentials");
             }
