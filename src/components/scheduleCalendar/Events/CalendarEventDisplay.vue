@@ -4,7 +4,7 @@ import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData";
 
 type EventSlot = {
     index: number;
@@ -171,8 +171,8 @@ function findLongestBisectChain(event: EventData): EventData[] {
 function getAllBisectingEvents(event: EventData): EventData[] {
     return calendarData.refRelevantEvents.value.filter((e) => {
         if (calendarData.selectedView === CalendarMode.Day) {
-            const event1 = event as ShiftEvent;
-            const event2 = e as ShiftEvent;
+            const event1 = event as ShiftEventData;
+            const event2 = e as ShiftEventData;
 
             return (
                 event1.bisects(event2) &&

@@ -3,7 +3,7 @@ import { EventData } from "./eventData.ts";
 import { EventTime } from "./eventTime.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
 
-export class ShiftEvent extends EventData {
+export class ShiftEventData extends EventData {
     constructor(public readonly shift: Shift) {
         super(
             shift.name,

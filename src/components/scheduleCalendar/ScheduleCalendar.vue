@@ -76,7 +76,9 @@ function hasEmployeesToDisplay(): boolean {
 
 .calendarBody {
     width: 100%;
-    height: 90%;
+    flex: 1;
+    min-height: 0;
+    max-height: 90%;
     display: flex;
     flex-direction: row;
     overflow-y: auto;
@@ -121,7 +123,7 @@ function hasEmployeesToDisplay(): boolean {
     >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div class="mb-10" :class="gridClasses.get(data.selectedView)!">
+            <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"

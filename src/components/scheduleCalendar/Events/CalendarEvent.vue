@@ -7,7 +7,7 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { isSameDay, startOfWeek } from "@internationalized/date";
 
 //#region Variables
@@ -325,7 +325,7 @@ function getGridArea(): string {
     if (props.calendarData.selectedView == CalendarMode.Day) {
         let row = 1;
 
-        if (model.value instanceof ShiftEvent) {
+        if (model.value instanceof ShiftEventData) {
             const employee = model.value.shift.employee;
 
             if (employee)
@@ -341,7 +341,7 @@ function getGridArea(): string {
 }
 
 function getClass() {
-    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
+    if (!(model.value instanceof ShiftEventData) || model.value.shift.published)
         return "event";
     else return `event ring-2 ${model.value.color.ring}`;
 }
@@ -364,7 +364,7 @@ function getStyle() {
         cursor: props.editable ? "pointer" : "cursor",
     };
 
-    if (model.value instanceof ShiftEvent && !model.value.shift.published)
+    if (model.value instanceof ShiftEventData && !model.value.shift.published)
         style["background-color"] =
             `color-mix(in srgb, var(${model.value.color.tailwind}), transparent 40%)`;
 
@@ -382,13 +382,13 @@ function getStyle() {
 }
 
 function getLabel(): string {
-    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
+    if (!(model.value instanceof ShiftEventData) || model.value.shift.published)
         return model.value.name;
     else return `${model.value.name} - Unpublished`;
 }
 
 function updateBackendEvent(): void {
-    if (model.value instanceof ShiftEvent) model.value.updateBackend();
+    if (model.value instanceof ShiftEventData) model.value.updateBackend();
 }
 
 function closeModal(): void {
@@ -435,7 +435,8 @@ function onEventDeleted(): void {
                     </div>
                     <div
                         v-if="
-                            model instanceof ShiftEvent && model.shift.employee
+                            model instanceof ShiftEventData &&
+                            model.shift.employee
                         "
                     >
                         {{ model.shift.employee.fullName }}
@@ -486,10 +487,11 @@ function onEventDeleted(): void {
                         }"
                     />
                     <UBadge
+                        v-if="model instanceof ShiftEventData"
                         class="font-normal text-gray-700 flex flex-col items-start"
                         variant="ghost"
                         :label="
-                            model instanceof ShiftEvent && model.shift.employee
+                            model.shift.employee
                                 ? `${model.shift.employee.firstName} ${model.shift.employee.lastName}`
                                 : ''
                         "

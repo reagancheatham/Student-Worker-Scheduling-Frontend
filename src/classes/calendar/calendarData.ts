@@ -8,7 +8,7 @@ import { ref, shallowRef } from "vue";
 import { EventData } from "./eventData.ts";
 import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
-import { ShiftEvent } from "./shiftEvent.ts";
+import { ShiftEventData } from "./shiftEventData.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
 import { Store } from "@classes/util/store.ts";
@@ -91,7 +91,7 @@ export class CalendarData {
             beginningOfDay,
             endOfDay,
         ).then((shifts) => {
-            events = shifts.map((shift) => new ShiftEvent(shift));
+            events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
         return events;
@@ -119,7 +119,7 @@ export class CalendarData {
             startDate,
             endDate,
         ).then((shifts) => {
-            events = shifts.map((shift) => new ShiftEvent(shift));
+            events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
         return events;
@@ -156,7 +156,7 @@ export class CalendarData {
         let relevantEmployees: Employee[] = [];
 
         for (const event of this.refRelevantEvents.value) {
-            if (!(event instanceof ShiftEvent)) continue;
+            if (!(event instanceof ShiftEventData)) continue;
             const employee = event.shift.employee;
 
             if (!employee) continue;

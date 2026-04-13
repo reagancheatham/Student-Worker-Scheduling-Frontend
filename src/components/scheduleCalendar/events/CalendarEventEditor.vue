@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { EventData } from "@classes/calendar/eventData.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData";
 
 const model = defineModel<EventData>({
     required: true,
@@ -14,7 +14,7 @@ const { isOpen, creator = false } = defineProps<{
 
 <template>
     <ShiftEventEditor
-        v-if="model instanceof ShiftEvent"
+        v-if="model instanceof ShiftEventData"
         v-model="model"
         :is-open="isOpen"
         :creator="creator"

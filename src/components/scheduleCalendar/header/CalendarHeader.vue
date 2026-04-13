@@ -3,7 +3,7 @@ import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData";
 import { Business } from "@classes/database/business.ts";
 import { Shift } from "@classes/database/shift.ts";
 import { Store } from "@classes/util/store.ts";
@@ -17,7 +17,7 @@ const { data, cellSize } = defineProps<{
 }>();
 
 const editedEvent = ref<EventData>(
-    new ShiftEvent(
+    new ShiftEventData(
         new Shift(0, 0, "", new Date(), new Date(), EventColor.blue, false),
     ),
 );
@@ -38,7 +38,7 @@ const createItems = [
 
 onMounted(async () => {
     business.value = await Store.getBusiness();
-    editedEvent.value = new ShiftEvent(createDefaultShift());
+    editedEvent.value = new ShiftEventData(createDefaultShift());
 });
 
 function getStyle() {
@@ -67,7 +67,7 @@ function goToToday() {
 }
 
 function createEvent() {
-    editedEvent.value = new ShiftEvent(createDefaultShift());
+    editedEvent.value = new ShiftEventData(createDefaultShift());
 
     isModalOpen.value = true;
 }

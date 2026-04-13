@@ -7,7 +7,7 @@ import {
 import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
 import {
     onMounted,
@@ -29,7 +29,7 @@ import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 
 //#region
-const model = defineModel<ShiftEvent>({
+const model = defineModel<ShiftEventData>({
     required: true,
 });
 
