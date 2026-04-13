@@ -24,7 +24,7 @@ const RESIZE_STEP = 5;
 const RESIZE_RATIO = 60 / RESIZE_STEP;
 const DRAG_THRESHOLD = 5;
 
-const refData = defineModel<EventData>({ required: true });
+const model = defineModel<EventData>({ required: true });
 
 const props = defineProps<{
     calendarData: CalendarData;
@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
 // This prevents events from flickering when loading data from backend
 function shouldRender(): boolean {
     const calendarData = props.calendarData;
-    const startTime = refData.value.startTime.calendarDate();
+    const startTime = model.value.startTime.calendarDate();
 
     if (calendarData.selectedView === CalendarMode.Day)
         return isSameDay(startTime, calendarData.selectedDay);
@@ -118,12 +118,12 @@ function onPointerMove(evt: PointerEvent): void {
 
         if (dragDistance >= DRAG_THRESHOLD) {
             state = EventState.Dragging;
-            dragStartTime = refData.value.startTime.clone();
-            dragEndTime = refData.value.endTime.clone();
+            dragStartTime = model.value.startTime.clone();
+            dragEndTime = model.value.endTime.clone();
             isPopoverOpen.value = false;
-            refData.value.zIndex = MAX_Z_INDEX;
+            model.value.zIndex = MAX_Z_INDEX;
 
-            emit("dragBegan", refData.value);
+            emit("dragBegan", model.value);
         }
     }
 }
@@ -158,8 +158,8 @@ function updateDrag(delta: Vector2): void {
 
         const day = weekDate.day;
 
-        refData.value.startTime.day = day;
-        refData.value.endTime.day = day;
+        model.value.startTime.day = day;
+        model.value.endTime.day = day;
     }
 
     const hourDifference = dragEndTime.hour - dragStartTime.hour;
@@ -185,10 +185,10 @@ function updateDrag(delta: Vector2): void {
     }
 
     if (totalDifference >= 15) {
-        refData.value.startTime.hour = startHour;
-        refData.value.startTime.minute = startMinute;
-        refData.value.endTime.hour = endHour;
-        refData.value.endTime.minute = endMinute;
+        model.value.startTime.hour = startHour;
+        model.value.startTime.minute = startMinute;
+        model.value.endTime.hour = endHour;
+        model.value.endTime.minute = endMinute;
     }
 }
 
@@ -205,19 +205,19 @@ function onPointerUp(_: PointerEvent): void {
 
     state = EventState.None;
 
-    emit("dragEnded", refData.value);
+    emit("dragEnded", model.value);
     updateBackendEvent();
 }
 
 function startResize(evt: PointerEvent): void {
     evt.preventDefault();
 
-    resizeTime = refData.value.endTime.clone();
+    resizeTime = model.value.endTime.clone();
     resizePointerStart =
         props.calendarData.selectedView === CalendarMode.Day
             ? evt.clientX
             : evt.clientY;
-    refData.value.zIndex = MAX_Z_INDEX;
+    model.value.zIndex = MAX_Z_INDEX;
 
     document.body.style.cursor = "ns-resize";
     document.body.style.userSelect = "none";
@@ -257,16 +257,16 @@ function onResize(evt: PointerEvent): void {
     [hour, minute] = calculateTimeChange(hour, minute);
 
     minuteDifference =
-        60 * (hour - refData.value.startTime.hour) +
-        (minute - refData.value.startTime.minute);
+        60 * (hour - model.value.startTime.hour) +
+        (minute - model.value.startTime.minute);
 
     if (minuteDifference < 15) return;
 
     state = EventState.Resizing;
-    refData.value.endTime.hour = hour;
-    refData.value.endTime.minute = minute;
+    model.value.endTime.hour = hour;
+    model.value.endTime.minute = minute;
 
-    emit("resized", refData.value);
+    emit("resized", model.value);
 }
 
 function stopResize(): void {
@@ -318,15 +318,15 @@ function resizeTitle(): void {
 }
 
 function getGridArea(): string {
-    const data = refData.value;
+    const data = model.value;
     const startTime = data.startTime;
     const endTime = data.endTime;
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
         let row = 1;
 
-        if (refData.value instanceof ShiftEvent) {
-            const employee = refData.value.shift.employee;
+        if (model.value instanceof ShiftEvent) {
+            const employee = model.value.shift.employee;
 
             if (employee)
                 row =
@@ -341,9 +341,9 @@ function getGridArea(): string {
 }
 
 function getClass() {
-    if (!(refData.value instanceof ShiftEvent) || refData.value.shift.published)
+    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
         return "event";
-    else return `event ring-2 ${refData.value.color.ring}`;
+    else return `event ring-2 ${model.value.color.ring}`;
 }
 
 function getStyle() {
@@ -354,9 +354,9 @@ function getStyle() {
 
     let style = {
         "grid-area": getGridArea(),
-        "background-color": `var(${refData.value.color.tailwind})`,
-        "z-index": `${refData.value.zIndex}`,
-        "border-color": `var(${refData.value.color.border})`,
+        "background-color": `var(${model.value.color.tailwind})`,
+        "z-index": `${model.value.zIndex}`,
+        "border-color": `var(${model.value.color.border})`,
         "margin-top": `0`,
         "margin-bottom": `0`,
         "margin-left": `0`,
@@ -364,25 +364,31 @@ function getStyle() {
         cursor: props.editable ? "pointer" : "cursor",
     };
 
-    if (refData.value instanceof ShiftEvent && !refData.value.shift.published)
+    if (model.value instanceof ShiftEvent && !model.value.shift.published)
         style["background-color"] =
-            `color-mix(in srgb, var(${refData.value.color.tailwind}), transparent 50%)`;
+            `color-mix(in srgb, var(${model.value.color.tailwind}), transparent 40%)`;
 
     if (props.calendarData.selectedView == CalendarMode.Day) {
         style["margin-top"] =
-            `${(refData.value.leftBisectMargin / 100) * props.cellSize.y}px`;
+            `${(model.value.leftBisectMargin / 100) * props.cellSize.y}px`;
         style["margin-bottom"] =
-            `${(refData.value.rightBisectMargin / 100) * props.cellSize.y}px`;
+            `${(model.value.rightBisectMargin / 100) * props.cellSize.y}px`;
     } else {
-        style["margin-left"] = `${refData.value.leftBisectMargin}%`;
-        style["margin-right"] = `${refData.value.rightBisectMargin}%`;
+        style["margin-left"] = `${model.value.leftBisectMargin}%`;
+        style["margin-right"] = `${model.value.rightBisectMargin}%`;
     }
 
     return style;
 }
 
+function getLabel(): string {
+    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
+        return model.value.name;
+    else return `${model.value.name} - Unpublished`;
+}
+
 function updateBackendEvent(): void {
-    if (refData.value instanceof ShiftEvent) refData.value.updateBackend();
+    if (model.value instanceof ShiftEvent) model.value.updateBackend();
 }
 
 function closeModal(): void {
@@ -421,19 +427,18 @@ function onEventDeleted(): void {
     >
         <template #content>
             <UCard>
-                <template #header>{{ refData.name }}</template>
+                <template #header>{{ model.name }}</template>
                 <template #default>
                     <div>
-                        {{ refData.startTime.toTimeString() }} -
-                        {{ refData.endTime.toTimeString() }}
+                        {{ model.startTime.toTimeString() }} -
+                        {{ model.endTime.toTimeString() }}
                     </div>
                     <div
                         v-if="
-                            refData instanceof ShiftEvent &&
-                            refData.shift.employee
+                            model instanceof ShiftEvent && model.shift.employee
                         "
                     >
-                        {{ refData.shift.employee.fullName }}
+                        {{ model.shift.employee.fullName }}
                     </div>
                 </template>
             </UCard>
@@ -461,7 +466,7 @@ function onEventDeleted(): void {
                     <UBadge
                         class="text-black select-none"
                         variant="ghost"
-                        :label="refData.name"
+                        :label="getLabel()"
                         style="max-width: 100%"
                         :style="{
                             fontSize: `${titleFontSize}px`,
@@ -475,7 +480,7 @@ function onEventDeleted(): void {
                     <UBadge
                         class="font-normal text-gray-800 flex flex-col items-start"
                         variant="ghost"
-                        :label="`${refData.startTime.toTimeString()} - ${refData.endTime.toTimeString()}`"
+                        :label="`${model.startTime.toTimeString()} - ${model.endTime.toTimeString()}`"
                         :ui="{
                             label: 'text-wrap line-clamp-2 select-none',
                         }"
@@ -484,9 +489,8 @@ function onEventDeleted(): void {
                         class="font-normal text-gray-700 flex flex-col items-start"
                         variant="ghost"
                         :label="
-                            refData instanceof ShiftEvent &&
-                            refData.shift.employee
-                                ? `${refData.shift.employee.firstName} ${refData.shift.employee.lastName}`
+                            model instanceof ShiftEvent && model.shift.employee
+                                ? `${model.shift.employee.firstName} ${model.shift.employee.lastName}`
                                 : ''
                         "
                     />
@@ -517,7 +521,7 @@ function onEventDeleted(): void {
             </template>
         </UCard>
         <CalendarEventEditor
-            :model-value="refData"
+            :model-value="model"
             :is-open="isModalOpen"
             @close-requested="closeModal()"
             @event-deleted="onEventDeleted()"
