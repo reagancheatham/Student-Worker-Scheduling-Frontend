@@ -16,11 +16,10 @@ const modal = overlay.create(ProfileSettingsModal);
 async function openSettings() {
     const instance = modal.open({
         user: user.value,
+        onUpdated: (updatedUser) => {
+            user.value = updatedUser;
+        }
     });
-}
-
-function updateUserInfo(updatedUserInfo) {
-    user.value = updateUserInfo;
 }
 </script>
 

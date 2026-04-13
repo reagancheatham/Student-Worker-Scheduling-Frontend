@@ -10,6 +10,10 @@ const props = defineProps({
         type: User,
         required: true,
     },
+    onUpdated: {
+        type: Function,
+        required: false
+    }
 });
 
 const schema = v.object({
@@ -67,7 +71,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
         toast.add({title: "User info updated!", color: 'green'});
 
-
+        props.onUpdated?.(payload);
         emit("updated", payload);
         emit("close");
     } catch (err) {
