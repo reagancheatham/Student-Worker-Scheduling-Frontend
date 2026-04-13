@@ -6,7 +6,7 @@ export class Store {
     public static getUser(): User | undefined {
         const storedUser = localStorage.getItem("user");
 
-        if (storedUser) {
+        if (storedUser && storedUser != "undefined") {
             try {
                 const user = JSON.parse(storedUser);
                 return new User(
@@ -40,7 +40,7 @@ export class Store {
     public static async getBusiness(): Promise<Business | undefined> {
         const storedBusiness = localStorage.getItem("business");
 
-        if (storedBusiness) {
+        if (storedBusiness && storedBusiness != "undefined") {
             try {
                 const business = JSON.parse(storedBusiness);
                 return new Business(business.id, business.name);
