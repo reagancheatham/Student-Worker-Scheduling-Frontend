@@ -9,6 +9,14 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { isSameDay, startOfWeek } from "@internationalized/date";
+import {
+    GetClassFunc,
+    GetLabelFunc,
+    GetStyleFunc,
+    UpdateBackendFunc,
+} from "@classes/calendar/eventFunctions.ts";
+import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 
 //#region Variables
 enum EventState {
@@ -55,10 +63,19 @@ let dragEndTime: EventTime;
 let resizeTime: EventTime;
 let observer: ResizeObserver | null = null;
 let resizePointerStart: number;
+let getClassImpl: GetClassFunc;
+let getStyleImpl: GetStyleFunc;
+let getLabelImpl: GetLabelFunc;
+let updateBackendImpl: UpdateBackendFunc;
 //#endregion
 
 onMounted(() => {
     const elementValue = element.value.$el;
+
+    getClassImpl = ShiftEvent.getClass;
+    getStyleImpl = ShiftEvent.getStyle;
+    getLabelImpl = ShiftEvent.getLabel;
+    updateBackendImpl = ShiftEvent.updateBackendEvent;
 
     if (!elementValue) return;
 
@@ -341,9 +358,14 @@ function getGridArea(): string {
 }
 
 function getClass() {
-    if (!(model.value instanceof ShiftEventData) || model.value.shift.published)
-        return "event";
-    else return `event ring-2 ${model.value.color.ring}`;
+    return getClassImpl(
+        new EventStyleData(
+            model.value,
+            props.calendarData,
+            props.cellSize,
+            props.editable,
+        ),
+    );
 }
 
 function getStyle() {
@@ -352,43 +374,36 @@ function getStyle() {
             visibility: "hidden",
         };
 
-    let style = {
-        "grid-area": getGridArea(),
-        "background-color": `var(${model.value.color.tailwind})`,
-        "z-index": `${model.value.zIndex}`,
-        "border-color": `var(${model.value.color.border})`,
-        "margin-top": `0`,
-        "margin-bottom": `0`,
-        "margin-left": `0`,
-        "margin-right": `0`,
-        cursor: props.editable ? "pointer" : "cursor",
-    };
-
-    if (model.value instanceof ShiftEventData && !model.value.shift.published)
-        style["background-color"] =
-            `color-mix(in srgb, var(${model.value.color.tailwind}), transparent 40%)`;
-
-    if (props.calendarData.selectedView == CalendarMode.Day) {
-        style["margin-top"] =
-            `${(model.value.leftBisectMargin / 100) * props.cellSize.y}px`;
-        style["margin-bottom"] =
-            `${(model.value.rightBisectMargin / 100) * props.cellSize.y}px`;
-    } else {
-        style["margin-left"] = `${model.value.leftBisectMargin}%`;
-        style["margin-right"] = `${model.value.rightBisectMargin}%`;
-    }
-
-    return style;
+    return getStyleImpl(
+        new EventStyleData(
+            model.value,
+            props.calendarData,
+            props.cellSize,
+            props.editable,
+        ),
+    );
 }
 
 function getLabel(): string {
-    if (!(model.value instanceof ShiftEventData) || model.value.shift.published)
-        return model.value.name;
-    else return `${model.value.name} - Unpublished`;
+    return getLabelImpl(
+        new EventStyleData(
+            model.value,
+            props.calendarData,
+            props.cellSize,
+            props.editable,
+        ),
+    );
 }
 
 function updateBackendEvent(): void {
-    if (model.value instanceof ShiftEventData) model.value.updateBackend();
+    updateBackendImpl(
+        new EventStyleData(
+            model.value,
+            props.calendarData,
+            props.cellSize,
+            props.editable,
+        ),
+    );
 }
 
 function closeModal(): void {

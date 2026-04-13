@@ -8,10 +8,12 @@ import { onMounted, ref } from "vue";
 const {
     header,
     editable = false,
+    template = false,
     defaultView = CalendarMode.Week,
 } = defineProps<{
     header?: boolean;
     editable?: boolean;
+    template?: boolean;
     defaultView?: CalendarMode;
 }>();
 
