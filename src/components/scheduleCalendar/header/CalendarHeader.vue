@@ -11,9 +11,14 @@ import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref } from "vue";
 
-const { data, cellSize } = defineProps<{
+const {
+    data,
+    cellSize,
+    template = false,
+} = defineProps<{
     data: CalendarData;
     cellSize: Vector2;
+    template?: boolean;
 }>();
 
 const editedEvent = ref<EventData>(
@@ -138,16 +143,28 @@ function updateRelevantEvents() {
             />
         </UDropdownMenu>
         <div class="headerSegment leftSegment">
-            <CalendarDateShifter :data="data" />
+            <CalendarDateShifter v-if="!template" :data="data" />
+            <p
+                v-if="template"
+                class="mb-0.5 ml-4 text-lg font-medium text-neutral-500"
+            >
+                Template Builder
+            </p>
         </div>
         <div class="headerSegment rightSegment">
             <UButton
+                v-if="template"
                 label="Today"
                 variant="outline"
                 color="neutral"
                 @click="goToToday"
             ></UButton>
-            <UFormField class="selectMenuContainer" label="Date" name="option">
+            <UFormField
+                v-if="template"
+                class="selectMenuContainer"
+                label="Date"
+                name="option"
+            >
                 <CalendarDatePicker :data="data" />
             </UFormField>
             <UFormField class="selectMenuContainer" label="View" name="option">

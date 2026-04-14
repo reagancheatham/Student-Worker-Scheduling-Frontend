@@ -12,7 +12,7 @@ export class ShiftEvent {
             return "";
         }
 
-        if (event.shift.published) return `event ring-2 ${event.color.ring}`;
+        if (!event.shift.published) return `event ring-2 ${event.color.ring}`;
         else return "event";
     }
 

@@ -17,7 +17,9 @@ const {
     defaultView?: CalendarMode;
 }>();
 
-const data = new CalendarData(defaultView, today(CalendarData.timeZone));
+const data = template
+    ? CalendarData.createTemplate(defaultView)
+    : CalendarData.create(defaultView, today(CalendarData.timeZone));
 const cellSize = ref(Vector2.zero);
 
 const gridClasses = new Map<CalendarMode, string>([
@@ -123,16 +125,22 @@ function hasEmployeesToDisplay(): boolean {
         class="calendarContainer"
         :style="getContainerStyle()"
     >
-        <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
+        <CalendarHeader
+            v-if="header"
+            :data="data"
+            :cell-size="cellSize"
+            :template="template"
+        />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
+                    :template="template"
                 />
                 <CalendarTimeDisplay :data="data" :cell-size="cellSize" />
                 <CalendarEmployeeDisplay
-                    v-if="data.selectedView === CalendarMode.Day"
+                    v-if="data.selectedView === CalendarMode.Day && !template"
                     :data="data"
                     :cell-size="cellSize"
                 />

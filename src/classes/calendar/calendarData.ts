@@ -33,10 +33,20 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
+    public readonly isTemplate = ref<boolean>(false);
 
-    constructor(selectedView: CalendarMode, selectedDay: CalendarDate) {
+    constructor(selectedView: CalendarMode, selectedDay: CalendarDate, isTemplate: boolean) {
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
+        this.isTemplate.value = isTemplate;
+    }
+
+    public static create(selectedView: CalendarMode, selectedDay: CalendarDate): CalendarData {
+        return new CalendarData(selectedView, selectedDay, false);
+    }
+
+    public static createTemplate(selectedView: CalendarMode): CalendarData {
+        return new CalendarData(selectedView, today(CalendarData.timeZone), true);
     }
 
     public get selectedView(): CalendarMode {

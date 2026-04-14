@@ -55,6 +55,10 @@ const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
+const getClassImpl = ref<GetClassFunc>();
+const getStyleImpl = ref<GetStyleFunc>();
+const getLabelImpl = ref<GetLabelFunc>();
+const updateBackendImpl = ref<UpdateBackendFunc>();
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -63,19 +67,17 @@ let dragEndTime: EventTime;
 let resizeTime: EventTime;
 let observer: ResizeObserver | null = null;
 let resizePointerStart: number;
-let getClassImpl: GetClassFunc;
-let getStyleImpl: GetStyleFunc;
-let getLabelImpl: GetLabelFunc;
-let updateBackendImpl: UpdateBackendFunc;
 //#endregion
 
 onMounted(() => {
     const elementValue = element.value.$el;
 
-    getClassImpl = ShiftEvent.getClass;
-    getStyleImpl = ShiftEvent.getStyle;
-    getLabelImpl = ShiftEvent.getLabel;
-    updateBackendImpl = ShiftEvent.updateBackendEvent;
+    console.log("mounted");
+
+    getClassImpl.value = ShiftEvent.getClass;
+    getStyleImpl.value = ShiftEvent.getStyle;
+    getLabelImpl.value = ShiftEvent.getLabel;
+    updateBackendImpl.value = ShiftEvent.updateBackendEvent;
 
     if (!elementValue) return;
 
@@ -334,75 +336,39 @@ function resizeTitle(): void {
     titleMargin.value = TITLE_MARGIN_RANGE.lerp(t);
 }
 
-function getGridArea(): string {
-    const data = model.value;
-    const startTime = data.startTime;
-    const endTime = data.endTime;
+function getClass(): string {
+    if (!getClassImpl.value) return "";
 
-    if (props.calendarData.selectedView == CalendarMode.Day) {
-        let row = 1;
-
-        if (model.value instanceof ShiftEventData) {
-            const employee = model.value.shift.employee;
-
-            if (employee)
-                row =
-                    props.calendarData.relevantEmployees.findIndex(
-                        (relEmployee) => relEmployee.id === employee.id,
-                    ) + 1;
-        }
-
-        return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
-    } else
-        return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+    return getClassImpl.value(getStyleData());
 }
 
-function getClass() {
-    return getClassImpl(
-        new EventStyleData(
-            model.value,
-            props.calendarData,
-            props.cellSize,
-            props.editable,
-        ),
-    );
-}
-
-function getStyle() {
-    if (!shouldRender())
+function getStyle(): any {
+    if (!shouldRender() || !getStyleImpl.value)
         return {
             visibility: "hidden",
         };
 
-    return getStyleImpl(
-        new EventStyleData(
-            model.value,
-            props.calendarData,
-            props.cellSize,
-            props.editable,
-        ),
-    );
+    return getStyleImpl.value(getStyleData());
 }
 
 function getLabel(): string {
-    return getLabelImpl(
-        new EventStyleData(
-            model.value,
-            props.calendarData,
-            props.cellSize,
-            props.editable,
-        ),
-    );
+    if (!getLabelImpl.value) return "";
+
+    return getLabelImpl.value(getStyleData());
 }
 
 function updateBackendEvent(): void {
-    updateBackendImpl(
-        new EventStyleData(
-            model.value,
-            props.calendarData,
-            props.cellSize,
-            props.editable,
-        ),
+    if (!updateBackendImpl.value) return;
+
+    updateBackendImpl.value(getStyleData());
+}
+
+function getStyleData(): EventStyleData {
+    return new EventStyleData(
+        model.value,
+        props.calendarData,
+        props.cellSize,
+        props.editable,
     );
 }
 
