@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { routes } from "../routing/routes.ts";
