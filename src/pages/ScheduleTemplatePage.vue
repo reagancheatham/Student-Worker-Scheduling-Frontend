@@ -1,8 +1,33 @@
 <script setup lang="ts">
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { ScheduleTemplateServices } from "../services/scheduleTemplateServices.ts";
+import { Store } from "@classes/util/store.ts";
 
-const scheduleTemplate = ref<ScheduleTemplate>();
+const selectedTemplate = ref<ScheduleTemplate>();
+const scheduleTemplates = ref<ScheduleTemplate[]>([]);
+
+onMounted(async () => {
+    const business = await Store.getBusiness();
+
+    if (!business) return;
+
+    scheduleTemplates.value = await ScheduleTemplateServices.getAllForBusiness(
+        business.id,
+    );
+});
+
+async function createTemplate(): Promise<void> {
+    const business = await Store.getBusiness();
+
+    if (!business) return;
+
+    selectedTemplate.value = new ScheduleTemplate(
+        0,
+        business.id,
+        "New Schedule Template",
+    );
+}
 </script>
 
 <style>
@@ -21,16 +46,31 @@ body {
 </style>
 
 <template>
-    <div v-if="scheduleTemplate" class="scheduleContainer">
-        <ScheduleCalendar header editable template />
+    <div v-if="selectedTemplate" class="scheduleContainer">
+        <ScheduleCalendar header editable :template="selectedTemplate" />
     </div>
-    <UCard v-else class="templateCreator" :ui="{ body: 'h-full justify-items-center content-center text-center' }">
+    <UCard
+        v-else
+        class="templateCreator"
+        :ui="{ body: 'h-full justify-items-center content-center text-center' }"
+    >
         <template #default>
-            <p class="text-xl">Create or Edit Template</p>
-            <div class="flex">
-                <UDropdownMenu>
-                    <UButton variant="outline" color="neutral" />
-                </UDropdownMenu>
+            <div class="flex gap-4">
+                <div>
+                    <p>Select Template to Edit</p>
+                    <USelectMenu
+                        :model-value="selectedTemplate"
+                        class="w-48"
+                        :items="scheduleTemplates"
+                        label-key="name"
+                    />
+                </div>
+                <p class="self-end">or</p>
+                <UButton
+                    class="h-1/2 self-end"
+                    label="Create New Template"
+                    @click="createTemplate"
+                />
             </div>
         </template>
     </UCard>

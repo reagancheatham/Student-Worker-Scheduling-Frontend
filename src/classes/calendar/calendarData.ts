@@ -12,6 +12,7 @@ import { ShiftEventData } from "./shiftEventData.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
 import { Store } from "@classes/util/store.ts";
+import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -33,20 +34,35 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
-    public readonly isTemplate = ref<boolean>(false);
+    public readonly refIsTemplate = ref<boolean>(false);
+    public readonly refSelectedTemplate = ref<ScheduleTemplate>();
 
-    constructor(selectedView: CalendarMode, selectedDay: CalendarDate, isTemplate: boolean) {
+    constructor(
+        selectedView: CalendarMode,
+        selectedDay: CalendarDate,
+        isTemplate: boolean = false,
+        selectedTemplate?: ScheduleTemplate,
+    ) {
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
-        this.isTemplate.value = isTemplate;
+        this.refIsTemplate.value = isTemplate;
+        this.refSelectedTemplate.value = selectedTemplate;
     }
 
-    public static create(selectedView: CalendarMode, selectedDay: CalendarDate): CalendarData {
-        return new CalendarData(selectedView, selectedDay, false);
+    public static create(
+        selectedView: CalendarMode,
+        selectedDay: CalendarDate,
+    ): CalendarData {
+        return new CalendarData(selectedView, selectedDay);
     }
 
-    public static createTemplate(selectedView: CalendarMode): CalendarData {
-        return new CalendarData(selectedView, today(CalendarData.timeZone), true);
+    public static createTemplate(selectedView: CalendarMode, selectedTemplate: ScheduleTemplate): CalendarData {
+        return new CalendarData(
+            selectedView,
+            today(CalendarData.timeZone),
+            true,
+            selectedTemplate
+        );
     }
 
     public get selectedView(): CalendarMode {
@@ -80,6 +96,10 @@ export class CalendarData {
 
     public get relevantEmployees(): Employee[] {
         return this.refRelevantEmployees.value;
+    }
+
+    public get selectedTemplate(): ScheduleTemplate | undefined {
+        return this.refSelectedTemplate.value;
     }
 
     public async getEventsForDate(date: CalendarDate): Promise<EventData[]> {

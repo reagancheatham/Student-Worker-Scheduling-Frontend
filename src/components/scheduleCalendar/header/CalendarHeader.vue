@@ -148,19 +148,23 @@ function updateRelevantEvents() {
                 v-if="template"
                 class="mb-0.5 ml-4 text-lg font-medium text-neutral-500"
             >
-                Template Builder
+                {{
+                    data.selectedTemplate
+                        ? data.selectedTemplate.name
+                        : "Template Builder"
+                }}
             </p>
         </div>
         <div class="headerSegment rightSegment">
             <UButton
-                v-if="template"
+                v-if="!template"
                 label="Today"
                 variant="outline"
                 color="neutral"
                 @click="goToToday"
             ></UButton>
             <UFormField
-                v-if="template"
+                v-if="!template"
                 class="selectMenuContainer"
                 label="Date"
                 name="option"

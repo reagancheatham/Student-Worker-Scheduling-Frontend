@@ -97,9 +97,10 @@ export class DatabaseServices {
             .then((results) => {
                 const data = results.data as object[];
 
-                data.forEach((element) => {
-                    finalResult.push(model.create(element));
-                });
+                if (data && Array.isArray(data))
+                    data.forEach((element) => {
+                        finalResult.push(model.create(element));
+                    });
 
                 console.log(`${path} found successfully`);
             })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref } from "vue";
@@ -8,17 +9,17 @@ import { onMounted, ref } from "vue";
 const {
     header,
     editable = false,
-    template = false,
+    template = undefined,
     defaultView = CalendarMode.Week,
 } = defineProps<{
     header?: boolean;
     editable?: boolean;
-    template?: boolean;
+    template?: ScheduleTemplate;
     defaultView?: CalendarMode;
 }>();
 
 const data = template
-    ? CalendarData.createTemplate(defaultView)
+    ? CalendarData.createTemplate(defaultView, template)
     : CalendarData.create(defaultView, today(CalendarData.timeZone));
 const cellSize = ref(Vector2.zero);
 
@@ -129,14 +130,14 @@ function hasEmployeesToDisplay(): boolean {
             v-if="header"
             :data="data"
             :cell-size="cellSize"
-            :template="template"
+            :template="template !== undefined"
         />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
-                    :template="template"
+                    :template="template !== undefined"
                 />
                 <CalendarTimeDisplay :data="data" :cell-size="cellSize" />
                 <CalendarEmployeeDisplay
