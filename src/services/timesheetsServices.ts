@@ -4,15 +4,13 @@ import { DatabaseServices } from "@classes/util/databaseServices";
 const API_ROOT: string = "timesheets";
 
 export class TimeSheetsServices {
-    // static async create(timesheet: Timesheet) {
-    //     await DatabaseServices.create(Timesheet, API_ROOT, timesheet);
-    // }
-
+    //late night ai pass is why this one is weird.
+    //if you wanna refactor go ahead
     static async create(timesheet: Timesheet): Promise<Timesheet> {
         const responseData = await DatabaseServices.create(
             Timesheet,
             API_ROOT,
-            timesheet.toJSON(), // use toJSON()
+            timesheet.toJSON(),
         );
         return Timesheet.createFromData(responseData);
     }
