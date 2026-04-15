@@ -54,6 +54,7 @@ export class Shift extends DatabaseModel {
         this._employee = value;
 
         if (value) this._employeeID = value.id;
+        else this._employeeID = 0;
     }
 
     /* date formatting incase we need it */
@@ -183,7 +184,6 @@ export class Shift extends DatabaseModel {
             startTime: this.startTime,
             endTime: this.endTime,
             color: this.color,
-            employee: this._employee,
             published: this.published,
         };
     }

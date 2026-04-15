@@ -27,6 +27,7 @@ import { EmployeeServices } from "../../../services/employeeServices.ts";
 import { Store } from "@classes/util/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
+import { TempStore } from "@classes/util/tempStore.ts";
 
 //#region
 const model = defineModel<ShiftEventData>({
@@ -67,7 +68,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
-        employee: v.optional(v.instance(Employee, "Invalid employee")),
+        employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
         v.check(
@@ -260,14 +261,15 @@ function selectDate(date: DateValue | any): void {
 }
 
 async function submitModalForm(_: FormSubmitEvent<Schema>) {
+    TempStore.isLoading = true;
     isSubmitting.value = true;
-
-    console.log("submitting!");
 
     const event = model.value;
     const date = state.eventDate;
     const startTime = new Time(state.startTime.hour, state.startTime.minute);
     const endTime = new Time(state.endTime.hour, state.endTime.minute);
+
+    console.log(`employee: ${state.employee}`);
 
     event.name = state.name;
 
@@ -305,6 +307,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     emit("formSubmitted");
 
+    TempStore.isLoading = false;
     toggleModal();
 }
 
@@ -433,6 +436,7 @@ function publishShift(): void {
                         <USelectMenu
                             v-model="state.color"
                             :items="colors"
+                            :default-value="undefined"
                             label-key="label"
                         >
                             <template #leading="{ modelValue, ui }">
@@ -455,15 +459,7 @@ function publishShift(): void {
                             v-model="state.employee"
                             :items="employees"
                             label-key="fullName"
-                        ></USelectMenu>
-                        <UButton
-                            v-if="state.employee"
-                            class="ml-1 relative top-0.5"
-                            size="xs"
-                            variant="subtle"
-                            color="neutral"
-                            icon="i-lucide-x"
-                            @click="state.employee = undefined"
+                            clear
                         />
                     </UFormField>
                     <UFormField name="taskList">

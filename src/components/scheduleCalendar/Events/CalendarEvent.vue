@@ -72,8 +72,6 @@ let resizePointerStart: number;
 onMounted(() => {
     const elementValue = element.value.$el;
 
-    console.log("mounted");
-
     getClassImpl.value = ShiftEvent.getClass;
     getStyleImpl.value = ShiftEvent.getStyle;
     getLabelImpl.value = ShiftEvent.getLabel;

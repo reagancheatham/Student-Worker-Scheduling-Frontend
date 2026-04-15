@@ -13,6 +13,9 @@ import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
 import { Store } from "@classes/util/store.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
+import { ScheduleShiftTemplateServices } from "../../services/scheduleShiftTemplateServices.ts";
+import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
+import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -36,17 +39,17 @@ export class CalendarData {
     public readonly refRelevantEvents = ref<EventData[]>([]);
     public readonly refIsTemplate = ref<boolean>(false);
     public readonly refSelectedTemplate = ref<ScheduleTemplate>();
+    public readonly refTemplateEvents = ref<ShiftTemplateEventData[]>([]);
 
     constructor(
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
-        isTemplate: boolean = false,
         selectedTemplate?: ScheduleTemplate,
     ) {
+        this.refIsTemplate.value = selectedTemplate !== undefined;
+        this.refSelectedTemplate.value = selectedTemplate;
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
-        this.refIsTemplate.value = isTemplate;
-        this.refSelectedTemplate.value = selectedTemplate;
     }
 
     public static create(
@@ -56,12 +59,14 @@ export class CalendarData {
         return new CalendarData(selectedView, selectedDay);
     }
 
-    public static createTemplate(selectedView: CalendarMode, selectedTemplate: ScheduleTemplate): CalendarData {
+    public static createTemplate(
+        selectedView: CalendarMode,
+        selectedTemplate: ScheduleTemplate,
+    ): CalendarData {
         return new CalendarData(
             selectedView,
             today(CalendarData.timeZone),
-            true,
-            selectedTemplate
+            selectedTemplate,
         );
     }
 
@@ -102,7 +107,41 @@ export class CalendarData {
         return this.refSelectedTemplate.value;
     }
 
-    public async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
+    public get isTemplate(): boolean {
+        return this.refIsTemplate.value;
+    }
+
+    public async updateRelevantData() {
+        console.log(`updating: ${this.isTemplate}`);
+
+        this.refRelevantEvents.value = await this.updateRelevantEvents();
+        this.refRelevantEmployees.value = await this.updateRelevantEmployees();
+    }
+
+    private async updateRelevantEvents(): Promise<EventData[]> {
+        let relevantEvents: EventData[];
+
+        if (this.isTemplate) relevantEvents = await this.getEventsForTemplate();
+        else if (this.selectedView === CalendarMode.Day) {
+            const beginningOfDay = this.selectedDay.toDate(
+                CalendarData.timeZone,
+            );
+            const endOfDay = this.selectedDay.toDate(CalendarData.timeZone);
+            beginningOfDay.setHours(0, 0, 0, 0);
+            endOfDay.setHours(24, 59, 59, 99);
+
+            relevantEvents = await this.getEventsForDate(this.selectedDay);
+        } else {
+            relevantEvents = await this.getEventsInDateRange(
+                this.selectedWeek.start,
+                this.selectedWeek.end,
+            );
+        }
+
+        return relevantEvents;
+    }
+
+    private async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
         const beginningOfDay = date.toDate(CalendarData.timeZone);
         const endOfDay = date.toDate(CalendarData.timeZone);
         beginningOfDay.setHours(0, 0, 0, 0);
@@ -127,7 +166,7 @@ export class CalendarData {
         return events;
     }
 
-    public async getEventsInDateRange(
+    private async getEventsInDateRange(
         start: CalendarDate,
         end: CalendarDate,
     ): Promise<EventData[]> {
@@ -155,35 +194,28 @@ export class CalendarData {
         return events;
     }
 
-    public async updateRelevantData() {
-        this.refRelevantEvents.value = await this.updateRelevantEvents();
-        this.refRelevantEmployees.value = await this.updateRelevantEmployees();
-    }
+    private async getEventsForTemplate(): Promise<EventData[]> {
+        if (!this.selectedTemplate || this.selectedTemplate.id === 0) return [];
 
-    private async updateRelevantEvents(): Promise<EventData[]> {
-        let relevantEvents: EventData[];
-
-        if (this.selectedView === CalendarMode.Day) {
-            const beginningOfDay = this.selectedDay.toDate(
-                CalendarData.timeZone,
+        let events: EventData[] = [];
+        const shiftTemplates =
+            await ScheduleShiftTemplateServices.getAllForScheduleTemplate(
+                this.selectedTemplate.id,
             );
-            const endOfDay = this.selectedDay.toDate(CalendarData.timeZone);
-            beginningOfDay.setHours(0, 0, 0, 0);
-            endOfDay.setHours(24, 59, 59, 99);
 
-            relevantEvents = await this.getEventsForDate(this.selectedDay);
-        } else {
-            relevantEvents = await this.getEventsInDateRange(
-                this.selectedWeek.start,
-                this.selectedWeek.end,
-            );
-        }
+        events = shiftTemplates.map(
+            (template) => new ShiftTemplateEventData(template),
+        );
 
-        return relevantEvents;
+        events.push(...this.refTemplateEvents.value);
+
+        return events;
     }
 
     private async updateRelevantEmployees(): Promise<Employee[]> {
         let relevantEmployees: Employee[] = [];
+
+        if (this.isTemplate) return relevantEmployees;
 
         for (const event of this.refRelevantEvents.value) {
             if (!(event instanceof ShiftEventData)) continue;

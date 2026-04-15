@@ -4,7 +4,7 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, shallowRef } from "vue";
 
 const {
     header,
@@ -18,9 +18,7 @@ const {
     defaultView?: CalendarMode;
 }>();
 
-const data = template
-    ? CalendarData.createTemplate(defaultView, template)
-    : CalendarData.create(defaultView, today(CalendarData.timeZone));
+const data = shallowRef(getInitialCalendarData());
 const cellSize = ref(Vector2.zero);
 
 const gridClasses = new Map<CalendarMode, string>([
@@ -30,15 +28,23 @@ const gridClasses = new Map<CalendarMode, string>([
 ]);
 
 onMounted(() => {
-    data.updateRelevantData();
+    console.log("mounted");
+
+    data.value.updateRelevantData();
 });
+
+function getInitialCalendarData(): CalendarData {
+    return template
+        ? CalendarData.createTemplate(defaultView, template)
+        : CalendarData.create(defaultView, today(CalendarData.timeZone));
+}
 
 function updateCellSize(size: Vector2): void {
     cellSize.value = size;
 }
 
 function getContainerStyle() {
-    if (data.selectedView === CalendarMode.Day) return {};
+    if (data.value.selectedView === CalendarMode.Day) return {};
     else
         return {
             marginLeft: `${-0.5 * cellSize.value.x}px`,
@@ -46,7 +52,7 @@ function getContainerStyle() {
 }
 
 function getBodyStyle() {
-    if (data.selectedView === CalendarMode.Day)
+    if (data.value.selectedView === CalendarMode.Day)
         return {
             marginTop: `${-0.45 * cellSize.value.y}px`,
         };
@@ -57,7 +63,7 @@ function getBodyStyle() {
 }
 
 function hasEmployeesToDisplay(): boolean {
-    return editable || (!editable && data.relevantEmployees.length > 0);
+    return editable || (!editable && data.value.relevantEmployees.length > 0);
 }
 </script>
 
@@ -83,7 +89,6 @@ function hasEmployeesToDisplay(): boolean {
     width: 100%;
     flex: 1;
     min-height: 0;
-    max-height: 90%;
     display: flex;
     flex-direction: row;
     overflow-y: auto;
@@ -122,7 +127,7 @@ function hasEmployeesToDisplay(): boolean {
 
 <template>
     <div
-        v-if="hasEmployeesToDisplay()"
+        v-if="data && hasEmployeesToDisplay()"
         class="calendarContainer"
         :style="getContainerStyle()"
     >
@@ -132,7 +137,7 @@ function hasEmployeesToDisplay(): boolean {
             :cell-size="cellSize"
             :template="template !== undefined"
         />
-        <div class="calendarBody" :style="getBodyStyle()">
+        <div class="calendarBody max-h-11/12" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"

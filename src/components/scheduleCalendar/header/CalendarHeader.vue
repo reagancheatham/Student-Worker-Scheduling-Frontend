@@ -144,16 +144,13 @@ function updateRelevantEvents() {
         </UDropdownMenu>
         <div class="headerSegment leftSegment">
             <CalendarDateShifter v-if="!template" :data="data" />
-            <p
-                v-if="template"
-                class="mb-0.5 ml-4 text-lg font-medium text-neutral-500"
+            <UInput
+                v-if="data.selectedTemplate"
+                v-model="data.selectedTemplate.name"
+                size="xl"
+                variant="outline"
             >
-                {{
-                    data.selectedTemplate
-                        ? data.selectedTemplate.name
-                        : "Template Builder"
-                }}
-            </p>
+            </UInput>
         </div>
         <div class="headerSegment rightSegment">
             <UButton
