@@ -4,18 +4,16 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { EventData } from "@classes/calendar/eventData.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData";
+import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 import { Business } from "@classes/database/business.ts";
+import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.ts";
 import { Shift } from "@classes/database/shift.ts";
 import { Store } from "@classes/util/store.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref } from "vue";
 
-const {
-    data,
-    cellSize,
-    template = false,
-} = defineProps<{
+const { data, cellSize } = defineProps<{
     data: CalendarData;
     cellSize: Vector2;
     template?: boolean;
@@ -35,7 +33,19 @@ const createItems = [
             label: "Shift",
             icon: "i-heroicons-calendar-days-20-solid",
             onSelect() {
-                createEvent();
+                createShift();
+            },
+        },
+    ],
+];
+
+const createTemplateItems = [
+    [
+        {
+            label: "Shift",
+            icon: "i-heroicons-calendar-days-20-solid",
+            onSelect() {
+                createTemplateShift();
             },
         },
     ],
@@ -71,8 +81,16 @@ function goToToday() {
     data.selectedDay = today(CalendarData.timeZone);
 }
 
-function createEvent() {
+function createShift() {
     editedEvent.value = new ShiftEventData(createDefaultShift());
+
+    isModalOpen.value = true;
+}
+
+function createTemplateShift() {
+    editedEvent.value = new ShiftTemplateEventData(
+        createDefaultShiftTemplate(),
+    );
 
     isModalOpen.value = true;
 }
@@ -92,6 +110,24 @@ function createDefaultShift(): Shift {
         endTime,
         EventColor.blue,
         false,
+    );
+}
+
+function createDefaultShiftTemplate(): ScheduleShiftTemplate {
+    const selectedTemplate = data.selectedTemplate;
+    const startTime = new Date();
+    const endTime = new Date();
+
+    startTime.setHours(9, 0);
+    endTime.setHours(12, 0);
+
+    return new ScheduleShiftTemplate(
+        0,
+        selectedTemplate ? selectedTemplate.id : 0,
+        "New Shift",
+        startTime,
+        endTime,
+        EventColor.blue,
     );
 }
 
@@ -135,7 +171,7 @@ function updateRelevantEvents() {
 
 <template>
     <div class="headerContainer" :style="getStyle()">
-        <UDropdownMenu :items="createItems">
+        <UDropdownMenu :items="data.isTemplate ? createTemplateItems : createItems">
             <UButton
                 icon="i-heroicons-plus-20-solid"
                 class="px-5 py-5 shadow-md -mb-4"
@@ -143,7 +179,7 @@ function updateRelevantEvents() {
             />
         </UDropdownMenu>
         <div class="headerSegment leftSegment">
-            <CalendarDateShifter v-if="!template" :data="data" />
+            <CalendarDateShifter v-if="!data.isTemplate" :data="data" />
             <UInput
                 v-if="data.selectedTemplate"
                 v-model="data.selectedTemplate.name"

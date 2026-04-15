@@ -2,9 +2,8 @@
 import { CalendarData } from "@classes/calendar/calendarData";
 import { DateFormatter } from "@internationalized/date";
 
-const { data, template = false } = defineProps<{
+const { data } = defineProps<{
     data: CalendarData;
-    template?: boolean;
 }>();
 
 const weekFormatter = new DateFormatter(CalendarData.localeString, {
@@ -54,7 +53,9 @@ function getDayNumber(index: number): string {
     <div class="weekDayContainer">
         <div class="weekDayDisplay" v-for="n in 7">
             <div class="text-primary">{{ getDayName(n) }}</div>
-            <div v-if="!template" class="text-dimmed">{{ getDayNumber(n) }}</div>
+            <div v-if="!data.isTemplate" class="text-dimmed">
+                {{ getDayNumber(n) }}
+            </div>
         </div>
     </div>
 </template>
