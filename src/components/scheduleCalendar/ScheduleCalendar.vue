@@ -78,7 +78,8 @@ function hasEmployeesToDisplay(): boolean {
     --week-cell-min-height: calc(30px / 60);
     --week-cell-max-height: calc(35px / 60);
 
-    flex: 1;
+    display: flex;
+    flex-direction: column;
     min-height: 10px;
     min-width: 100px;
     height: 100%;
@@ -87,9 +88,10 @@ function hasEmployeesToDisplay(): boolean {
 
 .calendarBody {
     width: 100%;
+    display: flex;
     flex: 1;
     min-height: 0;
-    display: flex;
+    max-height: 100%;
     flex-direction: row;
     overflow-y: auto;
 }
@@ -131,12 +133,8 @@ function hasEmployeesToDisplay(): boolean {
         class="calendarContainer"
         :style="getContainerStyle()"
     >
-        <CalendarHeader
-            v-if="header"
-            :data="data"
-            :cell-size="cellSize"
-        />
-        <div class="calendarBody max-h-11/12" :style="getBodyStyle()">
+        <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
+        <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"

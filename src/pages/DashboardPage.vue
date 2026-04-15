@@ -13,13 +13,13 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
                 :ui="{
                     root: 'flex flex-col h-full',
                     header: 'mb-0 flex-none',
-                    body: 'flex-1 min-h-0'
+                    body: 'flex min-h-0 p-0'
                 }"
             >
                 <template #header>
                     <div class="text-base font-semibold">Today's Schedule</div>
                 </template>
-                <div class="w-full h-full min-h-0">
+                <div class="w-full h-full flex min-h-0">
                     <ScheduleCalendar :default-view="CalendarMode.Day" />
                 </div>
             </UCard>

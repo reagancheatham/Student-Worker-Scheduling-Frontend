@@ -171,7 +171,9 @@ function updateRelevantEvents() {
 
 <template>
     <div class="headerContainer" :style="getStyle()">
-        <UDropdownMenu :items="data.isTemplate ? createTemplateItems : createItems">
+        <UDropdownMenu
+            :items="data.isTemplate ? createTemplateItems : createItems"
+        >
             <UButton
                 icon="i-heroicons-plus-20-solid"
                 class="px-5 py-5 shadow-md -mb-4"
