@@ -29,7 +29,7 @@ upcoming.setHours(23, 59, 59, 99);
 
 onMounted(async () => {
     business.value = await Store.getBusiness();
-    loadData();
+    await loadData();
 });
 
 async function loadData() {

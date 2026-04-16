@@ -1,6 +1,8 @@
 import { DatabaseServices } from "@classes/util/databaseServices";
 import { ShiftOfferRequest } from "@classes/database/shiftOfferRequests";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequests";
+import { apiClient } from "./services";
+import { DatabaseModelStatic } from "@classes/database/databaseModel";
 
 const TRADE_API_ROOT: string = "shiftTradeRequests";
 const OFFER_API_ROOT: string = "shiftOfferRequests";
@@ -45,6 +47,57 @@ export class TradeServices {
         return await DatabaseServices.get<ShiftTradeRequest>(
             ShiftTradeRequest,
             `${TRADE_API_ROOT}/${id}`,
+        );
+    }
+
+    //since the getAll was throwing an error, i had AI build this to avoid modifying high traffic code...
+    //We can come back and modify the original function but this is the fix for now
+    //databaseServices getAll assumed that results.data is an array and threw a type error, i dont fully understand the issue
+    private static async fetchArray<T>(
+        model: DatabaseModelStatic<T>,
+        path: string,
+    ): Promise<T[]> {
+        const response = await apiClient.get(path);
+
+        let data = response.data;
+
+        // The backend wraps arrays in { results: [...] }
+        if (data && typeof data === "object" && Array.isArray(data.results)) {
+            data = data.results;
+        } else if (!Array.isArray(data)) {
+            // Fallback: if it's a single object, wrap it
+            data = [data];
+        }
+
+        const result = data.map((item: object) => model.create(item));
+        return result;
+    }
+
+    static async getAllAvailableTradeRequests(businessID: number) {
+        return await this.fetchArray<ShiftTradeRequest>(
+            ShiftTradeRequest,
+            `${TRADE_API_ROOT}/available/${businessID}`,
+        );
+    }
+
+    static async getAllPendingTradeRequests(businessID: number) {
+        return await this.fetchArray<ShiftTradeRequest>(
+            ShiftTradeRequest,
+            `${TRADE_API_ROOT}/pending/${businessID}`,
+        );
+    }
+
+    static async getAllAvailableOfferedShifts(businessID: number) {
+        return this.fetchArray<ShiftOfferRequest>(
+            ShiftOfferRequest,
+            `${OFFER_API_ROOT}/available/${businessID}`,
+        );
+    }
+
+    static async getAllPendingOfferedShifts(businessID: number) {
+        return this.fetchArray<ShiftOfferRequest>(
+            ShiftOfferRequest,
+            `${OFFER_API_ROOT}/pending/${businessID}`,
         );
     }
 }
