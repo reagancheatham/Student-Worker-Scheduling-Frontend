@@ -7,6 +7,10 @@ export class ShiftOfferRequest extends DatabaseModel {
         public claimingEmployeeID: number,
         public employeeMessage: string,
         public timeSent: Date,
+        public startTime: Date,
+        public endTime: Date,
+        public firstName: string,
+        public lastName: string,
     ) {
         super();
     }
@@ -18,6 +22,10 @@ export class ShiftOfferRequest extends DatabaseModel {
             data["claimingEmployeeID"] ?? 0,
             data["employeeMessage"] ?? "",
             data["timeSent"] ?? undefined,
+            data["startTime"] ?? undefined,
+            data["endTime"] ?? undefined,
+            data["firstname"] ?? undefined,
+            data["lastname"] ?? ""
         );
     }
 }

@@ -12,6 +12,9 @@ const offerRequests = ref<ShiftOfferRequest[]>([]);
 const pendingTradeRequests = ref<ShiftTradeRequest[]>([]);
 const pendingOfferRequests = ref<ShiftOfferRequest[]>([]);
 
+console.log("trades", tradeRequests);
+console.log("offers", offerRequests);
+
 onMounted(async () => {
     business.value = await Store.getBusiness();
     await loadData();
@@ -31,7 +34,7 @@ const tabs = [
 async function loadData() {
     try {
         tradeRequests.value = await TradeServices.getAllAvailableTradeRequests(business.value.id);
-        offerRequests. value = await TradeServices.getAllAvailableOfferedShifts(business.value.id);
+        offerRequests.value = await TradeServices.getAllAvailableOfferedShifts(business.value.id);
         pendingTradeRequests.value = await TradeServices.getAllPendingTradeRequests(business.value.id);
         pendingOfferRequests.value = await TradeServices.getAllPendingOfferedShifts(business.value.id);
     } catch (err) {
