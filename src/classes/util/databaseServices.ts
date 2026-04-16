@@ -7,22 +7,17 @@ export class DatabaseServices {
         path: string,
         object: any,
     ): Promise<T> {
-        let finalResult: T | null = null;
+        try {
+            const result = await apiClient.post(path, object);
 
-        await apiClient
-            .post(path, object)
-            .then((result) => {
-                finalResult = model.create(result.data);
-                console.log(`${path} created successfully`);
-            })
-            .catch((error) => {
-                console.error(`Error creating ${path}: ${error.message}`);
-                return null;
-            });
+            const modelValue = model.create(result.data);
+            console.log(`${path} created successfully`);
 
-        if (finalResult === null)
-            throw Error(`Error creating ${path}: invalid result!`);
-        else return finalResult;
+            return modelValue;
+        } catch (error: any) {
+            console.error(`Error creating ${path}: ${error.message}`);
+            throw error;
+        }
     }
 
     public static async update<T>(
@@ -30,85 +25,64 @@ export class DatabaseServices {
         path: string,
         object: any,
     ): Promise<T> {
-        let finalResult: T | null = null;
-        let error = "";
+        try {
+            const result = await apiClient.put(path, object);
 
-        await apiClient
-            .put(path, object)
-            .then((result) => {
-                finalResult = model.create(result.data);
-                console.log(`${path} updated successfully`);
-            })
-            .catch((error) => {
-                error =
-                    error?.response?.data?.message ??
-                    error?.response?.data ??
-                    error?.message ??
-                    "Unknown error";
-                console.error(`Error updating ${path}: ${error}`);
-            });
+            const modelValue = model.create(result.data);
+            console.log(`${path} updated successfully`);
 
-        if (finalResult === null)
-            throw Error(`Error editing ${path}: ${error}`);
-        else return finalResult;
+            return modelValue;
+        } catch (error: any) {
+            console.error(`Error updating ${path}: ${error.message}`);
+            throw error;
+        }
     }
 
     public static async delete(path: string) {
-        await apiClient
-            .delete(path)
-            .then(() => {
-                console.log(`${path} deleted successfully`);
-            })
-            .catch((error) => {
-                console.error(`Error deleting ${path}: ${error.message}`);
-            });
+        try {
+            await apiClient.delete(path);
+
+            console.log(`${path} deleted successfully`);
+        } catch (error: any) {
+            console.error(`Error deleting ${path}: ${error.message}`);
+            throw error;
+        }
     }
 
     public static async get<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T> {
-        let finalResult: T | null = null;
+        try {
+            const result = await apiClient.get(path);
 
-        await apiClient
-            .get(path)
-            .then((result) => {
-                finalResult = model.create(result.data);
-                console.log(`${path} found successfully`);
-            })
-            .catch((error) => {
-                console.error(`Error finding ${path}: ${error.message}`);
-                throw error;
-            });
+            const modelValue = model.create(result.data);
+            console.log(`${path} found successfully`);
 
-        if (finalResult === null)
-            throw Error(`Error finding ${path}: invalid result!`);
-        else return finalResult;
+            return modelValue;
+        } catch (error: any) {
+            console.error(`Error finding ${path}: ${error.message}`);
+            throw error;
+        }
     }
 
     public static async getAll<T>(
         model: DatabaseModelStatic<T>,
         path: string,
     ): Promise<T[]> {
-        let finalResult: T[] = [];
+        try {
+            const result = await apiClient.get(path);
+            const data = result.data as object[];
+            const values: T[] = [];
 
-        await apiClient
-            .get(path)
-            .then((results) => {
-                const data = results.data as object[];
+            if (data && Array.isArray(data))
+                data.forEach((element) => values.push(model.create(element)));
 
-                if (data && Array.isArray(data))
-                    data.forEach((element) => {
-                        finalResult.push(model.create(element));
-                    });
-
-                console.log(`${path} found successfully`);
-            })
-            .catch((error) => {
-                console.error(`Error finding ${path}: ${error.message}`);
-                throw error;
-            });
-
-        return finalResult;
+            console.log(`${path} found successfully`);
+            return values;
+        } catch (error: any) {
+            console.error(`Error finding ${path}: ${error.message}`);
+            throw error;
+        }
     }
 }
