@@ -28,8 +28,6 @@ const gridClasses = new Map<CalendarMode, string>([
 ]);
 
 onMounted(() => {
-    console.log("mounted");
-
     data.value.updateRelevantData();
 });
 

@@ -269,8 +269,6 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     const startTime = new Time(state.startTime.hour, state.startTime.minute);
     const endTime = new Time(state.endTime.hour, state.endTime.minute);
 
-    console.log(`employee: ${state.employee}`);
-
     event.name = state.name;
 
     event.startTime = new EventTime(

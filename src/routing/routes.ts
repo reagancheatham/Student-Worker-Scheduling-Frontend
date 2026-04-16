@@ -87,7 +87,12 @@ export const routes = {
         undefined,
         "/login",
     ).noAuth(),
-    Login: Route.create("/login/:code?", LoginPage, "Login").noAuth(),
+    Login: Route.create("/login", LoginPage, "Login").noAuth(),
+    InviteLogin: Route.create(
+        "/login/:code?",
+        LoginPage,
+        "Invite Login",
+    ).noAuth(),
     NoBusiness: Route.create("/noBusiness", NoBusinessPage, "No Business"),
     NavbarLayout: navbarLayout,
     MobileLayout: Route.create(

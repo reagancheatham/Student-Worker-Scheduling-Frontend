@@ -1,13 +1,12 @@
-<!-- <script setup lang="ts">
+<script setup lang="ts">
 import * as v from "valibot";
 import {
     useSortable,
     UseSortableReturn,
 } from "@vueuse/integrations/useSortable";
 import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
-import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
-import { DateFormatter, DateValue, Time } from "@internationalized/date";
+import { DateValue, Time } from "@internationalized/date";
 import {
     onMounted,
     ref,
@@ -18,16 +17,14 @@ import {
 } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { TaskList } from "@classes/database/taskList.ts";
-import { TaskListServices } from "../../../services/taskListServices.ts";
-import { Task } from "@classes/database/task.ts";
-import { TaskServices } from "../../../services/taskServices.ts";
-import { EmployeeServices } from "../../../services/employeeServices.ts";
 import { Store } from "@classes/util/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
-import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 import { TempStore } from "@classes/util/tempStore.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
+import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
+import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
+import { ShiftTaskListTemplateServices } from "../../../services/shiftTaskListTemplateServices.ts";
+import { ShiftTaskTemplateServices } from "../../../services/shiftTaskTemplateServices.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({
@@ -46,7 +43,6 @@ const emit = defineEmits({
 });
 
 const tableElement = useTemplateRef("table");
-const formElement = useTemplateRef("form");
 
 const vTime = v.object({
     hour: v.number(),
@@ -111,18 +107,16 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
-const taskList = ref<TaskList>(new TaskList(0, 0, "Task List", []));
-const editedTask = ref<Task>(createDefaultTask());
+const taskList = ref<ShiftTaskListTemplate>(
+    new ShiftTaskListTemplate(0, 0, "Task List", []),
+);
+const editedTask = ref<ShiftTaskTemplate>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
 const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
-const employees = ref<Employee[]>([]);
 
-const formatter = new DateFormatter(CalendarData.localeString, {
-    dateStyle: "medium",
-});
 const taskColumns = [
     {
         accessorKey: "name",
@@ -133,18 +127,9 @@ const taskColumns = [
             },
         },
     },
-    {
-        accessorFn: (task: Task) => task.checkOffs.length,
-        header: "Check Offs",
-    },
-    {
-        id: "action",
-        header: "Action",
-    },
 ];
 
-let deletedTasks: Task[] = [];
-let removedCheckOffs: TaskCheckOff[] = [];
+let deletedTasks: ShiftTaskTemplate[] = [];
 let isDirtyHandle: WatchHandle;
 let sortableInstance: UseSortableReturn;
 
@@ -161,7 +146,6 @@ colors.value = EventColor.colors.map((color) => {
 
 onMounted(() => {
     deletedTasks = [];
-    removedCheckOffs = [];
 
     watch(() => isOpen, initializeState);
 
@@ -214,12 +198,11 @@ async function initializeState() {
     };
 
     if (model.value.template.isValid()) {
-        taskList.value = await TaskListServices.getOrCreateForShift(
-            model.value.template.id,
-        );
-    } else taskList.value = new TaskList(0, 0, "Task List", []);
-
-    employees.value = await EmployeeServices.getAllForBusiness(business.id);
+        taskList.value =
+            await ShiftTaskListTemplateServices.getOrCreateForShift(
+                model.value.template.id,
+            );
+    } else taskList.value = new ShiftTaskListTemplate(0, 0, "Task List", []);
 
     initializeTaskUIIDs();
 
@@ -243,16 +226,11 @@ function toggleModal(): void {
     if (!isOpen) return;
 
     deletedTasks = [];
-    removedCheckOffs = [];
     if (isDirtyHandle) isDirtyHandle();
     isSubmitting.value = false;
     isCancelModalOpen.value = false;
 
     emit("closeRequested");
-}
-
-function selectDate(date: DateValue | any): void {
-    state.eventDate = date;
 }
 
 async function submitModalForm(_: FormSubmitEvent<Schema>) {
@@ -284,16 +262,11 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     event.color = state.color.value;
 
-    const removeCheckPromises = removedCheckOffs.map(async (check) => {
-        if (check.id > 0) return await TaskServices.deleteCheckOff(check);
-    });
-
     const taskPromises = deletedTasks.map(async (task) => {
-        if (task.isValid()) return await TaskServices.delete(task);
+        if (task.isValid()) return await ShiftTaskTemplateServices.delete(task);
     });
 
-    const totalPromises = [...removeCheckPromises, ...taskPromises];
-    await Promise.all(totalPromises);
+    await Promise.all(taskPromises);
     let updatedShift = await event.updateBackend();
     await taskList.value.updateBackend(updatedShift);
 
@@ -329,17 +302,13 @@ function onTaskAddRequested(): void {
     isDirty.value = true;
 }
 
-function removeCheckOffs(checkOffs: TaskCheckOff[]): void {
-    removedCheckOffs = [...removedCheckOffs, ...checkOffs];
-}
-
-function editTask(task: Task): void {
+function editTask(task: ShiftTaskTemplate): void {
     editedTask.value = task;
     isCreatingTask.value = false;
     isTaskEditorOpen.value = true;
 }
 
-function deleteTask(task: Task): void {
+function deleteTask(task: ShiftTaskTemplate): void {
     deletedTasks.push(task);
     const tasks = taskList.value.tasks;
     tasks.splice(tasks.indexOf(task), 1);
@@ -349,12 +318,8 @@ function closeTaskModal(): void {
     isTaskEditorOpen.value = false;
 }
 
-function createDefaultTask(): Task {
-    return new Task(0, taskList.value.id, 0, "New Task", "", []);
-}
-
-function publishShift(): void {
-    model.value.shift.published = true;
+function createDefaultTask(): ShiftTaskTemplate {
+    return new ShiftTaskTemplate(0, taskList.value.id, 0, "New Task", "");
 }
 </script>
 
@@ -383,47 +348,13 @@ function publishShift(): void {
                     <UFormField label="Name" name="name">
                         <UInput v-model="state.name" />
                     </UFormField>
-                    <div class="flex gap-4">
-                        <UFormField label="Date" name="eventDate">
-                            <UPopover>
-                                <UButton
-                                    class="h-1/2"
-                                    color="neutral"
-                                    variant="subtle"
-                                    icon="i-lucide-calendar"
-                                    :label="
-                                        formatter.format(
-                                            state.eventDate.toDate(
-                                                CalendarData.timeZone,
-                                            ),
-                                        )
-                                    "
-                                >
-                                </UButton>
-
-                                <template #content>
-                                    <UCalendar
-                                        prevent-deselect
-                                        v-model="state.eventDate"
-                                        @update:model-value="selectDate"
-                                    />
-                                </template>
-                            </UPopover>
-                        </UFormField>
-                        <USeparator
-                            class="h-8 self-end"
-                            orientation="vertical"
-                            size="sm"
-                            decorative
-                        />
-                        <UFormField label="Time Range" name="endTime">
-                            <div class="flex items-center gap-2">
-                                <UInputTime v-model="state.startTime" />
-                                <span class="text-gray-400">—</span>
-                                <UInputTime v-model="state.endTime" />
-                            </div>
-                        </UFormField>
-                    </div>
+                    <UFormField label="Time Range" name="endTime">
+                        <div class="flex items-center gap-2">
+                            <UInputTime v-model="state.startTime" />
+                            <span class="text-gray-400">—</span>
+                            <UInputTime v-model="state.endTime" />
+                        </div>
+                    </UFormField>
                     <UFormField label="Color" name="color">
                         <USelectMenu
                             v-model="state.color"
@@ -444,15 +375,6 @@ function publishShift(): void {
                                 />
                             </template>
                         </USelectMenu>
-                    </UFormField>
-                    <UFormField label="Assigned Employee" name="employee">
-                        <USelectMenu
-                            class="min-w-36"
-                            v-model="state.employee"
-                            :items="employees"
-                            label-key="fullName"
-                            clear
-                        />
                     </UFormField>
                     <UFormField name="taskList">
                         <div
@@ -488,7 +410,8 @@ function publishShift(): void {
                                 sticky="header"
                                 empty="No Tasks Assigned"
                                 :get-row-id="
-                                    (task: Task) => (task as any)._uiID
+                                    (task: ShiftTaskTemplate) =>
+                                        (task as any)._uiID
                                 "
                             >
                                 <template #action-cell="{ row }">
@@ -521,44 +444,6 @@ function publishShift(): void {
                         </div>
                     </UFormField>
                     <div class="flex flex-row gap-2">
-                        <UModal
-                            v-if="!creator && !alreadyPublished"
-                            class="pointer-events-auto"
-                            title="Publish Shift?"
-                            description="This will notify relevant employees."
-                            :dismissible="false"
-                            :ui="{ content: `sm:max-w-xs` }"
-                        >
-                            <UTooltip
-                                :text="
-                                    state.employee
-                                        ? 'Publish Shift to Employees'
-                                        : 'Employee Must Be Assigned to Publish'
-                                "
-                                ignore-non-keyboard-focus
-                            >
-                                <UButton
-                                    label="Publish"
-                                    :disabled="!state.employee"
-                                    @click="publishShift"
-                                />
-                            </UTooltip>
-                            <template #footer="{ close }">
-                                <UButton
-                                    label="Publish"
-                                    class="ml-auto"
-                                    type="submit"
-                                    @click="formElement?.submit()"
-                                />
-                                <UButton
-                                    label="Cancel"
-                                    color="neutral"
-                                    variant="outline"
-                                    class="mr-auto"
-                                    @click="close()"
-                                />
-                            </template>
-                        </UModal>
                         <UTooltip
                             :text="`Submit ${creator ? 'Creation' : 'Edit'}`"
                         >
@@ -635,15 +520,14 @@ function publishShift(): void {
                     </div>
                 </UForm>
             </div>
-            <TaskEditor
+            <TemplateTaskEditor
                 ref="table"
                 v-model="editedTask"
                 :is-open="isTaskEditorOpen"
                 :creator="isCreatingTask"
                 @close-requested="closeTaskModal()"
                 @add-requested="onTaskAddRequested()"
-                @remove-checks="removeCheckOffs"
             />
         </template>
     </UModal>
-</template> -->
+</template>

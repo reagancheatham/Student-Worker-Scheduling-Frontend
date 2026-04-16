@@ -112,8 +112,6 @@ export class CalendarData {
     }
 
     public async updateRelevantData() {
-        console.log(`updating: ${this.isTemplate}`);
-
         this.refRelevantEvents.value = await this.updateRelevantEvents();
         this.refRelevantEmployees.value = await this.updateRelevantEmployees();
     }
