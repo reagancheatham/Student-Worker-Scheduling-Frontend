@@ -1,5 +1,7 @@
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
+import { stringToWeekDay, WeekDay } from "@classes/util/weekDay.ts";
+import { ShiftTaskListTemplate } from "./shiftTaskListTemplate.ts";
 
 export class ScheduleShiftTemplate extends DatabaseModel {
     constructor(
@@ -9,11 +11,14 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         public startTime: Date,
         public endTime: Date,
         public color: EventColor,
+        public weekDay: WeekDay,
+        public taskList: ShiftTaskListTemplate,
     ) {
         super();
     }
 
     public static createFromData(data: any): ScheduleShiftTemplate {
+        const id = data["id"] ?? 0;
         const startTime = data["startTime"]
             ? new Date(data["startTime"])
             : new Date();
@@ -23,14 +28,22 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         const color = data["color"]
             ? EventColor.fromString(data["color"])
             : EventColor.blue;
+        const taskListData = data["ShiftTaskListTemplate"];
+        const weekDay = data["weekDay"]
+            ? stringToWeekDay(data["weekDay"])
+            : WeekDay.Sunday;
 
         return new ScheduleShiftTemplate(
-            data["id"] ?? 0,
+            id,
             data["scheduleTemplateID"] ?? 0,
             data["name"] ?? "",
             startTime,
             endTime,
             color,
+            weekDay,
+            taskListData
+                ? ShiftTaskListTemplate.createFromData(taskListData)
+                : new ShiftTaskListTemplate(0, id, "Task List", []),
         );
     }
 

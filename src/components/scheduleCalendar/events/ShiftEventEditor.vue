@@ -41,8 +41,8 @@ const { isOpen, creator = false } = defineProps<{
 
 const emit = defineEmits({
     closeRequested: () => true,
-    formSubmitted: () => true,
     eventDeleted: () => true,
+    formSubmitted: () => true,
 });
 
 const tableElement = useTemplateRef("table");
@@ -300,12 +300,12 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     const totalPromises = [...removeCheckPromises, ...taskPromises];
     await Promise.all(totalPromises);
-    let updatedShift = await event.updateBackend();
+    const updatedShift = await event.updateBackend();
     await taskList.value.updateBackend(updatedShift);
 
-    emit("formSubmitted");
-
     TempStore.isLoading = false;
+
+    emit("formSubmitted");
     toggleModal();
 }
 
@@ -532,7 +532,6 @@ function publishShift(): void {
                             class="pointer-events-auto"
                             title="Publish Shift?"
                             description="This will notify relevant employees."
-                            :dismissible="false"
                             :ui="{ content: `sm:max-w-xs` }"
                         >
                             <UTooltip
@@ -620,7 +619,6 @@ function publishShift(): void {
                             <UModal
                                 title="Discard unsaved changes?"
                                 description="Discarded changes can not be undone."
-                                :dismissable="false"
                                 :ui="{ content: 'sm:max-w-xs' }"
                                 :open="isCancelModalOpen"
                             >

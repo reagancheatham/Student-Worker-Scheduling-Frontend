@@ -1,10 +1,15 @@
 import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
 import { BusinessServices } from "../../services/businessServices.ts";
+import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
+
+const USER_KEY = "user";
+const BUSINESS_KEY = "business";
+const LAST_EDITED_TEMPLATE_KEY = "lastEditedTemplate";
 
 export class Store {
     public static getUser(): User | undefined {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = localStorage.getItem(USER_KEY);
 
         if (storedUser && storedUser != "undefined") {
             try {
@@ -30,24 +35,21 @@ export class Store {
     }
 
     public static setUser(user: User): void {
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
     }
 
     public static clearUser(): void {
-        localStorage.removeItem("user");
+        localStorage.removeItem(USER_KEY);
     }
 
     public static async getBusiness(): Promise<Business | undefined> {
-        const storedBusiness = localStorage.getItem("business");
+        const storedBusiness = localStorage.getItem(BUSINESS_KEY);
 
         if (storedBusiness && storedBusiness != "undefined") {
             try {
-                const business = JSON.parse(storedBusiness);
-                return new Business(business.id, business.name);
-            } catch (error) {
-                console.error(
-                    `Error parsing business from localStorage: ${error}`,
-                );
+                return Business.createFromData(JSON.parse(storedBusiness));
+            } catch (error: any) {
+                console.error(`Error retrieving business: ${error}`);
                 return undefined;
             }
         } else {
@@ -64,8 +66,8 @@ export class Store {
 
                 Store.setBusiness(businesses[0]);
                 return businesses[0];
-            } catch (error) {
-                console.error(`Error retrieving business for user`);
+            } catch (error: any) {
+                console.error(`Error retrieving business for user: ${error}`);
 
                 return undefined;
             }
@@ -73,15 +75,55 @@ export class Store {
     }
 
     public static setBusiness(business: Business): void {
-        localStorage.setItem("business", JSON.stringify(business));
+        localStorage.setItem(BUSINESS_KEY, JSON.stringify(business));
     }
 
     public static clearBusiness(): void {
-        localStorage.removeItem("business");
+        localStorage.removeItem(BUSINESS_KEY);
+    }
+
+    public static async getLastEditedTemplate(): Promise<
+        ScheduleTemplate | undefined
+    > {
+        const business = await this.getBusiness();
+
+        if (!business) return undefined;
+
+        const storedTemplate = localStorage.getItem(LAST_EDITED_TEMPLATE_KEY);
+
+        if (storedTemplate && storedTemplate != "undefined") {
+            try {
+                const template = ScheduleTemplate.createFromData(
+                    JSON.parse(storedTemplate),
+                );
+
+                if (template.businessID !== business.id) return undefined;
+
+                return template;
+            } catch (error: any) {
+                console.error(
+                    `Error retrieving last edited template: ${error}`,
+                );
+
+                return undefined;
+            }
+        }
+    }
+
+    public static setLastEditedTemplate(template: ScheduleTemplate): void {
+        localStorage.setItem(
+            LAST_EDITED_TEMPLATE_KEY,
+            JSON.stringify(template),
+        );
+    }
+
+    public static clearLastEditedTemplate(): void {
+        localStorage.removeItem(LAST_EDITED_TEMPLATE_KEY);
     }
 
     public static clear(): void {
         Store.clearUser();
         Store.clearBusiness();
+        this.clearLastEditedTemplate();
     }
 }

@@ -13,7 +13,7 @@ export class ShiftEventData extends EventData {
         );
     }
 
-    public async updateBackend(): Promise<Shift> {
+    public override async updateBackend(): Promise<Shift> {
         this.shift.name = this.name;
         this.shift.startTime = this.startTime.toDate();
         this.shift.endTime = this.endTime.toDate();
@@ -23,9 +23,13 @@ export class ShiftEventData extends EventData {
         else return ShiftServices.create(this.shift);
     }
 
-    public async destroy() {
+    public override async destroy(): Promise<void> {
         if (!this.shift.isValid()) return;
 
         return ShiftServices.delete(this.shift);
+    }
+
+    public override isValid(): boolean {
+        return this.shift.isValid();
     }
 }

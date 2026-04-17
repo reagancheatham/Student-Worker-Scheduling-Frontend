@@ -2,9 +2,12 @@
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
+import { TempStore } from "@classes/util/tempStore.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref, shallowRef } from "vue";
+import { ScheduleTemplateServices } from "../../services/scheduleTemplateServices.ts";
+import { ShiftTaskTemplateServices } from "../../services/shiftTaskTemplateServices.ts";
 
 const {
     header,
@@ -17,6 +20,10 @@ const {
     template?: ScheduleTemplate;
     defaultView?: CalendarMode;
 }>();
+
+const emit = defineEmits({
+    closeRequested: () => true,
+});
 
 const data = shallowRef(getInitialCalendarData());
 const cellSize = ref(Vector2.zero);
@@ -62,6 +69,10 @@ function getBodyStyle() {
 
 function hasEmployeesToDisplay(): boolean {
     return editable || (!editable && data.value.relevantEmployees.length > 0);
+}
+
+function cancelEdit(): void {
+    emit("closeRequested");
 }
 </script>
 
@@ -127,7 +138,7 @@ function hasEmployeesToDisplay(): boolean {
 
 <template>
     <div
-        v-if="data && hasEmployeesToDisplay()"
+        v-if="data && (data.isTemplate || hasEmployeesToDisplay())"
         class="calendarContainer"
         :style="getContainerStyle()"
     >
@@ -158,8 +169,20 @@ function hasEmployeesToDisplay(): boolean {
     </div>
     <div
         v-else
-        class="text-neutral-400 text-lg text-center content-center bg-neutral-100 h-full rounded-md"
+        class="text-neutral-400 text-lg text-center content-center bg-neutral-100 w-full h-full rounded-md"
     >
         No shifts to display.
+    </div>
+    <div v-if="data && data.isTemplate">
+        <div class="flex mt-10 mr-16 items-end">
+            <UButton
+                class="ml-auto"
+                label="Return to Template Selection"
+                size="xl"
+                variant="outline"
+                color="neutral"
+                @click="cancelEdit()"
+            />
+        </div>
     </div>
 </template>

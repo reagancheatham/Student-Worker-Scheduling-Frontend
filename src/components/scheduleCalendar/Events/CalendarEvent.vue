@@ -17,6 +17,8 @@ import {
 } from "@classes/calendar/eventFunctions.ts";
 import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftTemplateEvent } from "@classes/calendar/shiftTemplateEvent.ts";
+import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 
 //#region Variables
 enum EventState {
@@ -64,6 +66,8 @@ let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
 let dragStartTime: EventTime;
 let dragEndTime: EventTime;
+let templateDragStartTime: number;
+let templateDragEndTime: number;
 let resizeTime: EventTime;
 let observer: ResizeObserver | null = null;
 let resizePointerStart: number;
@@ -72,10 +76,17 @@ let resizePointerStart: number;
 onMounted(() => {
     const elementValue = element.value.$el;
 
-    getClassImpl.value = ShiftEvent.getClass;
-    getStyleImpl.value = ShiftEvent.getStyle;
-    getLabelImpl.value = ShiftEvent.getLabel;
-    updateBackendImpl.value = ShiftEvent.updateBackendEvent;
+    if (props.calendarData.isTemplate) {
+        getClassImpl.value = ShiftTemplateEvent.getClass;
+        getStyleImpl.value = ShiftTemplateEvent.getStyle;
+        getLabelImpl.value = ShiftTemplateEvent.getLabel;
+        updateBackendImpl.value = undefined;
+    } else {
+        getClassImpl.value = ShiftEvent.getClass;
+        getStyleImpl.value = ShiftEvent.getStyle;
+        getLabelImpl.value = ShiftEvent.getLabel;
+        updateBackendImpl.value = ShiftEvent.updateBackendEvent;
+    }
 
     if (!elementValue) return;
 
@@ -137,6 +148,9 @@ function onPointerMove(evt: PointerEvent): void {
             state = EventState.Dragging;
             dragStartTime = model.value.startTime.clone();
             dragEndTime = model.value.endTime.clone();
+            templateDragStartTime = model.value.templateStartDay;
+            templateDragEndTime = model.value.templateEndDay;
+
             isPopoverOpen.value = false;
             model.value.zIndex = MAX_Z_INDEX;
 
@@ -164,19 +178,30 @@ function updateDrag(delta: Vector2): void {
         hour = dragStartTime.hour;
         minute = dragStartTime.minute + dY;
 
-        const weekStart = props.calendarData.selectedWeek.start;
-        const weekEnd = props.calendarData.selectedWeek.end;
+        if (!props.calendarData.isTemplate) {
+            const weekStart = props.calendarData.selectedWeek.start;
+            const weekEnd = props.calendarData.selectedWeek.end;
 
-        let weekDate = dragStartTime.calendarDate();
-        weekDate = weekDate.add({ days: dX });
+            let weekDate = dragStartTime.calendarDate();
+            weekDate = weekDate.add({ days: dX });
 
-        if (weekDate < weekStart) weekDate = weekStart;
-        else if (weekDate > weekEnd) weekDate = weekEnd;
+            if (weekDate < weekStart) weekDate = weekStart;
+            else if (weekDate > weekEnd) weekDate = weekEnd;
 
-        const day = weekDate.day;
+            const day = weekDate.day;
 
-        model.value.startTime.day = day;
-        model.value.endTime.day = day;
+            model.value.startTime.day = day;
+            model.value.endTime.day = day;
+        } else {
+            const newDayIndex = MathUtil.clamp(
+                templateDragStartTime + dX,
+                0,
+                7,
+            );
+
+            model.value.templateStartDay = newDayIndex;
+            model.value.templateEndDay = newDayIndex;
+        }
     }
 
     const hourDifference = dragEndTime.hour - dragStartTime.hour;
@@ -504,6 +529,7 @@ function onEventDeleted(): void {
         <CalendarEventEditor
             :model-value="model"
             :is-open="isModalOpen"
+            :data="calendarData"
             @close-requested="closeModal()"
             @event-deleted="onEventDeleted()"
         />

@@ -16,6 +16,9 @@ import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { ScheduleShiftTemplateServices } from "../../services/scheduleShiftTemplateServices.ts";
 import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
 import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.ts";
+import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
+import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
+import { TemplateCalendarData } from "./templateCalendarData.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -37,17 +40,18 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
-    public readonly refIsTemplate = ref<boolean>(false);
-    public readonly refSelectedTemplate = ref<ScheduleTemplate>();
-    public readonly refTemplateEvents = ref<ShiftTemplateEventData[]>([]);
+    public readonly refTemplateData = ref<TemplateCalendarData>();
 
     constructor(
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
         selectedTemplate?: ScheduleTemplate,
     ) {
-        this.refIsTemplate.value = selectedTemplate !== undefined;
-        this.refSelectedTemplate.value = selectedTemplate;
+        if (selectedTemplate)
+            this.refTemplateData.value = new TemplateCalendarData(
+                selectedTemplate,
+            );
+
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
     }
@@ -77,7 +81,7 @@ export class CalendarData {
     public set selectedView(mode: CalendarMode) {
         this.refSelectedView.value = mode;
 
-        this.updateRelevantData();
+        if (!this.isTemplate) this.updateRelevantData();
     }
 
     public get selectedDay(): CalendarDate {
@@ -92,7 +96,7 @@ export class CalendarData {
 
         this.refSelectedWeek.value = { start, end };
 
-        this.updateRelevantData();
+        if (!this.isTemplate) this.updateRelevantData();
     }
 
     public get selectedWeek(): CalendarRange {
@@ -104,11 +108,15 @@ export class CalendarData {
     }
 
     public get selectedTemplate(): ScheduleTemplate | undefined {
-        return this.refSelectedTemplate.value;
+        return this.refTemplateData.value?.selectedTemplate;
     }
 
     public get isTemplate(): boolean {
-        return this.refIsTemplate.value;
+        return this.refTemplateData.value !== undefined;
+    }
+
+    public get templateData(): TemplateCalendarData | undefined {
+        return this.refTemplateData.value;
     }
 
     public async updateRelevantData() {
@@ -119,7 +127,9 @@ export class CalendarData {
     private async updateRelevantEvents(): Promise<EventData[]> {
         let relevantEvents: EventData[];
 
-        if (this.isTemplate) relevantEvents = await this.getEventsForTemplate();
+        if (this.isTemplate)
+            relevantEvents =
+                await this.refTemplateData.value!.getEventsForTemplate();
         else if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
                 CalendarData.timeZone,
@@ -188,24 +198,6 @@ export class CalendarData {
         ).then((shifts) => {
             events = shifts.map((shift) => new ShiftEventData(shift));
         });
-
-        return events;
-    }
-
-    private async getEventsForTemplate(): Promise<EventData[]> {
-        if (!this.selectedTemplate || this.selectedTemplate.id === 0) return [];
-
-        let events: EventData[] = [];
-        const shiftTemplates =
-            await ScheduleShiftTemplateServices.getAllForScheduleTemplate(
-                this.selectedTemplate.id,
-            );
-
-        events = shiftTemplates.map(
-            (template) => new ShiftTemplateEventData(template),
-        );
-
-        events.push(...this.refTemplateEvents.value);
 
         return events;
     }

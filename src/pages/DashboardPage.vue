@@ -13,7 +13,7 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
                 :ui="{
                     root: 'flex flex-col h-full',
                     header: 'mb-0 flex-none',
-                    body: 'flex min-h-0 p-0'
+                    body: 'flex min-h-0 p-0 w-full h-full'
                 }"
             >
                 <template #header>

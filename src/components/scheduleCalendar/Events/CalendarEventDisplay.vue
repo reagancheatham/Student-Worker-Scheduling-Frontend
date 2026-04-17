@@ -171,13 +171,15 @@ function findLongestBisectChain(event: EventData): EventData[] {
 function getAllBisectingEvents(event: EventData): EventData[] {
     return calendarData.refRelevantEvents.value.filter((e) => {
         if (calendarData.selectedView === CalendarMode.Day) {
-            const event1 = event as ShiftEventData;
-            const event2 = e as ShiftEventData;
-
-            return (
-                event1.bisects(event2) &&
-                event1.shift.employee?.id === event2.shift.employee?.id
-            );
+            if (
+                event instanceof ShiftEventData &&
+                e instanceof ShiftEventData
+            ) {
+                return (
+                    event.bisects(e) &&
+                    event.shift.employee?.id === e.shift.employee?.id
+                );
+            } else return event.bisects(e);
         } else return event.bisects(e);
     });
 }

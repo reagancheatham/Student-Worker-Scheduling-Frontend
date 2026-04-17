@@ -5,16 +5,16 @@ import { ShiftTaskTemplate } from "./shiftTaskTemplate.ts";
 
 export class ShiftTaskListTemplate extends DatabaseModel {
     public constructor(
-        public readonly id: number,
+        public id: number,
         public scheduleShiftID: number,
-        public readonly name: string,
-        public tasks: ShiftTaskTemplate[],
+        public name: string,
+        public shiftTaskTemplates: ShiftTaskTemplate[],
     ) {
         super();
     }
 
     public static createFromData(data: any): ShiftTaskListTemplate {
-        let tasksJSON = data["Tasks"];
+        let tasksJSON = data["ShiftTaskTemplates"];
         let tasks: ShiftTaskTemplate[] = [];
 
         if (tasksJSON) {
@@ -27,8 +27,8 @@ export class ShiftTaskListTemplate extends DatabaseModel {
 
         return new ShiftTaskListTemplate(
             data["id"] ?? 0,
-            data["shiftID"] ?? 0,
-            data["name"] ?? 0,
+            data["scheduleShiftID"] ?? 0,
+            data["name"] ?? "Task List",
             tasks,
         );
     }
@@ -42,9 +42,9 @@ export class ShiftTaskListTemplate extends DatabaseModel {
 
             return response;
         } else {
-            const response = await ShiftTaskListTemplateServices.update(this);
+            await ShiftTaskListTemplateServices.update(this);
 
-            return response;
+            return this;
         }
     }
 }

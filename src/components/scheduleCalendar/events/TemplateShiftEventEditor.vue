@@ -19,27 +19,31 @@ import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { Store } from "@classes/util/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
-import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
 import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
-import { ShiftTaskListTemplateServices } from "../../../services/shiftTaskListTemplateServices.ts";
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftTaskTemplateServices } from "../../../services/shiftTaskTemplateServices.ts";
+import { TempStore } from "@classes/util/tempStore.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({
     required: true,
 });
 
-const { isOpen, creator = false } = defineProps<{
+const {
+    isOpen,
+    data,
+    creator = false,
+} = defineProps<{
     isOpen: boolean;
+    data: CalendarData;
     creator?: boolean;
 }>();
 
 const emit = defineEmits({
     closeRequested: () => true,
-    formSubmitted: () => true,
     eventDeleted: () => true,
+    formSubmitted: () => true,
 });
 
 const tableElement = useTemplateRef("table");
@@ -107,9 +111,6 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
-const taskList = ref<ShiftTaskListTemplate>(
-    new ShiftTaskListTemplate(0, 0, "Task List", []),
-);
 const editedTask = ref<ShiftTaskTemplate>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
@@ -126,6 +127,10 @@ const taskColumns = [
                 td: "max-w-[200px] truncate whitespace-normal",
             },
         },
+    },
+    {
+        id: "action",
+        header: "Action",
     },
 ];
 
@@ -158,19 +163,21 @@ onMounted(() => {
             const el = element.$el as HTMLElement;
             if (sortableInstance) sortableInstance.stop();
 
+            const taskList = model.value.template.taskList;
+
             sortableInstance = useSortable(
                 el.querySelector("tbody"),
-                taskList.value.tasks,
+                taskList.shiftTaskTemplates,
                 {
                     animation: 150,
                     onUpdate: (e: any) => {
-                        const tasks = taskList.value.tasks;
+                        const tasks = taskList.shiftTaskTemplates;
                         const movedItem = tasks.splice(e.oldIndex, 1)[0];
 
                         tasks.splice(e.newIndex, 0, movedItem);
 
                         // force Vue to redraw
-                        taskList.value.tasks = [...tasks];
+                        taskList.shiftTaskTemplates = [...tasks];
                     },
                 } as any,
             );
@@ -197,13 +204,6 @@ async function initializeState() {
         },
     };
 
-    if (model.value.template.isValid()) {
-        taskList.value =
-            await ShiftTaskListTemplateServices.getOrCreateForShift(
-                model.value.template.id,
-            );
-    } else taskList.value = new ShiftTaskListTemplate(0, 0, "Task List", []);
-
     initializeTaskUIIDs();
 
     isDirty.value = false;
@@ -213,7 +213,9 @@ async function initializeState() {
 }
 
 function initializeTaskUIIDs() {
-    taskList.value.tasks.forEach((task) => {
+    const taskList = model.value.template.taskList;
+
+    taskList.shiftTaskTemplates.forEach((task) => {
         if (!(task as any)._uiID) UIIDUtil.attachUUID(task, "task");
     });
 }
@@ -267,12 +269,11 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     });
 
     await Promise.all(taskPromises);
-    let updatedShift = await event.updateBackend();
-    await taskList.value.updateBackend(updatedShift);
-
-    emit("formSubmitted");
+    await event.updateBackend();
 
     TempStore.isLoading = false;
+
+    emit("formSubmitted");
     toggleModal();
 }
 
@@ -294,10 +295,12 @@ function openAddTaskModal(): void {
 }
 
 function onTaskAddRequested(): void {
+    const taskList = model.value.template.taskList;
+
     UIIDUtil.attachUUID(editedTask.value, "task");
 
-    editedTask.value.listOrder = taskList.value.tasks.length;
-    taskList.value.tasks.push(editedTask.value);
+    editedTask.value.listOrder = taskList.shiftTaskTemplates.length;
+    taskList.shiftTaskTemplates.push(editedTask.value);
     editedTask.value = createDefaultTask();
     isDirty.value = true;
 }
@@ -309,8 +312,10 @@ function editTask(task: ShiftTaskTemplate): void {
 }
 
 function deleteTask(task: ShiftTaskTemplate): void {
+    const taskList = model.value.template.taskList;
+
     deletedTasks.push(task);
-    const tasks = taskList.value.tasks;
+    const tasks = taskList.shiftTaskTemplates;
     tasks.splice(tasks.indexOf(task), 1);
 }
 
@@ -319,7 +324,9 @@ function closeTaskModal(): void {
 }
 
 function createDefaultTask(): ShiftTaskTemplate {
-    return new ShiftTaskTemplate(0, taskList.value.id, 0, "New Task", "");
+    const taskList = model.value.template.taskList;
+
+    return new ShiftTaskTemplate(0, taskList.id, 0, "New Task", "");
 }
 </script>
 
@@ -328,6 +335,7 @@ function createDefaultTask(): ShiftTaskTemplate {
         :open="isOpen"
         :title="creator ? 'Shift Creator' : 'Shift Editor'"
         :dismissible="false"
+        :ui="{ content: 'sm:max-w-sm' }"
         description="Edit the details of a shift."
         @update:open="toggleModal()"
     >
@@ -397,10 +405,12 @@ function createDefaultTask(): ShiftTaskTemplate {
                                 />
                             </div>
                             <UTable
-                                v-if="taskList"
+                                v-if="model.template.taskList"
                                 ref="table"
                                 class="overflow-y-auto h-48 flex-1 max-h-64"
-                                :data="taskList.tasks"
+                                :data="
+                                    model.template.taskList.shiftTaskTemplates
+                                "
                                 :columns="taskColumns"
                                 :ui="{
                                     tbody: 'my-table-tbody',

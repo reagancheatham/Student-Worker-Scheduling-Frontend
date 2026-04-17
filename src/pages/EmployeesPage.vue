@@ -140,13 +140,17 @@ function deleteEmployee() {
     );
 }
 
-async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
-    await EmployeeServices.create(addState.email, addState.isManager).then(
-        () => {
-            getData();
-            isAddOpen.value = false;
-        },
+async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
+    const employee = await Employee.createInviteEmployee(
+        addState.email,
+        addState.isManager,
     );
+
+    isAddOpen.value = false;
+
+    await EmployeeServices.create(employee).then(() => {
+        getData();
+    });
 }
 
 async function getData() {

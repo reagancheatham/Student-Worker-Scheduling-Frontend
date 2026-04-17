@@ -1,14 +1,30 @@
 <script setup lang="ts">
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { ScheduleTemplateServices } from "../services/scheduleTemplateServices.ts";
 import { Store } from "@classes/util/store.ts";
 import { TempStore } from "@classes/util/tempStore.ts";
 
+const possibleSelectedTemplate = ref<ScheduleTemplate>();
 const selectedTemplate = ref<ScheduleTemplate>();
 const scheduleTemplates = ref<ScheduleTemplate[]>([]);
+const isDeleteModalOpen = ref(false);
 
 onMounted(async () => {
+    const lastEditedTemplate = await Store.getLastEditedTemplate();
+
+    if (lastEditedTemplate) selectedTemplate.value = lastEditedTemplate;
+
+    watch(
+        selectedTemplate,
+        () => {
+            if (selectedTemplate.value)
+                Store.setLastEditedTemplate(selectedTemplate.value);
+            else Store.clearLastEditedTemplate();
+        },
+        { deep: true },
+    );
+
     await updateTemplatesList();
 });
 
@@ -17,34 +33,32 @@ async function createTemplate(): Promise<void> {
 
     if (!business) return;
 
-    selectedTemplate.value = new ScheduleTemplate(
-        0,
-        business.id,
-        "New Schedule Template",
+    const newTemplate = await ScheduleTemplateServices.create(
+        new ScheduleTemplate(0, business.id, "New Schedule Template"),
     );
+
+    selectedTemplate.value = newTemplate;
 }
 
-async function saveTemplate(): Promise<void> {
-    if (!selectedTemplate.value) return;
+async function deleteTemplate(): Promise<void> {
+    if (!possibleSelectedTemplate.value) return;
 
-    TempStore.isLoading = true;
+    isDeleteModalOpen.value = false;
+    await ScheduleTemplateServices.delete(possibleSelectedTemplate.value);
+}
 
-    if (selectedTemplate.value.id === 0)
-        await ScheduleTemplateServices.create(selectedTemplate.value);
-    else
-        await ScheduleTemplateServices.update(selectedTemplate.value);
-
-    await updateTemplatesList();
-
-    selectedTemplate.value = undefined;
-    TempStore.isLoading = false;
+function selectTemplate(): void {
+    selectedTemplate.value = possibleSelectedTemplate.value;
 }
 
 function cancelEdit(): void {
+    updateTemplatesList();
     selectedTemplate.value = undefined;
 }
 
 async function updateTemplatesList(): Promise<void> {
+    TempStore.isLoading = true;
+
     const business = await Store.getBusiness();
 
     if (!business) return;
@@ -52,6 +66,8 @@ async function updateTemplatesList(): Promise<void> {
     scheduleTemplates.value = await ScheduleTemplateServices.getAllForBusiness(
         business.id,
     );
+
+    TempStore.isLoading = false;
 }
 </script>
 
@@ -72,58 +88,71 @@ body {
 
 <template>
     <div v-if="selectedTemplate" class="scheduleContainer">
-        <ScheduleCalendar header editable :template="selectedTemplate" />
-        <div class="flex mt-14 mr-16 gap-4">
-            <UButton
-                class="ml-auto"
-                label="Save"
-                size="xl"
-                @click="saveTemplate()"
-            />
-            <UModal
-                title="Discard all changes?"
-                :ui="{ content: 'sm:max-w-xs' }"
-            >
-                <UButton
-                    label="Cancel Edit"
-                    size="xl"
-                    variant="outline"
-                    color="neutral"
-                />
-
-                <template #footer="{ close }">
-                    <UButton
-                        label="Discard"
-                        class="ml-auto"
-                        @click="cancelEdit()"
-                    />
-                    <UButton
-                        label="Return To Editing"
-                        color="neutral"
-                        variant="outline"
-                        class="mr-auto"
-                        @click="close()"
-                    />
-                </template>
-            </UModal>
-        </div>
+        <ScheduleCalendar
+            header
+            editable
+            :template="selectedTemplate"
+            @close-requested="cancelEdit()"
+        />
     </div>
     <UCard
         v-else
         class="templateCreator"
-        :ui="{ body: 'h-full justify-items-center content-center text-center bg-neutral-100' }"
+        :ui="{
+            body: 'h-full justify-items-center content-center text-center bg-neutral-100',
+        }"
     >
         <template #default>
-            <div class="flex gap-4 mb-32">
+            <div class="flex gap-4 mb-4">
+                <div>
                     <USelectMenu
-                        v-model="selectedTemplate"
+                        class="w-52"
+                        v-model="possibleSelectedTemplate"
                         :items="scheduleTemplates"
+                        :disabled="TempStore.isLoading"
+                        :loading="TempStore.isLoading"
                         label-key="name"
                         placeholder="Select a Template to Edit"
+                        clear
                     />
+                    <div
+                        v-if="possibleSelectedTemplate"
+                        class="flex gap-4 mt-2 justify-center"
+                    >
+                        <UButton label="Edit" @click="selectTemplate()" />
+                        <UButton
+                            label="Delete"
+                            variant="outline"
+                            color="neutral"
+                            @click="isDeleteModalOpen = true"
+                        />
+                        <UModal
+                            :title="`Delete template ${possibleSelectedTemplate.name}?`"
+                            description="Deletion can not be undone."
+                            :ui="{ content: 'sm:max-w-xs' }"
+                            :open="isDeleteModalOpen"
+                        >
+                            <template #footer="{ close }">
+                                <UButton
+                                    label="Delete"
+                                    class="ml-auto"
+                                    @click="deleteTemplate()"
+                                />
+                                <UButton
+                                    label="Cancel"
+                                    color="neutral"
+                                    variant="outline"
+                                    class="mr-auto"
+                                    @click="isDeleteModalOpen = false"
+                                />
+                            </template>
+                        </UModal>
+                    </div>
+                </div>
+
                 <p class="mt-1">or</p>
                 <UButton
-                    class="h-1/2 self-end"
+                    class="self-start"
                     label="Create New Template"
                     @click="createTemplate"
                 />

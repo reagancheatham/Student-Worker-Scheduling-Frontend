@@ -62,36 +62,27 @@ export class ShiftTemplateEvent {
         return event.name;
     }
 
-    public static updateBackendEvent(styleData: EventStyleData): void {
-        const event = styleData.event;
-
-        if (!(event instanceof ShiftTemplateEventData)) {
-            ShiftTemplateEvent.printTypeError();
-            return;
-        }
-
-        event.updateBackend();
-    }
-
     private static getGridArea(
         event: ShiftTemplateEventData,
         calendarData: CalendarData,
     ): string {
         const startTime = event.startTime;
         const endTime = event.endTime;
+        const startDayIndex = event.templateStartDay;
+        const endDayIndex = event.templateEndDay;
 
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
 
             return `${row} 
             / ${1 + (60 * startTime.hour + startTime.minute)} 
-            / span ${1 + endTime.day - startTime.day} 
+            / span ${1 + endDayIndex - startDayIndex} 
             / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
         } else
             return `${1 + (60 * startTime.hour + startTime.minute)} 
-            / ${1 + startTime.day - calendarData.selectedWeek.start.day} 
+            / ${1 + startDayIndex} 
             / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} 
-            / span ${1 + (endTime.day - startTime.day)}`;
+            / span ${1 + (endDayIndex - startDayIndex)}`;
     }
 
     private static printTypeError(): void {
