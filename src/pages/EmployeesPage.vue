@@ -17,6 +17,8 @@ const UDropdownMenu = resolveComponent("UDropdownMenu");
 const globalFilter = ref();
 const deleteDoubleConfirm = ref(false);
 const selectedEmployee = ref<Employee>();
+const isRefreshOpen = ref(false);
+const isRefreshingSchoolUnavailabilities = ref(false);
 
 const isAddOpen = ref(false);
 const addState = shallowReactive({
@@ -32,6 +34,20 @@ const addValidationSchema = valibot.object({
     isManager: valibot.boolean(),
 });
 type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
+
+const refreshState = shallowReactive({
+    termCode: "",
+});
+
+const refreshValidationSchema = valibot.object({
+    termCode: valibot.pipe(
+        valibot.string(),
+        valibot.nonEmpty("Term code is required"),
+    ),
+});
+type RefreshValidationSchema = valibot.InferOutput<
+    typeof refreshValidationSchema
+>;
 const toastNotification = useToast();
 
 let data = ref<Employee[]>([]);
@@ -141,6 +157,51 @@ function deleteEmployee() {
     );
 }
 
+async function submitRefreshSchoolUnavailabilities(
+    event: FormSubmitEvent<RefreshValidationSchema>,
+) {
+    const business = Store.getBusiness();
+
+    if (!business) {
+        toastNotification.add({
+            title: "Business not found",
+            description: "Unable to refresh school unavailabilities.",
+            color: "error",
+            icon: "i-lucide-circle-alert",
+        });
+        return;
+    }
+
+    isRefreshingSchoolUnavailabilities.value = true;
+
+    try {
+        await EmployeeServices.importStudentSchedulesForBusiness(
+            business.id,
+            event.data.termCode.trim(),
+        );
+
+        toastNotification.add({
+            title: "School unavailabilities refreshed",
+            description: "Student schedules were imported successfully.",
+            color: "success",
+            icon: "i-lucide-circle-check",
+        });
+
+        refreshState.termCode = "";
+        isRefreshOpen.value = false;
+    } catch (error) {
+        console.error(`Error refreshing school unavailabilities: ${error}`);
+        toastNotification.add({
+            title: "Refresh failed",
+            description: "Could not import student schedules.",
+            color: "error",
+            icon: "i-lucide-circle-alert",
+        });
+    } finally {
+        isRefreshingSchoolUnavailabilities.value = false;
+    }
+}
+
 async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
     await EmployeeServices.create(addState.email, addState.isManager).then(
         () => {
@@ -151,7 +212,20 @@ async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
 }
 
 function getData() {
-    EmployeeServices.getAllForBusiness(Store.getBusiness()!.id)
+    const business = Store.getBusiness();
+
+    if (!business) {
+        toastNotification.add({
+            title: "Business not found",
+            description: "Unable to load employees.",
+            color: "error",
+            icon: "i-lucide-circle-alert",
+        });
+        data.value = [];
+        return;
+    }
+
+    EmployeeServices.getAllForBusiness(business.id)
         .then((result) => {
             data.value = result;
             console.log(data);
@@ -193,12 +267,63 @@ onMounted(() => {
         </template>
     </UModal>
 
+    <UModal
+        v-model:open="isRefreshOpen"
+        title="Refresh School Unavailabilities"
+        description="Import the latest student schedule blocks for every employee in this business."
+        close-icon="i-lucide-x"
+    >
+        <template #content>
+            <div class="p-4">
+                <UForm
+                    :schema="refreshValidationSchema"
+                    :state="refreshState"
+                    class="flex flex-col gap-4"
+                    @submit="submitRefreshSchoolUnavailabilities"
+                >
+                    <UFormField label="Term Code" name="termCode">
+                        <UInput
+                            v-model="refreshState.termCode"
+                            placeholder="e.g. 2026SP"
+                        />
+                    </UFormField>
+
+                    <div class="flex gap-2 justify-end">
+                        <UButton
+                            type="submit"
+                            :loading="isRefreshingSchoolUnavailabilities"
+                            :disabled="isRefreshingSchoolUnavailabilities"
+                        >
+                            Refresh
+                        </UButton>
+
+                        <UButton
+                            variant="outline"
+                            color="neutral"
+                            @click="isRefreshOpen = false"
+                        >
+                            Cancel
+                        </UButton>
+                    </div>
+                </UForm>
+            </div>
+        </template>
+    </UModal>
+
     <div class="h-screen flex flex-col">
         <div class="flex justify-between px-4 py-3.5 border-b border-accented">
             <UInput
                 v-model="globalFilter"
                 class="max-w-sm"
                 placeholder="Filter..."
+            />
+
+            <UButton
+                label="Refresh Unavailabilities"
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-refresh-cw"
+                @click="isRefreshOpen = true"
             />
 
             <UButton

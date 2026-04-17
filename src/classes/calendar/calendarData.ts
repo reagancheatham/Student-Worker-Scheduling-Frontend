@@ -81,9 +81,9 @@ export class CalendarData {
         let events: EventData[] = [];
         const business = Store.getBusiness();
 
-        console.log("requesting with business" + JSON.stringify(business))
+        if (!business) return events;
 
-        await ShiftServices.getAllInRangeForBusiness(business!.id, beginningOfDay, endOfDay).then(
+        await ShiftServices.getAllInRangeForBusiness(business.id, beginningOfDay, endOfDay).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },
@@ -104,7 +104,9 @@ export class CalendarData {
         let events: EventData[] = [];
         const business = Store.getBusiness();
 
-        await ShiftServices.getAllInRangeForBusiness(business!.id, startDate, endDate).then(
+        if (!business) return events;
+
+        await ShiftServices.getAllInRangeForBusiness(business.id, startDate, endDate).then(
             (shifts) => {
                 events = shifts.map((shift) => new ShiftEvent(shift));
             },
