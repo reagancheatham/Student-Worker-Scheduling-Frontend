@@ -13,7 +13,7 @@ export class ShiftEvent extends EventData {
         );
     }
 
-    public async updateBackendEvent() {
+    public async updateBackend(): Promise<Shift> {
         this.shift.name = this.name;
         this.shift.startTime = this.startTime.toDate();
         this.shift.endTime = this.endTime.toDate();

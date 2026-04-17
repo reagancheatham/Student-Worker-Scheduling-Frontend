@@ -12,6 +12,16 @@
     --color-maroon-700: #5f0f1d;
     --color-maroon-800: #4b0c17;
     --color-maroon-900: #35080f;
+    --color-event-blue-50: var(--color-sky-50);
+    --color-event-blue-100: var(--color-sky-100);
+    --color-event-blue-200: var(--color-sky-200);
+    --color-event-blue-300: var(--color-sky-300);
+    --color-event-blue-400: var(--color-sky-400);
+    --color-event-blue-500: var(--color-sky-500);
+    --color-event-blue-600: var(--color-sky-600);
+    --color-event-blue-700: var(--color-sky-700);
+    --color-event-blue-800: var(--color-sky-800);
+    --color-event-blue-900: var(--color-sky-900);
 }
 
 :root {

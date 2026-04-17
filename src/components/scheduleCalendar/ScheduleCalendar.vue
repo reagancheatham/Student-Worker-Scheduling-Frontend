@@ -3,7 +3,7 @@ import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 const {
     header,
@@ -24,6 +24,10 @@ const gridClasses = new Map<CalendarMode, string>([
     [CalendarMode.Month, "calendarGrid monthGrid"],
 ]);
 
+onMounted(() => {
+    data.updateRelevantData();
+});
+
 function updateCellSize(size: Vector2): void {
     cellSize.value = size;
 }
@@ -39,12 +43,16 @@ function getContainerStyle() {
 function getBodyStyle() {
     if (data.selectedView === CalendarMode.Day)
         return {
-            marginTop: `${-0.5 * cellSize.value.y}px`,
+            marginTop: `${-0.45 * cellSize.value.y}px`,
         };
     else
         return {
             paddingTop: `${0.5 * cellSize.value.y}px`,
         };
+}
+
+function hasEmployeesToDisplay(): boolean {
+    return editable || (!editable && data.relevantEmployees.length > 0);
 }
 </script>
 
@@ -106,10 +114,14 @@ function getBodyStyle() {
 </style>
 
 <template>
-    <div class="calendarContainer" :style="getContainerStyle()">
+    <div
+        v-if="hasEmployeesToDisplay()"
+        class="calendarContainer"
+        :style="getContainerStyle()"
+    >
         <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
         <div class="calendarBody" :style="getBodyStyle()">
-            <div :class="gridClasses.get(data.selectedView)!">
+            <div class="mb-10" :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
                     v-if="data.selectedView === CalendarMode.Week"
                     :data="data"
@@ -131,5 +143,11 @@ function getBodyStyle() {
                 />
             </div>
         </div>
+    </div>
+    <div
+        v-else
+        class="text-neutral-400 text-lg text-center content-center bg-neutral-100 h-full rounded-md"
+    >
+        No shifts to display.
     </div>
 </template>

@@ -1,5 +1,3 @@
-<script></script>
-
 <style>
 .scheduleContainer {
     height: 82vh;

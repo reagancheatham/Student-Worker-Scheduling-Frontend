@@ -1,11 +1,21 @@
-<script setup>
+<script setup lang="ts">
+import { Business } from "@classes/database/business.ts";
+import { Store } from "@classes/util/store.ts";
+import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 const route = useRoute();
+const business = ref<Business>();
+
+onMounted(async () => (business.value = await Store.getBusiness()));
 </script>
 
 <template>
     <UDashboardNavbar
-        :title="route.name"
+        :title="
+            business
+                ? `${business.name} - ${route.name?.toString()}`
+                : `${route.name?.toString()}`
+        "
         :ui="{
             root: 'px-0!',
             title: 'px-5!',

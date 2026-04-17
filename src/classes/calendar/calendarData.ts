@@ -11,6 +11,7 @@ import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEvent } from "./shiftEvent.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
+import { Store } from "@classes/util/store.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -78,12 +79,20 @@ export class CalendarData {
         endOfDay.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
+        const business = await Store.getBusiness();
 
-        await ShiftServices.getAllInRange(1, beginningOfDay, endOfDay).then(
-            (shifts) => {
-                events = shifts.map((shift) => new ShiftEvent(shift));
-            },
-        );
+        if (!business) {
+            events = [];
+            return events;
+        }
+
+        await ShiftServices.getAllInRangeForBusiness(
+            business.id,
+            beginningOfDay,
+            endOfDay,
+        ).then((shifts) => {
+            events = shifts.map((shift) => new ShiftEvent(shift));
+        });
 
         return events;
     }
@@ -98,12 +107,20 @@ export class CalendarData {
         endDate.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
+        const business = await Store.getBusiness();
 
-        await ShiftServices.getAllInRange(1, startDate, endDate).then(
-            (shifts) => {
-                events = shifts.map((shift) => new ShiftEvent(shift));
-            },
-        );
+        if (!business) {
+            events = [];
+            return events;
+        }
+
+        await ShiftServices.getAllInRangeForBusiness(
+            business.id,
+            startDate,
+            endDate,
+        ).then((shifts) => {
+            events = shifts.map((shift) => new ShiftEvent(shift));
+        });
 
         return events;
     }
@@ -140,17 +157,13 @@ export class CalendarData {
 
         for (const event of this.refRelevantEvents.value) {
             if (!(event instanceof ShiftEvent)) continue;
+            const employee = event.shift.employee;
 
-            if (!event.shift.employee) continue;
+            if (!employee) continue;
 
-            if (
-                relevantEmployees.find(
-                    (employee) => employee.id === event.shift.employee.id,
-                )
-            )
-                continue;
+            if (relevantEmployees.find((e) => e.id === employee.id)) continue;
 
-            relevantEmployees.push(event.shift.employee);
+            relevantEmployees.push(employee);
         }
 
         relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);

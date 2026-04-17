@@ -6,17 +6,23 @@ import { EventData } from "@classes/calendar/eventData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { Business } from "@classes/database/business.ts";
 import { Shift } from "@classes/database/shift.ts";
+import { Store } from "@classes/util/store.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 
 const { data, cellSize } = defineProps<{
     data: CalendarData;
     cellSize: Vector2;
 }>();
 
-const editedEvent = ref<EventData>(new ShiftEvent(createDefaultShift()));
+const editedEvent = ref<EventData>(
+    new ShiftEvent(
+        new Shift(0, 0, "", new Date(), new Date(), EventColor.blue, false),
+    ),
+);
 const isModalOpen = ref(false);
+const business = ref<Business>();
 
 const createItems = [
     [
@@ -29,6 +35,11 @@ const createItems = [
         },
     ],
 ];
+
+onMounted(async () => {
+    business.value = await Store.getBusiness();
+    editedEvent.value = new ShiftEvent(createDefaultShift());
+});
 
 function getStyle() {
     if (data.selectedView === CalendarMode.Day)
@@ -70,12 +81,12 @@ function createDefaultShift(): Shift {
 
     return new Shift(
         0,
-        Business.current.id,
+        business.value ? business.value.id : 0,
         "New Shift",
         startTime,
         endTime,
         EventColor.blue,
-        undefined,
+        false,
     );
 }
 

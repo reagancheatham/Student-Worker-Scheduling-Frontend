@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
@@ -176,7 +176,7 @@ function getAllBisectingEvents(event: EventData): EventData[] {
 
             return (
                 event1.bisects(event2) &&
-                event1.shift.employee.id === event2.shift.employee.id
+                event1.shift.employee?.id === event2.shift.employee?.id
             );
         } else return event.bisects(e);
     });
