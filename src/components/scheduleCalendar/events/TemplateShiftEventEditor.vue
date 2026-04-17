@@ -334,7 +334,7 @@ function createDefaultTask(): ShiftTaskTemplate {
     <UModal
         :open="isOpen"
         :title="creator ? 'Shift Creator' : 'Shift Editor'"
-        :dismissible="false"
+        :dismissible="!isDirty"
         :ui="{ content: 'sm:max-w-sm' }"
         description="Edit the details of a shift."
         @update:open="toggleModal()"

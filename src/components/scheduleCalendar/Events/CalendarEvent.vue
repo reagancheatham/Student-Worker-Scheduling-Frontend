@@ -80,7 +80,7 @@ onMounted(() => {
         getClassImpl.value = ShiftTemplateEvent.getClass;
         getStyleImpl.value = ShiftTemplateEvent.getStyle;
         getLabelImpl.value = ShiftTemplateEvent.getLabel;
-        updateBackendImpl.value = undefined;
+        updateBackendImpl.value = ShiftTemplateEvent.updateBackendEvent;
     } else {
         getClassImpl.value = ShiftEvent.getClass;
         getStyleImpl.value = ShiftEvent.getStyle;

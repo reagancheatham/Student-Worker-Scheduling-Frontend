@@ -12,7 +12,8 @@ export class ShiftEvent {
             return "";
         }
 
-        if (!event.shift.published) return `event ring-2 ${event.color.ring}`;
+        if (!event.shift.published)
+            return `event border-t-3 border-r-3 border-b-3`;
         else return "event";
     }
 

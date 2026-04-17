@@ -201,22 +201,27 @@ async function updateTemplateName(_: Event): Promise<void> {
         >
             <UButton
                 icon="i-heroicons-plus-20-solid"
-                class="px-5 py-5 shadow-md -mb-4"
+                class="px-5 py-5 shadow-md -mb-3"
                 :style="getButtonStyle()"
             />
         </UDropdownMenu>
         <div class="headerSegment leftSegment">
-            <CalendarDateShifter v-if="!data.isTemplate" :data="data" />
             <UInput
                 v-if="data.selectedTemplate"
                 v-model="templateName"
+                :class="data.selectedView === CalendarMode.Day ? 'ml-6' : ''"
                 :disabled="isUpdatingTemplateName"
                 size="xl"
                 variant="outline"
                 placeholder="Template Name"
                 @change="updateTemplateName"
-            >
-            </UInput>
+            />
+            <CalendarDateShifter
+                v-if="
+                    !data.isTemplate || data.selectedView === CalendarMode.Day
+                "
+                :data="data"
+            />
         </div>
         <div class="headerSegment rightSegment">
             <UButton

@@ -368,7 +368,7 @@ function publishShift(): void {
     <UModal
         :open="isOpen"
         :title="creator ? 'Shift Creator' : 'Shift Editor'"
-        :dismissible="false"
+        :dismissible="!isDirty"
         description="Edit the details of a shift."
         @update:open="toggleModal()"
     >

@@ -19,6 +19,7 @@ import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.t
 import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
 import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
 import { TemplateCalendarData } from "./templateCalendarData.ts";
+import { WeekDay } from "@classes/util/weekDay.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -81,7 +82,7 @@ export class CalendarData {
     public set selectedView(mode: CalendarMode) {
         this.refSelectedView.value = mode;
 
-        if (!this.isTemplate) this.updateRelevantData();
+        this.updateRelevantData();
     }
 
     public get selectedDay(): CalendarDate {
@@ -97,6 +98,17 @@ export class CalendarData {
         this.refSelectedWeek.value = { start, end };
 
         if (!this.isTemplate) this.updateRelevantData();
+    }
+
+    public get selectedTemplateDay(): WeekDay | undefined {
+        return this.templateData?.selectedDay;
+    }
+
+    public set selectedTemplateDay(day: WeekDay) {
+        if (!this.templateData) return;
+
+        this.templateData.selectedDay = day;
+        this.updateRelevantData();
     }
 
     public get selectedWeek(): CalendarRange {
@@ -129,7 +141,9 @@ export class CalendarData {
 
         if (this.isTemplate)
             relevantEvents =
-                await this.refTemplateData.value!.getEventsForTemplate();
+                await this.refTemplateData.value!.getEventsForTemplate(
+                    this.selectedView,
+                );
         else if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
                 CalendarData.timeZone,

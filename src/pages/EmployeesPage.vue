@@ -160,6 +160,7 @@ async function getData() {
 
     try {
         const result = await EmployeeServices.getAllForBusiness(business.id);
+
         data.value = result;
     } catch (error) {
         console.error(`Error getting employees: ${error}`);

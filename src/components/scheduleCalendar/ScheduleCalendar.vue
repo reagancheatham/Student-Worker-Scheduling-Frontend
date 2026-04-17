@@ -103,6 +103,7 @@ function cancelEdit(): void {
     max-height: 100%;
     flex-direction: row;
     overflow-y: auto;
+    pointer-events: none;
 }
 
 .calendarGrid {

@@ -12,7 +12,7 @@ export class ShiftTemplateEvent {
             return "";
         }
 
-        return `event ring-2 ${event.color.ring}`;
+        return `event border-t-3 border-r-3 border-b-3`;
     }
 
     public static getStyle(styleData: EventStyleData): any {
@@ -60,6 +60,17 @@ export class ShiftTemplateEvent {
         }
 
         return event.name;
+    }
+
+    public static updateBackendEvent(styleData: EventStyleData): void {
+        const event = styleData.event;
+
+        if (!(event instanceof ShiftTemplateEventData)) {
+            ShiftTemplateEvent.printTypeError();
+            return;
+        }
+
+        event.updateBackend();
     }
 
     private static getGridArea(
