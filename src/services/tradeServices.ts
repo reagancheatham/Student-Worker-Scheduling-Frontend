@@ -58,7 +58,7 @@ export class TradeServices {
         path: string,
     ): Promise<T[]> {
         const response = await apiClient.get(path);
-
+        console.log(`Raw response for ${path}:`, response.data);
         let data = response.data;
 
         // The backend wraps arrays in { results: [...] }

@@ -16,16 +16,20 @@ export class ShiftTradeRequest extends DatabaseModel {
     }
 
     public static createFromData(data: any): ShiftTradeRequest {
+        const shift = data.Shift || {}; //{} is any value except null or undefined
+        const employee = shift.Employee || {};
+        const user = employee.User || {};
+
         return new ShiftTradeRequest(
-            data["id"] ?? 0,
-            data["shiftID"] ?? 0,
-            data["targetEmployeeID"] ?? 0,
-            data["employeeMessage"] ?? "",
-            data["timeSent"] ?? undefined,
-            data["startTime"] ?? undefined,
-            data["endTime"] ?? undefined,
-            data["firstname"] ?? undefined,
-            data["lastname"] ?? ""
+            data.id ?? 0,
+            data.shiftID ?? 0,
+            data.targetEmployeeID ?? 0,
+            data.employeeMessage ?? "",
+            data.timeSent ? new Date(data.timeSent) : new Date(),
+            shift.startTime ? new Date(shift.startTime) : new Date(),
+            shift.endTime ? new Date(shift.endTime) : new Date(),
+            user.firstName ?? "",   // note the correct capitalization "firstName"
+            user.lastName ?? "",
         );
     }
 }
