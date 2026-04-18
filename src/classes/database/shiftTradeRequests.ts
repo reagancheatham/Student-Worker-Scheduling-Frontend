@@ -32,4 +32,8 @@ export class ShiftTradeRequest extends DatabaseModel {
             user.lastName ?? "",
         );
     }
+
+    public get fullName(): string {
+        return `${this.firstName} ${this.lastName}`;
+    }
 }

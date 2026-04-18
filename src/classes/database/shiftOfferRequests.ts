@@ -20,8 +20,6 @@ export class ShiftOfferRequest extends DatabaseModel {
         const employee = shift.Employee || {};
         const user = employee.User || {};
 
-        console.log("createFromData: ", data);
-
         return new ShiftOfferRequest(
             data.id ?? 0,
             data.shiftID ?? 0,
@@ -33,5 +31,9 @@ export class ShiftOfferRequest extends DatabaseModel {
             user.firstName ?? "",   // note the correct capitalization "firstName"
             user.lastName ?? "",
         );
+    }
+
+    public get fullName(): string {
+        return `${this.firstName} ${this.lastName}`;
     }
 }
