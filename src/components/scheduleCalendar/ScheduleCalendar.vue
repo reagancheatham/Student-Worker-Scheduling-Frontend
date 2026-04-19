@@ -2,12 +2,9 @@
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref, shallowRef } from "vue";
-import { ScheduleTemplateServices } from "../../services/scheduleTemplateServices.ts";
-import { ShiftTaskTemplateServices } from "../../services/shiftTaskTemplateServices.ts";
 
 const {
     header,

@@ -11,13 +11,9 @@ import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftEventData } from "./shiftEventData.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
-import { ScheduleShiftTemplateServices } from "../../services/scheduleShiftTemplateServices.ts";
 import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
-import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.ts";
-import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
-import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
 import { TemplateCalendarData } from "./templateCalendarData.ts";
 import { WeekDay } from "@classes/util/weekDay.ts";
 
@@ -194,7 +190,7 @@ export class CalendarData {
         endOfDay.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
 
         if (!business) {
             events = [];
@@ -222,7 +218,7 @@ export class CalendarData {
         endDate.setHours(23, 59, 59, 99);
 
         let events: EventData[] = [];
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
 
         if (!business) {
             events = [];

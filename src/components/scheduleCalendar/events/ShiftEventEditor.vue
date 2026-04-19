@@ -24,10 +24,12 @@ import { TaskListServices } from "../../../services/taskListServices.ts";
 import { Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
+import { TempStore } from "@classes/util/store/tempStore.ts";
+import { Role } from "@classes/database/role.ts";
+import { RoleServices } from "../../../services/roleServices.ts";
 
 //#region
 const model = defineModel<ShiftEventData>({
@@ -68,6 +70,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
+        targetRole: v.nullish(v.instance(Role, "Invalid role")),
         employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
@@ -96,6 +99,7 @@ const state = shallowReactive<{
     startTime: Time;
     endTime: Time;
     color: ColorItem;
+    role: Role | undefined;
     employee: Employee | undefined;
 }>({
     name: getData().name,
@@ -109,6 +113,7 @@ const state = shallowReactive<{
             color: getData().color.semantic,
         },
     },
+    role: getData().shift.role,
     employee: getData().shift.employee,
 });
 
@@ -121,6 +126,7 @@ const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
+const roles = ref<Role[]>([]);
 const alreadyPublished = ref<boolean>(false);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
@@ -200,7 +206,7 @@ onMounted(() => {
 async function initializeState() {
     if (!isOpen) return;
 
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 
@@ -224,7 +230,11 @@ async function initializeState() {
         );
     } else taskList.value = new TaskList(0, 0, "Task List", []);
 
-    employees.value = await EmployeeServices.getAllForBusiness(business.id);
+    const promises: Promise<any>[] = [];
+    promises.push(EmployeeServices.getAllForBusiness(business.id));
+    promises.push(RoleServices.getAllForBusiness(business.id));
+
+    await Promise.all(promises);
 
     initializeTaskUIIDs();
 
@@ -288,6 +298,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     );
 
     event.color = state.color.value;
+    event.shift.role = state.role;
     event.shift.employee = state.employee;
 
     const removeCheckPromises = removedCheckOffs.map(async (check) => {
@@ -393,7 +404,7 @@ function publishShift(): void {
                         <UFormField label="Date" name="eventDate">
                             <UPopover>
                                 <UButton
-                                    class="h-1/2"
+                                    class="h-1/2 min-w-36"
                                     color="neutral"
                                     variant="subtle"
                                     icon="i-lucide-calendar"
@@ -433,6 +444,7 @@ function publishShift(): void {
                     <UFormField label="Color" name="color">
                         <USelectMenu
                             v-model="state.color"
+                            class="min-w-36"
                             :items="colors"
                             :default-value="undefined"
                             label-key="label"
@@ -451,15 +463,32 @@ function publishShift(): void {
                             </template>
                         </USelectMenu>
                     </UFormField>
-                    <UFormField label="Assigned Employee" name="employee">
-                        <USelectMenu
-                            class="min-w-36"
-                            v-model="state.employee"
-                            :items="employees"
-                            label-key="fullName"
-                            clear
+                    <div class="flex gap-4">
+                        <UFormField label="Role" name="role">
+                            <USelectMenu
+                                class="min-w-36"
+                                v-model="state.role"
+                                :items="roles"
+                                label-key="name"
+                                clear
+                            />
+                        </UFormField>
+                        <USeparator
+                            class="h-8 self-end"
+                            orientation="vertical"
+                            size="sm"
+                            decorative
                         />
-                    </UFormField>
+                        <UFormField label="Assigned Employee" name="employee">
+                            <USelectMenu
+                                class="min-w-36"
+                                v-model="state.employee"
+                                :items="employees"
+                                label-key="fullName"
+                                clear
+                            />
+                        </UFormField>
+                    </div>
                     <UFormField name="taskList">
                         <div
                             class="flex flex-col flex-1 w-full border rounded-md border-accented"

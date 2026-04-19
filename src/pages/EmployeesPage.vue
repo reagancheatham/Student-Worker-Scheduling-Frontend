@@ -6,7 +6,7 @@ import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import * as valibot from "valibot";
 
 const toast = useToast();
@@ -154,7 +154,7 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
 }
 
 async function getData() {
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 

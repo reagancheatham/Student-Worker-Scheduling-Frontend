@@ -4,14 +4,14 @@ import { apiClient } from "./services";
 import { Owner } from "@classes/database/owner.ts";
 import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
-import { Store } from "@classes/util/store";
+import { Store } from "@classes/util/store/store";
 
 const API_ROOT: string = "employees";
 
 export class EmployeeServices {
     public static async create(employee: Employee) {
         try {
-            let business = await Store.getBusiness();
+            let business = await Store.businessStore.get();
             if (business)
                 await apiClient.post(`${API_ROOT}`, employee);
         } catch (error) {

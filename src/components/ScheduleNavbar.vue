@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Business } from "@classes/database/business.ts";
-import { Store } from "@classes/util/store.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
+import { Store } from "@classes/util/store/store";
+import { TempStore } from "@classes/util/store/tempStore";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 const route = useRoute();
 const business = ref<Business>();
 const isLoading = TempStore.refIsLoading;
 
-onMounted(async () => (business.value = await Store.getBusiness()));
+onMounted(async () => (business.value = await Store.businessStore.get()));
 </script>
 
 <template>

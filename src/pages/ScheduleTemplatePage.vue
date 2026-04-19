@@ -2,8 +2,8 @@
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { onMounted, ref, watch } from "vue";
 import { ScheduleTemplateServices } from "../services/scheduleTemplateServices.ts";
-import { Store } from "@classes/util/store.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
+import { Store } from "@classes/util/store/store.ts";
+import { TempStore } from "@classes/util/store/tempStore.ts";
 
 const possibleSelectedTemplate = ref<ScheduleTemplate>();
 const selectedTemplate = ref<ScheduleTemplate>();
@@ -11,7 +11,7 @@ const scheduleTemplates = ref<ScheduleTemplate[]>([]);
 const isDeleteModalOpen = ref(false);
 
 onMounted(async () => {
-    const lastEditedTemplate = await Store.getLastEditedTemplate();
+    const lastEditedTemplate = await Store.lastEditedTemplateStore.get();
 
     if (lastEditedTemplate) selectedTemplate.value = lastEditedTemplate;
 
@@ -19,8 +19,8 @@ onMounted(async () => {
         selectedTemplate,
         () => {
             if (selectedTemplate.value)
-                Store.setLastEditedTemplate(selectedTemplate.value);
-            else Store.clearLastEditedTemplate();
+                Store.lastEditedTemplateStore.set(selectedTemplate.value);
+            else Store.lastEditedTemplateStore.clear();
         },
         { deep: true },
     );
@@ -29,7 +29,7 @@ onMounted(async () => {
 });
 
 async function createTemplate(): Promise<void> {
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 
@@ -59,7 +59,7 @@ function cancelEdit(): void {
 async function updateTemplatesList(): Promise<void> {
     TempStore.isLoading = true;
 
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 

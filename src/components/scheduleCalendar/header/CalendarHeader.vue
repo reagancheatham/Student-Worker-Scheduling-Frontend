@@ -9,7 +9,7 @@ import { Business } from "@classes/database/business.ts";
 import { ScheduleShiftTemplate } from "@classes/database/scheduleShiftTemplate.ts";
 import { Shift } from "@classes/database/shift.ts";
 import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { WeekDay } from "@classes/util/weekDay.ts";
 import { today } from "@internationalized/date";
@@ -57,7 +57,7 @@ const createTemplateItems = [
 ];
 
 onMounted(async () => {
-    business.value = await Store.getBusiness();
+    business.value = await Store.businessStore.get();
     editedEvent.value = new ShiftEventData(createDefaultShift());
 
     if (data.isTemplate) templateName.value = data.selectedTemplate!.name;

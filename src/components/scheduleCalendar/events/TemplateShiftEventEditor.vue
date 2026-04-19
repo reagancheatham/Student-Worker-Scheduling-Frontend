@@ -17,13 +17,13 @@ import {
 } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftTaskTemplateServices } from "../../../services/shiftTaskTemplateServices.ts";
-import { TempStore } from "@classes/util/tempStore.ts";
+import { TempStore } from "@classes/util/store/tempStore.ts";
 import { fromWeekIndex, WeekDay } from "@classes/util/weekDay.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
 
@@ -193,7 +193,7 @@ onMounted(() => {
 async function initializeState() {
     if (!isOpen) return;
 
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 

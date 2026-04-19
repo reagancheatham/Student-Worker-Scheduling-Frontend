@@ -1,4 +1,4 @@
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 
 export class Employee extends DatabaseModel {
@@ -18,7 +18,7 @@ export class Employee extends DatabaseModel {
         email: string,
         isManager: boolean,
     ): Promise<Employee> {
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
         const businessID = business!.id;
 
         const employee = new Employee(0, businessID, "", "", "", email, "");
