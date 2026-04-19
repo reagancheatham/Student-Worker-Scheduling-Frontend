@@ -26,7 +26,9 @@ export class TemplateCalendarData {
 
         if (mode === CalendarMode.Day)
             events = shiftTemplates
-                .filter((template) => template.weekDay === this.selectedDay)
+                .filter((template) => {
+                    return template.weekDay === this.selectedDay;
+                })
                 .map((template) => new ShiftTemplateEventData(template));
         else
             events = shiftTemplates.map(

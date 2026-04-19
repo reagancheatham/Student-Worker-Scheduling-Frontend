@@ -24,6 +24,8 @@ import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftTaskTemplateServices } from "../../../services/shiftTaskTemplateServices.ts";
 import { TempStore } from "@classes/util/tempStore.ts";
+import { fromWeekIndex, WeekDay } from "@classes/util/weekDay.ts";
+import { EmployeeServices } from "../../../services/employeeServices.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({
@@ -64,7 +66,7 @@ const vColor = v.object({
 const schema = v.pipe(
     v.object({
         name: v.pipe(v.string(), v.nonEmpty("Name is required")),
-        eventDate: v.any(),
+        eventDate: v.enum(WeekDay),
         startTime: vTime,
         endTime: vTime,
         color: vColor,
@@ -92,13 +94,14 @@ type ColorItem = {
 
 const state = shallowReactive<{
     name: string;
-    eventDate: DateValue;
+    eventDate: WeekDay;
     startTime: Time;
     endTime: Time;
     color: ColorItem;
+    employee: Employee | undefined;
 }>({
     name: getData().name,
-    eventDate: getData().startTime.calendarDate(),
+    eventDate: fromWeekIndex(getData().templateStartDay),
     startTime: getData().startTime.toTime(),
     endTime: getData().endTime.toTime(),
     color: {
@@ -108,6 +111,7 @@ const state = shallowReactive<{
             color: getData().color.semantic,
         },
     },
+    employee: getData().template.employee,
 });
 
 const colors = ref<ColorItem[]>([]);
@@ -117,6 +121,7 @@ const isTaskEditorOpen = ref<boolean>(false);
 const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
+const employees = ref<Employee[]>([]);
 
 const taskColumns = [
     {
@@ -193,7 +198,7 @@ async function initializeState() {
     if (!business) return;
 
     state.name = getData().name;
-    state.eventDate = getData().startTime.calendarDate();
+    state.eventDate = fromWeekIndex(getData().templateStartDay);
     state.startTime = getData().startTime.toTime();
     state.endTime = getData().endTime.toTime();
     state.color = {
@@ -203,6 +208,8 @@ async function initializeState() {
             color: getData().color.semantic,
         },
     };
+
+    employees.value = await EmployeeServices.getAllForBusiness(business.id);
 
     initializeTaskUIIDs();
 
@@ -240,29 +247,20 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     isSubmitting.value = true;
 
     const event = model.value;
-    const date = state.eventDate;
     const startTime = new Time(state.startTime.hour, state.startTime.minute);
     const endTime = new Time(state.endTime.hour, state.endTime.minute);
 
     event.name = state.name;
-
     event.startTime = new EventTime(
-        date.year,
-        date.month,
-        date.day,
+        2026,
+        5,
+        12,
         startTime.hour,
         startTime.minute,
     );
-
-    event.endTime = new EventTime(
-        date.year,
-        date.month,
-        date.day,
-        endTime.hour,
-        endTime.minute,
-    );
-
+    event.endTime = new EventTime(2026, 5, 12, endTime.hour, endTime.minute);
     event.color = state.color.value;
+    event.template.employee = state.employee;
 
     const taskPromises = deletedTasks.map(async (task) => {
         if (task.isValid()) return await ShiftTaskTemplateServices.delete(task);
@@ -383,6 +381,15 @@ function createDefaultTask(): ShiftTaskTemplate {
                                 />
                             </template>
                         </USelectMenu>
+                    </UFormField>
+                    <UFormField label="Assigned Employee" name="employee">
+                        <USelectMenu
+                            class="min-w-36"
+                            v-model="state.employee"
+                            :items="employees"
+                            label-key="fullName"
+                            clear
+                        />
                     </UFormField>
                     <UFormField name="taskList">
                         <div

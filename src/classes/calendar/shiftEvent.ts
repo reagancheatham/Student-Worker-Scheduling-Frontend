@@ -92,11 +92,15 @@ export class ShiftEvent {
 
             const employee = event.shift.employee;
 
-            if (employee)
+            if (employee) {
                 row =
                     calendarData.relevantEmployees.findIndex(
                         (relEmployee) => relEmployee.id === employee.id,
                     ) + 1;
+
+                if (calendarData.hasUnassignedShift)
+                    row++;
+            }
 
             return `${row} 
             / ${1 + (60 * startTime.hour + startTime.minute)} 

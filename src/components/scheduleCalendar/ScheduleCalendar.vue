@@ -103,7 +103,7 @@ function cancelEdit(): void {
     max-height: 100%;
     flex-direction: row;
     overflow-y: auto;
-    pointer-events: none;
+    pointer-events: all;
 }
 
 .calendarGrid {
@@ -152,7 +152,7 @@ function cancelEdit(): void {
                 />
                 <CalendarTimeDisplay :data="data" :cell-size="cellSize" />
                 <CalendarEmployeeDisplay
-                    v-if="data.selectedView === CalendarMode.Day && !template"
+                    v-if="data.selectedView === CalendarMode.Day"
                     :data="data"
                     :cell-size="cellSize"
                 />

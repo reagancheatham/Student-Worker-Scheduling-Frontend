@@ -2,6 +2,7 @@ import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
 import { BusinessServices } from "../../services/businessServices.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
+import { ScheduleTemplateServices } from "../../services/scheduleTemplateServices.ts";
 
 const USER_KEY = "user";
 const BUSINESS_KEY = "business";
@@ -93,11 +94,12 @@ export class Store {
 
         if (storedTemplate && storedTemplate != "undefined") {
             try {
-                const template = ScheduleTemplate.createFromData(
-                    JSON.parse(storedTemplate),
-                );
+                const templateData = JSON.parse(storedTemplate);
 
-                if (template.businessID !== business.id) return undefined;
+                if (!templateData.businessID) return undefined;
+                else if (templateData.businessID !== business.id) return undefined;
+
+                const template = await ScheduleTemplateServices.get(templateData.id);
 
                 return template;
             } catch (error: any) {

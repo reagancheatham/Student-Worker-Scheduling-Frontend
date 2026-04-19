@@ -85,6 +85,17 @@ export class ShiftTemplateEvent {
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
 
+            const employee = event.template.employee;
+
+            if (employee) {
+                row =
+                    calendarData.relevantEmployees.findIndex(
+                        (relEmployee) => relEmployee.id === employee.id,
+                    ) + 1;
+
+                if (calendarData.hasUnassignedShift) row++;
+            }
+
             return `${row} 
             / ${1 + (60 * startTime.hour + startTime.minute)} 
             / span ${1 + endDayIndex - startDayIndex} 

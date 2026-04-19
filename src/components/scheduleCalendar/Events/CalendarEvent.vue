@@ -19,6 +19,7 @@ import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
 import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
 import { ShiftTemplateEvent } from "@classes/calendar/shiftTemplateEvent.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
+import { fromWeekIndex } from "@classes/util/weekDay.ts";
 
 //#region Variables
 enum EventState {
@@ -106,14 +107,22 @@ onBeforeUnmount(() => {
 function shouldRender(): boolean {
     const calendarData = props.calendarData;
     const startTime = model.value.startTime.calendarDate();
+    const templateDay = fromWeekIndex(model.value.templateStartDay);
 
-    if (calendarData.selectedView === CalendarMode.Day)
-        return isSameDay(startTime, calendarData.selectedDay);
-    else {
-        return isSameDay(
-            startOfWeek(startTime, CalendarData.localeString),
-            startOfWeek(calendarData.selectedDay, CalendarData.localeString),
-        );
+    if (calendarData.selectedView === CalendarMode.Day) {
+        if (calendarData.isTemplate)
+            return templateDay === calendarData.selectedTemplateDay;
+        else return isSameDay(startTime, calendarData.selectedDay);
+    } else {
+        if (calendarData.isTemplate) return true;
+        else
+            return isSameDay(
+                startOfWeek(startTime, CalendarData.localeString),
+                startOfWeek(
+                    calendarData.selectedDay,
+                    CalendarData.localeString,
+                ),
+            );
     }
 }
 
@@ -497,6 +506,16 @@ function onEventDeleted(): void {
                         :label="
                             model.shift.employee
                                 ? `${model.shift.employee.firstName} ${model.shift.employee.lastName}`
+                                : ''
+                        "
+                    />
+                    <UBadge
+                        v-else-if="model instanceof ShiftTemplateEventData"
+                        class="font-normal text-gray-700 flex flex-col items-start"
+                        variant="ghost"
+                        :label="
+                            model.template.employee
+                                ? `${model.template.employee.firstName} ${model.template.employee.lastName}`
                                 : ''
                         "
                     />

@@ -12,8 +12,6 @@ const { data } = defineProps<{
     data: CalendarData;
 }>();
 
-const ROWS_IN_DAY = 4;
-
 const cellElements = useTemplateRef<any[]>("cells");
 
 const containerClasses = new Map<CalendarMode, string>([
@@ -44,9 +42,16 @@ onMounted(() => {
 });
 
 function getLanes(): number {
-    if (data.selectedView == CalendarMode.Day)
-        return Math.max(1, data.relevantEmployees.length);
-    else return 7;
+    if (data.selectedView == CalendarMode.Day) {
+        let lanes = data.relevantEmployees.length;
+
+        if (data.hasUnassignedShift) lanes++;
+
+        if (lanes === 0)
+            lanes = 1;
+
+        return lanes;
+    } else return 7;
 }
 
 function getBorderStyle(cellIndex: number) {
@@ -69,7 +74,8 @@ function getBorderStyle(cellIndex: number) {
 
     if (cellIndex === 1) borderTopLeftRadius = "8px";
     else if (cellIndex === cellsInRow) borderTopRightRadius = "8px";
-    else if (cellIndex === cellsInRow * (rows - 1) + 1)
+
+    if (cellIndex === cellsInRow * (rows - 1) + 1)
         borderBottomLeftRadius = "8px";
     else if (cellIndex === cellsInRow * rows) borderBottomRightRadius = "8px";
 

@@ -42,6 +42,7 @@ export class CalendarData {
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
     public readonly refTemplateData = ref<TemplateCalendarData>();
+    public readonly refHasUnassignedShift = ref(false);
 
     constructor(
         selectedView: CalendarMode,
@@ -131,6 +132,10 @@ export class CalendarData {
         return this.refTemplateData.value;
     }
 
+    public get hasUnassignedShift(): boolean {
+        return this.refHasUnassignedShift.value;
+    }
+
     public async updateRelevantData() {
         this.refRelevantEvents.value = await this.updateRelevantEvents();
         this.refRelevantEmployees.value = await this.updateRelevantEmployees();
@@ -159,6 +164,25 @@ export class CalendarData {
                 this.selectedWeek.end,
             );
         }
+
+        let unassignedShift = false;
+
+        for (let i = 0; i < relevantEvents.length; i++) {
+            const event = relevantEvents[i];
+
+            if (event instanceof ShiftEventData && !event.shift.employee) {
+                unassignedShift = true;
+                break;
+            } else if (
+                event instanceof ShiftTemplateEventData &&
+                !event.template.employee
+            ) {
+                unassignedShift = true;
+                break;
+            }
+        }
+
+        this.refHasUnassignedShift.value = unassignedShift;
 
         return relevantEvents;
     }
@@ -219,11 +243,13 @@ export class CalendarData {
     private async updateRelevantEmployees(): Promise<Employee[]> {
         let relevantEmployees: Employee[] = [];
 
-        if (this.isTemplate) return relevantEmployees;
-
         for (const event of this.refRelevantEvents.value) {
-            if (!(event instanceof ShiftEventData)) continue;
-            const employee = event.shift.employee;
+            let employee;
+
+            if (event instanceof ShiftEventData)
+                employee = event.shift.employee;
+            else if (event instanceof ShiftTemplateEventData)
+                employee = event.template.employee;
 
             if (!employee) continue;
 

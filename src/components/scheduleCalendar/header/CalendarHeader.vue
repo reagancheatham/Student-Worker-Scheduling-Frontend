@@ -171,6 +171,8 @@ async function updateTemplateName(_: Event): Promise<void> {
     flex-direction: row;
     align-items: flex-end;
     height: 10%;
+    pointer-events: all;
+    z-index: 1;
 }
 
 .headerSegment {
