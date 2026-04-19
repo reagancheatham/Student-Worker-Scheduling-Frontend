@@ -3,9 +3,10 @@ import { Task } from "@classes/database/task.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 import { FormSubmitEvent } from "@nuxt/ui";
 import * as v from "valibot";
-import { onMounted, shallowReactive, watch } from "vue";
-import { Store } from "@classes/util/store.ts";
+import { onMounted, ref, shallowReactive, watch } from "vue";
+import { Store } from "@classes/util/store/store.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
+import { User } from "@classes/database/user.ts";
 
 const model = defineModel<Task>({
     required: true,
@@ -38,6 +39,7 @@ const state = shallowReactive<{
     description: model.value.description,
 });
 
+const user = ref<User>();
 const checkOffColumns = [
     {
         header: "Checked Off By:",
@@ -66,6 +68,8 @@ async function initializeState() {
     state.name = model.value.name;
     state.description = model.value.description;
 
+    user.value = await Store.userStore.get();
+
     if (model.value.isValid()) model.value.checkOffs = model.value.checkOffs;
     else model.value.checkOffs = [];
 }
@@ -91,20 +95,16 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
 }
 
 function shouldShowCheckOffButton(): boolean {
-    if (!model) return false;
-
-    const user = Store.getUser();
-
-    if (!user) return false;
+    if (!user.value) return false;
 
     return !model.value.checkOffs.find(
-        (checkOff) => checkOff.employee.email == user.email,
+        (checkOff) => checkOff.employee.email == user.value!.email,
     );
 }
 
 async function checkOff(): Promise<void> {
-    const user = Store.getUser();
-    const business = await Store.getBusiness();
+    const user = await Store.userStore.get();
+    const business = await Store.businessStore.get();
 
     if (!user || !business) {
         console.error("User or business is invalid!");
@@ -124,8 +124,8 @@ async function checkOff(): Promise<void> {
 }
 
 async function removeCheckOff(): Promise<void> {
-    const user = Store.getUser();
-    const business = await Store.getBusiness();
+    const user = await Store.userStore.get();
+    const business = await Store.businessStore.get();
 
     if (!user || !business) {
         console.error("User or business is invalid!");

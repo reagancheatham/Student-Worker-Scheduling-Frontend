@@ -7,7 +7,7 @@ import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import * as valibot from "valibot";
 
 const toast = useToast();
@@ -207,22 +207,27 @@ async function submitRefreshSchoolUnavailabilities(
     }
 }
 
-async function submitAdd(event: FormSubmitEvent<AddValidationSchema>) {
-    await EmployeeServices.create(addState.email, addState.isManager).then(
-        () => {
-            getData();
-            isAddOpen.value = false;
-        },
+async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
+    const employee = await Employee.createInviteEmployee(
+        addState.email,
+        addState.isManager,
     );
+
+    isAddOpen.value = false;
+
+    await EmployeeServices.create(employee).then(() => {
+        getData();
+    });
 }
 
 async function getData() {
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 
     try {
         const result = await EmployeeServices.getAllForBusiness(business.id);
+
         data.value = result;
     } catch (error) {
         console.error(`Error getting employees: ${error}`);

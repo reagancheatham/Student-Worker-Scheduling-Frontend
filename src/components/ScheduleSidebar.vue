@@ -1,42 +1,52 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRoute } from "vue-router";
-import { routes } from "../routing/routes.ts";
+import { subRoutes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
 import { AuthServices } from "../services/authServices.ts";
+import { useRoute } from "vue-router";
 
 const route = useRoute();
-
 const links = computed(() => [
     {
         label: "Dashboard",
         icon: "i-lucide-house",
-        to: routes.NavbarLayout.children![0].path,
-        active: route.path.includes(routes.NavbarLayout.children![0].path),
+        to: subRoutes.Dashboard,
     },
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
-        to: routes.NavbarLayout.children![1].path,
-        active: route.path.includes(routes.NavbarLayout.children![1].path),
+        to: subRoutes.Schedule,
+        defaultOpen:
+            route.path.includes(subRoutes.Schedule.path) ||
+            route.path.includes(subRoutes.ScheduleTemplate.path),
+        children: [
+            {
+                label: "Schedule Editor",
+                icon: "i-lucide-calendar-clock",
+                to: subRoutes.Schedule,
+            },
+            {
+                label: "Template Editor",
+                icon: "i-lucide-calendar-cog",
+                to: subRoutes.ScheduleTemplate,
+            },
+        ],
+        active: false,
     },
     {
         label: "Open Shifts",
         icon: "i-lucide-briefcase",
-        to: routes.NavbarLayout.children![2].path,
-        active: route.path.includes(routes.NavbarLayout.children![2].path),
+        to: subRoutes.OpenShifts,
     },
     {
         label: "Employees",
         icon: "i-lucide-users",
-        to: routes.NavbarLayout.children![3].path,
-        active: route.path.includes(routes.NavbarLayout.children![3].path),
+        to: subRoutes.Employees,
     },
     {
         label: "Settings",
         icon: "i-lucide-settings",
-        to: routes.NavbarLayout.children![4].path,
-        active: route.path.includes(routes.NavbarLayout.children![4].path),
+        to: subRoutes.Settings,
     },
 ]);
 
@@ -52,7 +62,9 @@ const searchGroups = computed(() => [
     {
         id: "links",
         label: "Go to",
-        items: links.value.flat(),
+        items: links.value.flatMap((link) =>
+            link.children ? [link, ...link.children] : [link],
+        ),
     },
     {
         id: "actions",
@@ -91,8 +103,28 @@ const searchGroups = computed(() => [
                 :kbds="[]"
             />
 
-            <UNavigationMenu orientation="vertical" :items="links">
-                <template #item="{ item, active }">
+            <UNavigationMenu
+                orientation="vertical"
+                :key="route.path"
+                :items="links"
+                :ui="{
+                    item: 'gap-3 w-full',
+                    link: [
+                        'group px-2 py-2 rounded-md transition-colors',
+                        collapsed ? 'justify-center' : 'justify-start',
+                        'text-neutral-100 hover:text-white data-active:text-maroon-500',
+                    ],
+                    linkLeadingIcon: [
+                        'w-5 h-5 shrink-0 transition-colors',
+                        'text-neutral-100 group-hover:text-white data-active:text-maroon-500 group-data-active:text-maroon-500',
+                    ],
+                    linkTrailing: collapsed ? 'hidden' : 'block',
+                    linkTrailingIcon: collapsed ? 'hidden' : 'block',
+                    linkLabel: collapsed ? 'hidden' : 'block',
+                    childList: 'ml-6 pl-2',
+                }"
+            >
+                <!-- <template #item="{ item, active }">
                     <div
                         :class="[
                             'flex items-center gap-3 w-full',
@@ -117,7 +149,7 @@ const searchGroups = computed(() => [
                             {{ item.label }}
                         </span>
                     </div>
-                </template>
+                </template> -->
             </UNavigationMenu>
         </template>
     </UDashboardSidebar>

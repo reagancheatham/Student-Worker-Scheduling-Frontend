@@ -3,13 +3,13 @@ import { onMounted, ref } from "vue";
 import { TimeOffRequestServices } from "../../services/timeOffServices";
 import { Notification, NotificationModel } from "@classes/util/notification";
 import { NotificationType } from "@classes/util/notificationType";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 
 const notifications = ref<Notification<NotificationModel>[]>([]);
 
 //this function will more likely than not just service call each type of notification backend model, unify them, then put em in an array of notification classes
 async function getNotifications() {
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) {
         notifications.value = [];

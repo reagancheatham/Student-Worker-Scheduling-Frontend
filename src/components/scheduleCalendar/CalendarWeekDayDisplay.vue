@@ -53,7 +53,9 @@ function getDayNumber(index: number): string {
     <div class="weekDayContainer">
         <div class="weekDayDisplay" v-for="n in 7">
             <div class="text-primary">{{ getDayName(n) }}</div>
-            <div class="text-dimmed">{{ getDayNumber(n) }}</div>
+            <div v-if="!data.isTemplate" class="text-dimmed">
+                {{ getDayNumber(n) }}
+            </div>
         </div>
     </div>
 </template>
