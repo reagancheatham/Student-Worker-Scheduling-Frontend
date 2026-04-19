@@ -13,6 +13,7 @@ export class Employee extends DatabaseModel {
     }
 
     public static createFromData(data: any): Employee {
+        console.log(data)
         let user = data["User"];
         let studentID = user ? user.studentID : ("" as string);
         let firstName = user ? user.firstName : ("" as string);

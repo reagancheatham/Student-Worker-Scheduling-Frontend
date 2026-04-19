@@ -17,7 +17,7 @@ export class ShiftOfferRequestNotification extends DatabaseModel{
     public static createFromData(data: any): ShiftOfferRequestNotification {
             return new ShiftOfferRequestNotification(
                 data["id"] ?? 0,
-                data["shiftOfferRequest"] ?? "",
+                ShiftOfferRequest.createFromData(data["ShiftOfferRequest"]),
                 NotificationType.ShiftOfferRequest,
                 data["dismissed"] ?? 0,
                 data["createdAt"] ?? Date.now()

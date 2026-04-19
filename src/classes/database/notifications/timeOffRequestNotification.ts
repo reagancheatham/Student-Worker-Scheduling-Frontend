@@ -17,7 +17,7 @@ export class TimeOffRequestNotification extends DatabaseModel{
     public static createFromData(data: any): TimeOffRequestNotification {
             return new TimeOffRequestNotification(
                 data["id"] ?? 0,
-                data["timeOffRequest"] ?? "",
+                TimeOffRequest.createFromData(data["TimeOffRequest"]) ?? "",
                 NotificationType.TimeOffRequest,
                 data["dismissed"] ?? 0,
                 data["createdAt"] ?? Date.now()

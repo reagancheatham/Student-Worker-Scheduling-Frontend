@@ -31,7 +31,7 @@ export class Shift extends DatabaseModel {
             ? EventColor.fromString(data["color"])
             : EventColor.blue;
         const employee = data["Employee"]
-            ? Employee.create(data["Employee"])
+            ? Employee.createFromData(data["Employee"])
             : undefined;
 
         return new Shift(

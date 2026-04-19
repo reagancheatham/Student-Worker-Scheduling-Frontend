@@ -10,22 +10,11 @@ export const router = createRouter({
     routes: unwrappedRoutes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const storedUser = localStorage.getItem("user");
     let token: string | null = null;
     let businessID = 1;
 
-    if (storedUser) {
-        try {
-            const parsedUser = JSON.parse(storedUser);
-            token = parsedUser.token;
-        } catch (err) {
-            console.error(
-                "Error parsing user from localStorage: " + JSON.stringify(err),
-            );
-            token = null;
-        }
-    }
     const inviteCode = !!to.params.code;
 
     if (to.meta.requiresAuth) {
