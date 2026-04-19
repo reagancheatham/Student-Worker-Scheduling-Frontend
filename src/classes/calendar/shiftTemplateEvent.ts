@@ -1,20 +1,18 @@
 import { CalendarData } from "./calendarData.ts";
 import { CalendarMode } from "./calendarMode.ts";
-import { ShiftEventData } from "./shiftEventData.ts";
 import { EventStyleData } from "./eventStyleData.ts";
+import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
 
-export class ShiftEvent {
+export class ShiftTemplateEvent {
     public static getClass(styleData: EventStyleData): string {
         const event = styleData.event;
 
-        if (!(event instanceof ShiftEventData)) {
-            ShiftEvent.printTypeError();
+        if (!(event instanceof ShiftTemplateEventData)) {
+            ShiftTemplateEvent.printTypeError();
             return "";
         }
 
-        if (!event.shift.published)
-            return `event border-t-3 border-r-3 border-b-3`;
-        else return "event";
+        return `event border-t-3 border-r-3 border-b-3`;
     }
 
     public static getStyle(styleData: EventStyleData): any {
@@ -23,14 +21,14 @@ export class ShiftEvent {
         const cellSize = styleData.cellSize;
         const editable = styleData.editable;
 
-        if (!(event instanceof ShiftEventData)) {
-            ShiftEvent.printTypeError();
+        if (!(event instanceof ShiftTemplateEventData)) {
+            ShiftTemplateEvent.printTypeError();
             return {};
         }
 
         let style = {
-            "grid-area": ShiftEvent.getGridArea(event, calendarData),
-            "background-color": `var(${event.color.tailwind})`,
+            "grid-area": ShiftTemplateEvent.getGridArea(event, calendarData),
+            "background-color": `color-mix(in srgb, var(${event.color.tailwind}), transparent 40%)`,
             "z-index": `${event.zIndex}`,
             "border-color": `var(${event.color.border})`,
             "margin-top": `0`,
@@ -39,10 +37,6 @@ export class ShiftEvent {
             "margin-right": `0`,
             cursor: editable ? "pointer" : "cursor",
         };
-
-        if (event instanceof ShiftEventData && !event.shift.published)
-            style["background-color"] =
-                `color-mix(in srgb, var(${event.color.tailwind}), transparent 40%)`;
 
         if (calendarData.selectedView == CalendarMode.Day) {
             style["margin-top"] =
@@ -60,20 +54,19 @@ export class ShiftEvent {
     public static getLabel(styleData: EventStyleData): string {
         const event = styleData.event;
 
-        if (!(event instanceof ShiftEventData)) {
-            ShiftEvent.printTypeError();
+        if (!(event instanceof ShiftTemplateEventData)) {
+            ShiftTemplateEvent.printTypeError();
             return "";
         }
 
-        if (event.shift.published) return event.name;
-        else return `${event.name} - Unpublished`;
+        return event.name;
     }
 
     public static updateBackendEvent(styleData: EventStyleData): void {
         const event = styleData.event;
 
-        if (!(event instanceof ShiftEventData)) {
-            ShiftEvent.printTypeError();
+        if (!(event instanceof ShiftTemplateEventData)) {
+            ShiftTemplateEvent.printTypeError();
             return;
         }
 
@@ -81,16 +74,18 @@ export class ShiftEvent {
     }
 
     private static getGridArea(
-        event: ShiftEventData,
+        event: ShiftTemplateEventData,
         calendarData: CalendarData,
     ): string {
         const startTime = event.startTime;
         const endTime = event.endTime;
+        const startDayIndex = event.templateStartDay;
+        const endDayIndex = event.templateEndDay;
 
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
 
-            const employee = event.shift.employee;
+            const employee = event.template.employee;
 
             if (employee) {
                 row =
@@ -98,24 +93,23 @@ export class ShiftEvent {
                         (relEmployee) => relEmployee.id === employee.id,
                     ) + 1;
 
-                if (calendarData.hasUnassignedShift)
-                    row++;
+                if (calendarData.hasUnassignedShift) row++;
             }
 
             return `${row} 
             / ${1 + (60 * startTime.hour + startTime.minute)} 
-            / span ${1 + endTime.day - startTime.day} 
+            / span ${1 + endDayIndex - startDayIndex} 
             / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
         } else
             return `${1 + (60 * startTime.hour + startTime.minute)} 
-            / ${1 + startTime.day - calendarData.selectedWeek.start.day} 
+            / ${1 + startDayIndex} 
             / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} 
-            / span ${1 + (endTime.day - startTime.day)}`;
+            / span ${1 + (endDayIndex - startDayIndex)}`;
     }
 
     private static printTypeError(): void {
         console.error(
-            `${ShiftEvent.name} only accepts ${ShiftEventData.name}s!`,
+            `${ShiftTemplateEvent.name} only accepts ${ShiftTemplateEventData.name}s!`,
         );
     }
 }

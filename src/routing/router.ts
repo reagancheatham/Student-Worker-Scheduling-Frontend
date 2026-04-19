@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routes } from "./routes.ts";
-import { Store } from "@classes/util/store.ts";
 import { AuthServices } from "../services/authServices.ts";
 
 const unwrappedRoutes = Object.entries(routes).map((r) => r[1].unwrap());
@@ -11,14 +10,15 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-    const inviteCode = !!to.params.code;
+    const inviteCode = to.params.code;
 
     if (to.meta.requiresAuth) {
         const valid = await AuthServices.validateSession();
 
         if (valid) next();
         else next(routes.Login.path);
-    } else if (to.path == routes.Login.path) {
+    } else if (to.path.startsWith("/login")) {
+
         if (inviteCode) {
             next();
             return;
@@ -26,7 +26,7 @@ router.beforeEach(async (to, from, next) => {
 
         const valid = await AuthServices.validateSession();
 
-        if (valid) next(routes.NavbarLayout.children[0]);
+        if (valid) next(routes.NavbarLayout.path);
         else next();
     } else next();
 });

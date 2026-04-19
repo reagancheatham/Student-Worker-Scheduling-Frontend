@@ -11,6 +11,8 @@ import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
+import ScheduleContainerPage from "../pages/ScheduleContainerPage.vue";
+import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
 
 class Route {
     constructor(
@@ -50,6 +52,33 @@ class Route {
     }
 }
 
+const navbarLayout = Route.create(
+    "/nav",
+    NavbarLayout,
+    "NavbarLayout",
+    [
+        Route.create("dashboard", DashboardPage, "Dashboard").noAuth(),
+        Route.create(
+            "scheduleContainer",
+            ScheduleContainerPage,
+            "Schedule Container",
+            [
+                Route.create("schedule", SchedulePage, "Schedule Editor"),
+                Route.create(
+                    "scheduleTemplate",
+                    ScheduleTemplatePage,
+                    "Schedule Template Editor",
+                ),
+            ],
+            "/nav/scheduleContainer/schedule",
+        ).noAuth(),
+        Route.create("openShifts", OpenShiftsPage, "Open Shifts").noAuth(),
+        Route.create("employees", EmployeesPage, "Employees").noAuth(),
+        Route.create("settings", SettingsPage, "Settings").noAuth(),
+    ],
+    "/nav/dashboard",
+);
+
 export const routes = {
     Default: Route.create(
         "/",
@@ -58,21 +87,14 @@ export const routes = {
         undefined,
         "/login",
     ).noAuth(),
-    Login: Route.create("/login/:code?", LoginPage, "Login").noAuth(),
+    Login: Route.create("/login", LoginPage, "Login").noAuth(),
+    InviteLogin: Route.create(
+        "/login/:code?",
+        LoginPage,
+        "Invite Login",
+    ).noAuth(),
     NoBusiness: Route.create("/noBusiness", NoBusinessPage, "No Business"),
-    NavbarLayout: Route.create(
-        "/nav",
-        NavbarLayout,
-        "NavbarLayout",
-        [
-            Route.create("dashboard", DashboardPage, "Dashboard").noAuth(),
-            Route.create("schedule", SchedulePage, "Schedule").noAuth(),
-            Route.create("openShifts", OpenShiftsPage, "Open Shifts").noAuth(),
-            Route.create("employees", EmployeesPage, "Employees").noAuth(),
-            Route.create("settings", SettingsPage, "Settings").noAuth(),
-        ],
-        "/nav/dashboard",
-    ),
+    NavbarLayout: navbarLayout,
     MobileLayout: Route.create(
         "/mobile",
         NavbarLayout,
@@ -89,4 +111,14 @@ export const routes = {
         "/mobile/homePage",
     ),
     Admin: Route.create("/admin", AdminPage, "Admin"),
+};
+
+export const subRoutes = {
+    Dashboard: navbarLayout.children[0],
+    ScheduleContainer: navbarLayout.children[1],
+    Schedule: navbarLayout.children[1].children[0],
+    ScheduleTemplate: navbarLayout.children[1].children[1],
+    OpenShifts: navbarLayout.children[2],
+    Employees: navbarLayout.children[3],
+    Settings: navbarLayout.children[4],
 };

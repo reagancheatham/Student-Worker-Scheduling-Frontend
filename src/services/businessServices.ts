@@ -1,6 +1,6 @@
 import { Business } from "@classes/database/business";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 
 const API_ROOT: string = "businesses";
 
@@ -37,6 +37,6 @@ export class BusinessServices {
             `/businesses/${businessID}`,
         );
 
-        Store.setBusiness(newBusiness);
+        Store.businessStore.set(newBusiness);
     }
 }

@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useColorMode } from "@vueuse/core";
 import { Settings } from "@classes/database/settings.ts";
 import { SettingsServices } from "../services/settingsServices.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 
 type SwitchSettingKey =
     | "doubleTaskSignOff"
@@ -123,7 +123,7 @@ async function loadSettings() {
     isLoading.value = true;
     statusMessage.value = "";
 
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) return;
 
