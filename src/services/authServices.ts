@@ -65,7 +65,12 @@ export class AuthServices {
 
     public static async validateSession(): Promise<boolean> {
         try {
+            const user = Store.userStore.getImmediate();
+
+            if (!user) return false;
+
             const result = await apiClient.post(`authentication/validate`);
+            console.log("Validating")
 
             return result.data.valid;
         } catch (error) {
