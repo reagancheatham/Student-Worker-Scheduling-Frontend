@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { subRoutes } from "../routing/routes.ts";
+import { computed, onMounted, ref } from "vue";
+import { routes, subRoutes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
 import { AuthServices } from "../services/authServices.ts";
 import { useRoute } from "vue-router";
+import { PermissionRoleServices } from "../services/permissionRoleServices.ts";
+import { Store } from "@classes/util/store/store.ts";
+
+const isAdmin = ref(false);
+
+onMounted(async () => {
+    const permissionRoleID = Store.userStore.getImmediate()?.permissionRoleID
+    if (!permissionRoleID) return;
+    const role = await PermissionRoleServices.get(permissionRoleID);
+    isAdmin.value = role.name === "Admin";
+});
 
 const route = useRoute();
 const links = computed(() => [
@@ -60,6 +71,11 @@ const links = computed(() => [
         icon: "i-lucide-settings",
         to: subRoutes.Settings,
     },
+    ...(isAdmin.value ? [{
+        label: "Go To Admin",
+        icon: "i-lucide-shield",
+        to: routes.Admin,
+    }] : []),
 ]);
 
 const actions = computed(() => [

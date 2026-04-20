@@ -10,7 +10,11 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-    const inviteCode = to.params.code;
+    const storedUser = localStorage.getItem("user");
+    let token: string | null = null;
+    let businessID = 1;
+
+    const inviteCode = !!to.params.code;
 
     if (to.meta.requiresAuth) {
         const valid = await AuthServices.validateSession();

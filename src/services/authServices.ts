@@ -3,7 +3,7 @@ import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
-import { Admin } from "@classes/database/permissionRole.ts";
+import { Admin } from "@classes/util/permissionRole.ts";
 import { routes, subRoutes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication";
@@ -11,7 +11,6 @@ const API_ROOT: string = "authentication";
 export class AuthServices {
     public static async login(token: string, code?: string) {
         let user: User;
-
         try {
             const result = await apiClient.post(API_ROOT, {
                 credential: token,
@@ -70,6 +69,7 @@ export class AuthServices {
             if (!user) return false;
 
             const result = await apiClient.post(`authentication/validate`);
+            console.log("Validating")
 
             return result.data.valid;
         } catch (error) {
