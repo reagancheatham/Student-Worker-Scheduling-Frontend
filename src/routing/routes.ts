@@ -12,6 +12,7 @@ import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
 import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
+import ScheduleContainerPage from "../pages/ScheduleContainerPage.vue";
 
 class Route {
     constructor(
@@ -71,7 +72,11 @@ const navbarLayout = Route.create(
             ],
             "/nav/scheduleContainer/schedule",
         ).noAuth(),
-        Route.create("notifications", NotificationsPage, "Notifications").noAuth(),
+        Route.create(
+            "notifications",
+            NotificationsPage,
+            "Notifications",
+        ).noAuth(),
         Route.create("employees", EmployeesPage, "Employees").noAuth(),
         Route.create("settings", SettingsPage, "Settings").noAuth(),
     ],
