@@ -11,7 +11,6 @@ import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
-import ScheduleContainerPage from "../pages/ScheduleContainerPage.vue";
 import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
 
 class Route {

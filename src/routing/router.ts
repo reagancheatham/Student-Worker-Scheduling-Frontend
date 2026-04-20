@@ -10,10 +10,6 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-    const storedUser = localStorage.getItem("user");
-    let token: string | null = null;
-    let businessID = 1;
-
     const inviteCode = !!to.params.code;
 
     if (to.meta.requiresAuth) {
@@ -22,7 +18,6 @@ router.beforeEach(async (to, from, next) => {
         if (valid) next();
         else next(routes.Login.path);
     } else if (to.path.startsWith("/login")) {
-
         if (inviteCode) {
             next();
             return;
