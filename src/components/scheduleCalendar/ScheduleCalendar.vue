@@ -95,7 +95,6 @@ function cancelEdit(): void {
 .calendarBody {
     width: 100%;
     display: flex;
-    flex: 1;
     min-height: 0;
     max-height: 100%;
     flex-direction: row;
@@ -172,7 +171,7 @@ function cancelEdit(): void {
         No shifts to display.
     </div>
     <div v-if="data && data.isTemplate">
-        <div class="flex mt-10 mr-16 items-end">
+        <div class="absolute right-8 bottom-8">
             <UButton
                 class="ml-auto"
                 label="Return to Template Selection"

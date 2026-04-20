@@ -416,7 +416,6 @@ function onEventDeleted(): void {
 <style>
 .event {
     pointer-events: all;
-    border-left-width: 4px;
     display: flex;
     flex-direction: column;
     padding-left: 10px;
@@ -461,7 +460,7 @@ function onEventDeleted(): void {
         <UCard
             ref="element"
             variant="ghost"
-            :class="getClass()"
+            :class="[getClass()]"
             :style="getStyle()"
             :ui="{
                 footer: 'mt-auto',
@@ -539,7 +538,7 @@ function onEventDeleted(): void {
                 "
             >
                 <div
-                    class="resizeHandle bottom-0 left-0 right-0 cursor-ns-resize"
+                    class="resizeHandle -bottom-1 left-0 right-0 cursor-ns-resize"
                     style="height: 8px"
                     @pointerdown="startResize"
                 />
@@ -551,6 +550,7 @@ function onEventDeleted(): void {
             :data="calendarData"
             @close-requested="closeModal()"
             @event-deleted="onEventDeleted()"
+            @form-submitted="calendarData.updateRelevantData()"
         />
     </UPopover>
 </template>

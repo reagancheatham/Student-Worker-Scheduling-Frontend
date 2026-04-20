@@ -10,6 +10,7 @@ import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
 import {
+    computed,
     onMounted,
     ref,
     shallowReactive,
@@ -70,7 +71,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
-        targetRole: v.nullish(v.instance(Role, "Invalid role")),
+        role: v.nullish(v.instance(Role, "Invalid role")),
         employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
@@ -152,6 +153,37 @@ const taskColumns = [
     },
 ];
 
+const isValidRole = computed(() => {
+    if (!state.employee || !state.role) return true;
+    else
+        return (
+            state.employee.roles.find((r) => r.id === state.role!.id) !==
+            undefined
+        );
+});
+
+const employeeItems = computed(() => {
+    if (!state.role) {
+        return employees.value;
+    } else {
+        return employees.value.map((employee) => {
+            let chip;
+
+            if (
+                employee.roles.find((r) => r.id === state.role!.id) ===
+                undefined
+            )
+                chip = {
+                    color: "warning",
+                };
+
+            (employee as any).chip = chip;
+
+            return employee;
+        });
+    }
+});
+
 let deletedTasks: Task[] = [];
 let removedCheckOffs: TaskCheckOff[] = [];
 let isDirtyHandle: WatchHandle;
@@ -223,6 +255,7 @@ async function initializeState() {
         },
     };
     state.employee = getData().shift.employee;
+    state.role = getData().shift.role;
 
     if (model.value.shift.isValid()) {
         taskList.value = await TaskListServices.getOrCreateForShift(
@@ -230,9 +263,16 @@ async function initializeState() {
         );
     } else taskList.value = new TaskList(0, 0, "Task List", []);
 
+    const getEmployees = async () =>
+        (employees.value = await EmployeeServices.getAllForBusiness(
+            business.id,
+        ));
+    const getRoles = async () =>
+        (roles.value = await RoleServices.getAllForBusiness(business.id));
+
     const promises: Promise<any>[] = [];
-    promises.push(EmployeeServices.getAllForBusiness(business.id));
-    promises.push(RoleServices.getAllForBusiness(business.id));
+    promises.push(getEmployees());
+    promises.push(getRoles());
 
     await Promise.all(promises);
 
@@ -298,8 +338,8 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     );
 
     event.color = state.color.value;
-    event.shift.role = state.role;
     event.shift.employee = state.employee;
+    event.shift.role = state.role;
 
     const removeCheckPromises = removedCheckOffs.map(async (check) => {
         if (check.id > 0) return await TaskServices.deleteCheckOff(check);
@@ -465,13 +505,17 @@ function publishShift(): void {
                     </UFormField>
                     <div class="flex gap-4">
                         <UFormField label="Role" name="role">
-                            <USelectMenu
-                                class="min-w-36"
-                                v-model="state.role"
-                                :items="roles"
-                                label-key="name"
-                                clear
-                            />
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.role"
+                                    :items="roles"
+                                    label-key="name"
+                                    clear
+                                    placeholder="Select Role"
+                                    :autofocus="false"
+                                />
+                            </div>
                         </UFormField>
                         <USeparator
                             class="h-8 self-end"
@@ -480,13 +524,27 @@ function publishShift(): void {
                             decorative
                         />
                         <UFormField label="Assigned Employee" name="employee">
-                            <USelectMenu
-                                class="min-w-36"
-                                v-model="state.employee"
-                                :items="employees"
-                                label-key="fullName"
-                                clear
-                            />
+                            <UChip
+                                :show="!isValidRole"
+                                size="3xl"
+                                text="Missing Role"
+                                color="warning"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                            >
+                                <div @pointerdown.stop.prevent>
+                                    <USelectMenu
+                                        class="min-w-36"
+                                        v-model="state.employee"
+                                        label-key="fullName"
+                                        :items="employeeItems"
+                                        clear
+                                        placeholder="Select Employee"
+                                        :autofocus="false"
+                                    />
+                                </div>
+                            </UChip>
                         </UFormField>
                     </div>
                     <UFormField name="taskList">
@@ -574,7 +632,6 @@ function publishShift(): void {
                                 <UButton
                                     label="Publish"
                                     :disabled="!state.employee"
-                                    @click="publishShift"
                                 />
                             </UTooltip>
                             <template #footer="{ close }">
@@ -582,7 +639,12 @@ function publishShift(): void {
                                     label="Publish"
                                     class="ml-auto"
                                     type="submit"
-                                    @click="formElement?.submit()"
+                                    @click="
+                                        () => {
+                                            publishShift();
+                                            formElement?.submit();
+                                        }
+                                    "
                                 />
                                 <UButton
                                     label="Cancel"

@@ -13,7 +13,7 @@ export class ShiftEvent {
         }
 
         if (!event.shift.published)
-            return `event border-t-3 border-r-3 border-b-3`;
+            return `event ring-inset ring-3 ${event.color.ring}`;
         else return "event";
     }
 
@@ -98,8 +98,7 @@ export class ShiftEvent {
                         (relEmployee) => relEmployee.id === employee.id,
                     ) + 1;
 
-                if (calendarData.hasUnassignedShift)
-                    row++;
+                if (calendarData.hasUnassignedShift) row++;
             }
 
             return `${row} 

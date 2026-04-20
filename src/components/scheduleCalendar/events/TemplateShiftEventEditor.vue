@@ -6,8 +6,9 @@ import {
 } from "@vueuse/integrations/useSortable";
 import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { EventTime } from "@classes/calendar/eventTime.ts";
-import { DateValue, Time } from "@internationalized/date";
+import { Time } from "@internationalized/date";
 import {
+    computed,
     onMounted,
     ref,
     shallowReactive,
@@ -26,6 +27,8 @@ import { ShiftTaskTemplateServices } from "../../../services/shiftTaskTemplateSe
 import { TempStore } from "@classes/util/store/tempStore.ts";
 import { fromWeekIndex, WeekDay } from "@classes/util/weekDay.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
+import { Role } from "@classes/database/role.ts";
+import { RoleServices } from "../../../services/roleServices.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({
@@ -70,6 +73,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
+        role: v.nullish(v.instance(Role, "Invalid role")),
         employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
@@ -98,6 +102,7 @@ const state = shallowReactive<{
     startTime: Time;
     endTime: Time;
     color: ColorItem;
+    role: Role | undefined;
     employee: Employee | undefined;
 }>({
     name: getData().name,
@@ -111,6 +116,7 @@ const state = shallowReactive<{
             color: getData().color.semantic,
         },
     },
+    role: getData().template.role,
     employee: getData().template.employee,
 });
 
@@ -122,6 +128,7 @@ const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
+const roles = ref<Role[]>([]);
 
 const taskColumns = [
     {
@@ -138,6 +145,37 @@ const taskColumns = [
         header: "Action",
     },
 ];
+
+const isValidRole = computed(() => {
+    if (!state.employee || !state.role) return true;
+    else
+        return (
+            state.employee.roles.find((r) => r.id === state.role!.id) !==
+            undefined
+        );
+});
+
+const employeeItems = computed(() => {
+    if (!state.role) {
+        return employees.value;
+    } else {
+        return employees.value.map((employee) => {
+            let chip;
+
+            if (
+                employee.roles.find((r) => r.id === state.role!.id) ===
+                undefined
+            )
+                chip = {
+                    color: "warning",
+                };
+
+            (employee as any).chip = chip;
+
+            return employee;
+        });
+    }
+});
 
 let deletedTasks: ShiftTaskTemplate[] = [];
 let isDirtyHandle: WatchHandle;
@@ -208,8 +246,21 @@ async function initializeState() {
             color: getData().color.semantic,
         },
     };
+    state.employee = getData().template.employee;
+    state.role = getData().template.role;
 
-    employees.value = await EmployeeServices.getAllForBusiness(business.id);
+    const getEmployees = async () =>
+        (employees.value = await EmployeeServices.getAllForBusiness(
+            business.id,
+        ));
+    const getRoles = async () =>
+        (roles.value = await RoleServices.getAllForBusiness(business.id));
+
+    const promises: Promise<any>[] = [];
+    promises.push(getEmployees());
+    promises.push(getRoles());
+
+    await Promise.all(promises);
 
     initializeTaskUIIDs();
 
@@ -261,6 +312,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     event.endTime = new EventTime(2026, 5, 12, endTime.hour, endTime.minute);
     event.color = state.color.value;
     event.template.employee = state.employee;
+    event.template.role = state.role;
 
     const taskPromises = deletedTasks.map(async (task) => {
         if (task.isValid()) return await ShiftTaskTemplateServices.delete(task);
@@ -331,16 +383,16 @@ function createDefaultTask(): ShiftTaskTemplate {
 <template>
     <UModal
         :open="isOpen"
-        :title="creator ? 'Shift Creator' : 'Shift Editor'"
+        :title="creator ? 'Template Shift Creator' : 'Template Shift Editor'"
         :dismissible="!isDirty"
-        :ui="{ content: 'sm:max-w-sm' }"
+        :ui="{ content: 'sm:max-w-md' }"
         description="Edit the details of a shift."
         @update:open="toggleModal()"
     >
         <template #content>
             <div class="p-2 flex flex-row">
                 <p class="text-xl font-semibold ml-2">
-                    {{ creator ? "Shift Creator" : "Shift Editor" }}
+                    {{ creator ? "Template Shift Creator" : "Template Shift Editor" }}
                 </p>
             </div>
             <div class="p-4">
@@ -382,15 +434,50 @@ function createDefaultTask(): ShiftTaskTemplate {
                             </template>
                         </USelectMenu>
                     </UFormField>
-                    <UFormField label="Assigned Employee" name="employee">
-                        <USelectMenu
-                            class="min-w-36"
-                            v-model="state.employee"
-                            :items="employees"
-                            label-key="fullName"
-                            clear
+                    <div class="flex gap-4">
+                        <UFormField label="Role" name="role">
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.role"
+                                    :items="roles"
+                                    label-key="name"
+                                    clear
+                                    placeholder="Select Role"
+                                    :autofocus="false"
+                                />
+                            </div>
+                        </UFormField>
+                        <USeparator
+                            class="h-8 self-end"
+                            orientation="vertical"
+                            size="sm"
+                            decorative
                         />
-                    </UFormField>
+                        <UFormField label="Assigned Employee" name="employee">
+                            <UChip
+                                :show="!isValidRole"
+                                size="3xl"
+                                text="Missing Role"
+                                color="warning"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                            >
+                                <div @pointerdown.stop.prevent>
+                                    <USelectMenu
+                                        class="min-w-36"
+                                        v-model="state.employee"
+                                        label-key="fullName"
+                                        :items="employeeItems"
+                                        clear
+                                        placeholder="Select Employee"
+                                        :autofocus="false"
+                                    />
+                                </div>
+                            </UChip>
+                        </UFormField>
+                    </div>
                     <UFormField name="taskList">
                         <div
                             class="flex flex-col flex-1 w-full border rounded-md border-accented"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { isMobileApp } from "@classes/util/isMobile";
 import MobileTabs from "@components/MobileTabs.vue";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import ProfileSettingsModal from "../../mobile/modals/ProfileSettingsModal.vue";
 import { Store } from "@classes/util/store/store.ts";
 

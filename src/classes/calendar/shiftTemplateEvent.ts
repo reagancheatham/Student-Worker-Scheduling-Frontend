@@ -12,7 +12,7 @@ export class ShiftTemplateEvent {
             return "";
         }
 
-        return `event border-t-3 border-r-3 border-b-3`;
+        return `event ring-inset ring-3 ${event.color.ring}`;
     }
 
     public static getStyle(styleData: EventStyleData): any {
@@ -30,7 +30,6 @@ export class ShiftTemplateEvent {
             "grid-area": ShiftTemplateEvent.getGridArea(event, calendarData),
             "background-color": `color-mix(in srgb, var(${event.color.tailwind}), transparent 40%)`,
             "z-index": `${event.zIndex}`,
-            "border-color": `var(${event.color.border})`,
             "margin-top": `0`,
             "margin-bottom": `0`,
             "margin-left": `0`,
