@@ -5,7 +5,7 @@ import SettingsPage from "../pages/SettingsPage.vue";
 import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
-import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import NotificationsPage from "../pages/NotificationsPage.vue";
 import AdminPage from "../pages/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
@@ -72,7 +72,7 @@ const navbarLayout = Route.create(
             ],
             "/nav/scheduleContainer/schedule",
         ).noAuth(),
-        Route.create("openShifts", OpenShiftsPage, "Open Shifts").noAuth(),
+        Route.create("notifications", NotificationsPage, "Notifications").noAuth(),
         Route.create("employees", EmployeesPage, "Employees").noAuth(),
         Route.create("settings", SettingsPage, "Settings").noAuth(),
     ],
@@ -118,7 +118,7 @@ export const subRoutes = {
     ScheduleContainer: navbarLayout.children[1],
     Schedule: navbarLayout.children[1].children[0],
     ScheduleTemplate: navbarLayout.children[1].children[1],
-    OpenShifts: navbarLayout.children[2],
+    Notifications: navbarLayout.children[2],
     Employees: navbarLayout.children[3],
     Settings: navbarLayout.children[4],
 };
