@@ -11,6 +11,8 @@ const scheduleTemplates = ref<ScheduleTemplate[]>([]);
 const isDeleteModalOpen = ref(false);
 
 onMounted(async () => {
+    selectedTemplate.value = Store.lastEditedTemplateStore.getUnsafe();
+
     const lastEditedTemplate = await Store.lastEditedTemplateStore.get();
 
     if (lastEditedTemplate) selectedTemplate.value = lastEditedTemplate;
