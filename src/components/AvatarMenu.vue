@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { computed, onMounted, ref } from "vue";
 import { AuthServices } from "../services/authServices";
 import { BusinessServices } from "../services/businessServices";
 import { router } from "../routing/router.ts";
+import { User } from "@classes/database/user.ts";
 
 defineProps<{
     collapsed?: boolean;
 }>();
 
-const localUser = Store.getUser();
-
-const user = ref({
-    name: `${localUser?.firstName} ${localUser?.lastName}`,
+const user = ref<User>();
+const displayUser = ref({
+    name: "",
     avatar: {
-        src: localUser?.profilePicture,
-        alt: localUser?.firstName,
+        src: "" as string | undefined,
+        alt: "?" as string | undefined,
     },
 });
 
@@ -26,7 +26,7 @@ const items = computed(() => [
     [
         {
             type: "label",
-            label: user.value.name,
+            label: displayUser.value.name,
         },
     ],
     [
@@ -50,13 +50,13 @@ const items = computed(() => [
 ]);
 
 async function getBusinesses() {
-    if (localUser == null) {
+    if (!user.value) {
         console.log("localUser doesn't exist!");
         return;
     }
 
     try {
-        const result = await BusinessServices.getAllForUser(localUser.id);
+        const result = await BusinessServices.getAllForUser(user.value.id);
 
         usersBusinesses.value = result.map(
             (business: any): DropdownMenuItem => ({
@@ -72,7 +72,18 @@ async function getBusinesses() {
     }
 }
 
-onMounted(() => getBusinesses());
+onMounted(async () => {
+    user.value = await Store.userStore.get();
+    displayUser.value = {
+        name: `${user.value?.firstName} ${user.value?.lastName}`,
+        avatar: {
+            src: user.value?.profilePicture,
+            alt: user.value?.firstName,
+        },
+    };
+
+    getBusinesses();
+});
 </script>
 
 <template>
@@ -87,8 +98,8 @@ onMounted(() => getBusinesses());
     >
         <UButton
             v-bind="{
-                ...user,
-                label: collapsed ? undefined : user?.name,
+                ...displayUser,
+                label: collapsed ? undefined : displayUser?.name,
                 trailingIcon: collapsed
                     ? undefined
                     : 'i-lucide-chevrons-up-down',

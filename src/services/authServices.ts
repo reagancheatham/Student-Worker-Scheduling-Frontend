@@ -1,9 +1,9 @@
 import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
-import { Admin } from "@classes/database/permissionRole.ts";
+import { Admin } from "@classes/util/permissionRole.ts";
 import { routes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication";
@@ -11,7 +11,6 @@ const API_ROOT: string = "authentication";
 export class AuthServices {
     public static async login(token: string, code?: string) {
         let user: User;
-
         try {
             const result = await apiClient.post(API_ROOT, {
                 credential: token,
@@ -22,7 +21,7 @@ export class AuthServices {
                 user = result.data.user;
                 user.token = result.data.token;
 
-                Store.setUser(user);
+                Store.userStore.set(user);
 
                 if (user.permissionRoleID == Admin.id) {
                     router.push(routes.Admin.path);
@@ -34,11 +33,11 @@ export class AuthServices {
 
                     if (businesses && businesses.length > 0) {
                         const firstBusiness = businesses[0];
-                        Store.setBusiness(firstBusiness);
+                        Store.businessStore.set(firstBusiness);
 
                         router.push(routes.NavbarLayout.children![0].path);
                     } else {
-                        Store.clearBusiness();
+                        Store.businessStore.clear();
                         router.push(routes.NoBusiness.path);
                     }
                 }
@@ -52,20 +51,25 @@ export class AuthServices {
 
     public static async logout() {
         try {
-            Store.clearUser();
+            Store.userStore.clear();
             router.push(routes.Login.path);
 
             await apiClient.post(`${API_ROOT}/logout`);
         } catch (error) {
             console.error("Logout failed: ", error);
-            Store.clearUser();
+            Store.userStore.clear();
             router.push(routes.Login.path);
         }
     }
 
     public static async validateSession(): Promise<boolean> {
         try {
+            const user = Store.userStore.getImmediate();
+
+            if (!user) return false;
+
             const result = await apiClient.post(`authentication/validate`);
+            console.log("Validating")
 
             return result.data.valid;
         } catch (error) {

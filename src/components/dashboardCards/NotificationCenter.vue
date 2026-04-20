@@ -6,6 +6,7 @@ import { TimeOffRequestNotificationServices } from "../../services/notifications
 import { NotificationType } from "@classes/util/notificationType";
 import { MessageNotificationServices } from "../../services/notifications/messageNotificationServices";
 import { ShiftTradeRequestNotificationServices } from "../../services/notifications/shfitTradeRequestNotificationServices";
+import { Store } from "@classes/util/store/store";
 
 const notifications = ref<AppNotification[]>([]);
 const toast = useToast();
