@@ -107,6 +107,7 @@ async function deleteBusiness(business: Business) {
 
 async function submitEdit(_: FormSubmitEvent<EditValidationSchema>) {
     if (!selectedBusiness.value) return;
+    isEditOpen.value = false;
     await BusinessServices.update(
         new Business(selectedBusiness.value.id, editState.name),
         editState.email,
@@ -117,7 +118,6 @@ async function submitEdit(_: FormSubmitEvent<EditValidationSchema>) {
                 description: `Updated ${editState.name} successfully`,
             });
             getData();
-            isEditOpen.value = false;
         })
         .catch((err: any) => {
             toastNotification.add({
@@ -129,6 +129,7 @@ async function submitEdit(_: FormSubmitEvent<EditValidationSchema>) {
 }
 
 async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
+    isAddOpen.value = false;
     await BusinessServices.create(
         new Business(-1, addState.name),
         addState.email,
@@ -139,7 +140,6 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
                 description: `Added ${addState.name} successfully`,
             });
             getData();
-            isAddOpen.value = false;
         })
         .catch((err: any) => {
             toastNotification.add({
