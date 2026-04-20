@@ -45,6 +45,14 @@ export class ShiftOfferRequestNotificationServices {
         return finalResult;
     }
 
+    static async dismiss(
+        shiftOfferRequestNotification: ShiftOfferRequestNotification,
+    ) {
+        await apiClient.put(`${API_ROOT}/dismiss`, {
+            id: shiftOfferRequestNotification.id,
+        });
+    }
+
     static async approve(
         shiftOfferRequestNotification: ShiftOfferRequestNotification,
     ) {

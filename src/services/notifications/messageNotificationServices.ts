@@ -8,7 +8,21 @@ const API_ROOT: string = "messageNotifications";
 
 export class MessageNotificationServices {
     static async update(messageNotification: MessageNotification) {
-        await DatabaseServices.update(MessageNotification, API_ROOT, messageNotification);
+        await DatabaseServices.update(
+            MessageNotification,
+            API_ROOT,
+            messageNotification,
+        );
+    }
+
+    static async delete(messageNotification: MessageNotification) {
+        await DatabaseServices.delete(`&{API_ROOT}/${messageNotification.id}`);
+    }
+
+    static async dismiss(messageNotification: MessageNotification) {
+        await apiClient.put(`${API_ROOT}/dismiss`, {
+            id: messageNotification.id,
+        });
     }
 
     static async getAllForBusiness(): Promise<AppNotification[]> {
@@ -24,9 +38,7 @@ export class MessageNotificationServices {
                 finalResult = data.map((item: any) => {
                     const notificationInstance =
                         MessageNotification.createFromData(item);
-                    return AppNotification.fromMessage(
-                        notificationInstance,
-                    );
+                    return AppNotification.fromMessage(notificationInstance);
                 });
             }
             console.log(`${path} found successfully`);
