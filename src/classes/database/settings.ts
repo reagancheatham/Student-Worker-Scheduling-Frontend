@@ -27,7 +27,7 @@ export class Settings extends DatabaseModel {
             data["automaticShiftTrades"] ?? false,
             data["enableOpenShift"] ?? false,
             data["enableShiftTrades"] ?? false,
-            data["defaultTermCode"] ?? "",
+            data["defaultTermCode"] ?? "2026SP",
         );
     }
 
@@ -42,7 +42,7 @@ export class Settings extends DatabaseModel {
             false,
             false,
             false,
-            "",
+            "2026SP",
         );
     }
 }
