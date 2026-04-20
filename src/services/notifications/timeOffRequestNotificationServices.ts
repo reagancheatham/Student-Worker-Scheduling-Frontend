@@ -1,7 +1,7 @@
 import { TimeOffRequestNotification } from "@classes/database/notifications/timeOffRequestNotification";
 import { AppNotification } from "@classes/util/appNotification";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import { apiClient } from "../services";
 import { TimeOffRequestServices } from "../timeOffServices";
 
@@ -19,7 +19,7 @@ export class TimeOffRequestNotificationServices {
     }
 
     static async getAllForBusiness(): Promise<AppNotification[]> {
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
         const path = `${API_ROOT}/business/${business?.id}`;
         let finalResult: AppNotification[] = [];
 
