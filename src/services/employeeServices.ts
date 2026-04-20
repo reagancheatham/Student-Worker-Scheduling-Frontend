@@ -12,8 +12,7 @@ export class EmployeeServices {
     public static async create(employee: Employee) {
         try {
             let business = await Store.businessStore.get();
-            if (business)
-                await apiClient.post(`${API_ROOT}`, employee);
+            if (business) await apiClient.post(`${API_ROOT}`, employee);
         } catch (error) {
             console.error(`Error adding employee: ${error}`);
             return;
@@ -47,6 +46,8 @@ export class EmployeeServices {
 
         try {
             const result = await apiClient.get(`${API_ROOT}/owners`);
+
+            if (!result.data || !Array.isArray(result.data)) return owners;
 
             owners = result.data.map((ownerData: any) => {
                 return new Owner(

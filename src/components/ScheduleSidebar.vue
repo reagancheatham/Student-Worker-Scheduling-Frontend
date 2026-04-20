@@ -15,7 +15,6 @@ const links = computed(() => [
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
-        to: subRoutes.Schedule,
         defaultOpen:
             route.path.includes(subRoutes.Schedule.path) ||
             route.path.includes(subRoutes.ScheduleTemplate.path),
@@ -31,7 +30,6 @@ const links = computed(() => [
                 to: subRoutes.ScheduleTemplate,
             },
         ],
-        active: false,
     },
     {
         label: "Open Shifts",
@@ -41,7 +39,21 @@ const links = computed(() => [
     {
         label: "Employees",
         icon: "i-lucide-users",
-        to: subRoutes.Employees,
+        defaultOpen:
+            route.path.includes(subRoutes.EmployeeList.path) ||
+            route.path.includes(subRoutes.Roles.path),
+        children: [
+            {
+                label: "Employee List",
+                icon: "i-lucide-list",
+                to: subRoutes.EmployeeList,
+            },
+            {
+                label: "Roles",
+                icon: "i-lucide-clipboard-list",
+                to: subRoutes.Roles,
+            },
+        ],
     },
     {
         label: "Settings",
@@ -105,7 +117,6 @@ const searchGroups = computed(() => [
 
             <UNavigationMenu
                 orientation="vertical"
-                :key="route.path"
                 :items="links"
                 :ui="{
                     item: 'gap-3 w-full',

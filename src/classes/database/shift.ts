@@ -31,6 +31,7 @@ export class Shift extends DatabaseModel {
         const employee = data["Employee"]
             ? Employee.create(data["Employee"])
             : undefined;
+        const role = data["Role"] ? Role.create(data["Role"]) : undefined;
 
         return new Shift(
             data["id"] ?? 0,
@@ -41,6 +42,7 @@ export class Shift extends DatabaseModel {
             color,
             data["published"] ?? false,
             employee,
+            role,
         );
     }
 

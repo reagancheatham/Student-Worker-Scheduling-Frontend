@@ -4,7 +4,7 @@ import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
 import { Admin } from "@classes/database/permissionRole.ts";
-import { routes } from "../routing/routes.ts";
+import { routes, subRoutes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication";
 
@@ -36,7 +36,7 @@ export class AuthServices {
                         const firstBusiness = businesses[0];
                         Store.businessStore.set(firstBusiness);
 
-                        router.push(routes.NavbarLayout.children![0].path);
+                        router.push(subRoutes.Dashboard.path);
                     } else {
                         Store.businessStore.clear();
                         router.push(routes.NoBusiness.path);
@@ -52,19 +52,23 @@ export class AuthServices {
 
     public static async logout() {
         try {
-            Store.userStore.clear();
-            router.push(routes.Login.path);
-
             await apiClient.post(`${API_ROOT}/logout`);
+
+            router.push(routes.Login.path);
+            Store.clear();
         } catch (error) {
             console.error("Logout failed: ", error);
-            Store.userStore.clear();
+            Store.clear();
             router.push(routes.Login.path);
         }
     }
 
     public static async validateSession(): Promise<boolean> {
         try {
+            const user = Store.userStore.getImmediate();
+
+            if (!user) return false;
+
             const result = await apiClient.post(`authentication/validate`);
 
             return result.data.valid;
