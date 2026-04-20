@@ -45,6 +45,14 @@ export class TimeOffRequestNotificationServices {
         return finalResult;
     }
 
+    static async dismiss(
+        timeOffRequestNotification: TimeOffRequestNotification,
+    ) {
+        await apiClient.put(`${API_ROOT}/dismiss`, {
+            id: timeOffRequestNotification.id,
+        });
+    }
+
     static async approve(
         timeOffRequestNotification: TimeOffRequestNotification,
     ) {
@@ -53,11 +61,7 @@ export class TimeOffRequestNotificationServices {
         );
     }
 
-    static async deny(
-        timeOffRequestNotification: TimeOffRequestNotification,
-    ) {
-        TimeOffRequestServices.deny(
-            timeOffRequestNotification.timeOffRequest,
-        );
+    static async deny(timeOffRequestNotification: TimeOffRequestNotification) {
+        TimeOffRequestServices.deny(timeOffRequestNotification.timeOffRequest);
     }
 }

@@ -21,7 +21,7 @@ async function getNotifications() {
         ...shiftOfferRequests,
         ...messages,
         ...shiftTradeRequests,
-    ]);
+    ]).filter((notification) => !notification.dismissed);
 }
 
 function getAvatar(notification: AppNotification) {
@@ -70,8 +70,33 @@ function isActionable(type: NotificationType): boolean {
 }
 
 async function dismiss(notification: AppNotification, close: () => void) {
-    notifications.value = notifications.value.filter(n => n.id !== notification.id);
+    async function dismiss(notification: AppNotification, close: () => void) {
+    try {
+        switch (notification.notificationType) {
+            case NotificationType.TimeOffRequest:
+                await TimeOffRequestNotificationServices.dismiss(notification.timeOffRequestNotification!);
+                break;
+            case NotificationType.ShiftOfferRequest:
+                await ShiftOfferRequestNotificationServices.dismiss(notification.shiftOfferRequestNotification!);
+                break;
+            case NotificationType.ShiftTradeRequest:
+                await ShiftTradeRequestNotificationServices.dismiss(notification.shiftTradeRequestNotification!);
+                break;
+            case NotificationType.Message:
+                await MessageNotificationServices.dismiss(notification.messageNotification!);
+                break;
+        }
+        notifications.value = notifications.value.filter((n) => n.id !== notification.id);
+    } catch {
+        toast.add({
+            title: "Error",
+            description: "Could not dismiss notification.",
+            color: "red",
+            icon: "i-lucide-triangle-alert",
+        });
+    }
     close();
+}
 }
 
 async function deny(notification: AppNotification, close: () => void) {
