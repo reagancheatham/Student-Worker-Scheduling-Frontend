@@ -1,7 +1,7 @@
 import { MessageNotification } from "@classes/database/notifications/messageNotification";
 import { AppNotification } from "@classes/util/appNotification";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import { apiClient } from "../services";
 
 const API_ROOT: string = "messageNotifications";
@@ -12,7 +12,7 @@ export class MessageNotificationServices {
     }
 
     static async getAllForBusiness(): Promise<AppNotification[]> {
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
         const path = `${API_ROOT}/business/${business?.id}`;
         let finalResult: AppNotification[] = [];
 

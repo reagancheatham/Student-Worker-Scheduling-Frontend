@@ -1,6 +1,6 @@
 import { ShiftOfferRequestNotification } from "@classes/database/notifications/shiftOfferRequestNotification";
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import { AppNotification } from "@classes/util/appNotification";
 import { apiClient } from "../services";
 import { ShiftOfferRequestServices } from "../shiftOfferRequestServices";
@@ -19,7 +19,7 @@ export class ShiftOfferRequestNotificationServices {
     }
 
     static async getAllForBusiness(): Promise<AppNotification[]> {
-        const business = await Store.getBusiness();
+        const business = await Store.businessStore.get();
         const path = `${API_ROOT}/business/${business?.id}`;
         let finalResult: AppNotification[] = [];
 
