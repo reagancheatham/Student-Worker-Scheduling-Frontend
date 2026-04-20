@@ -160,7 +160,7 @@ function deleteEmployee() {
 async function submitRefreshSchoolUnavailabilities(
     event: FormSubmitEvent<RefreshValidationSchema>,
 ) {
-    const business = await Store.getBusiness();
+    const business = await Store.businessStore.get();
 
     if (!business) {
         toast.add({
@@ -175,17 +175,43 @@ async function submitRefreshSchoolUnavailabilities(
     isRefreshingSchoolUnavailabilities.value = true;
 
     try {
-        await EmployeeUnavailabilityServices.importStudentSchedulesForBusiness(
+        const response =
+            await EmployeeUnavailabilityServices.importStudentSchedulesForBusiness(
             business.id,
             event.data.termCode.trim(),
         );
 
-        toast.add({
-            title: "School unavailabilities refreshed",
-            description: "Student schedules were imported successfully.",
-            color: "success",
-            icon: "i-lucide-circle-check",
-        });
+        const payload = response?.data ?? {};
+        const employeesProcessed = Number(payload?.employeesProcessed ?? 0);
+        const employeesSkipped = Number(payload?.employeesSkipped ?? 0);
+        const employeeErrors = Array.isArray(payload?.employeeErrors)
+            ? payload.employeeErrors
+            : [];
+
+        if (employeesProcessed === 0 && (employeesSkipped > 0 || employeeErrors.length > 0)) {
+            toast.add({
+                title: "Refresh completed with issues",
+                description:
+                    employeeErrors[0]?.message ??
+                    "No employee schedules were imported. Check student IDs/emails and term code.",
+                color: "warning",
+                icon: "i-lucide-circle-alert",
+            });
+        } else if (employeeErrors.length > 0 || employeesSkipped > 0) {
+            toast.add({
+                title: "School unavailabilities refreshed",
+                description: `${employeesProcessed} employee(s) updated, ${employeesSkipped} skipped.`,
+                color: "warning",
+                icon: "i-lucide-triangle-alert",
+            });
+        } else {
+            toast.add({
+                title: "School unavailabilities refreshed",
+                description: "Student schedules were imported successfully.",
+                color: "success",
+                icon: "i-lucide-circle-check",
+            });
+        }
 
         refreshState.termCode = "";
         isRefreshOpen.value = false;
