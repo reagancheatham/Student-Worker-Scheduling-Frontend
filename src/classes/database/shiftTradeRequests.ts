@@ -7,6 +7,7 @@ export class ShiftTradeRequest extends DatabaseModel {
         public targetEmployeeID: number,
         public employeeMessage: string,
         public timeSent: Date,
+        public status: string,
         public startTime: Date,
         public endTime: Date,
         public firstName: string,
@@ -26,9 +27,10 @@ export class ShiftTradeRequest extends DatabaseModel {
             data.targetEmployeeID ?? 0,
             data.employeeMessage ?? "",
             data.timeSent ? new Date(data.timeSent) : new Date(),
+            data.status ?? null,
             shift.startTime ? new Date(shift.startTime) : new Date(),
             shift.endTime ? new Date(shift.endTime) : new Date(),
-            user.firstName ?? "",   // note the correct capitalization "firstName"
+            user.firstName ?? "",
             user.lastName ?? "",
         );
     }
