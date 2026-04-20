@@ -1,11 +1,11 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import { routes } from "./routes.ts";
 import { AuthServices } from "../services/authServices.ts";
 
 const unwrappedRoutes = Object.entries(routes).map((r) => r[1].unwrap());
 
 export const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHashHistory(import.meta.env.BASE_URL),
     routes: unwrappedRoutes,
 });
 
