@@ -1,6 +1,14 @@
-class PermissionRole {
-    public constructor(public readonly id: number, public readonly name: string) {}
-}
+import { DatabaseModel } from "./databaseModel.ts";
 
-export const User = new PermissionRole(1, "User");
-export const Admin = new PermissionRole(2, "Admin");
+export class PermissionRole extends DatabaseModel {
+    constructor(
+        public readonly id: number,
+        public readonly name: string,
+    ) {
+        super();
+    }
+
+    public static createFromData(data: any): PermissionRole {
+        return new PermissionRole(data["id"] ?? 0, data["name"] ?? "");
+    }
+}
