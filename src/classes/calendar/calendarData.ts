@@ -8,10 +8,14 @@ import { ref, shallowRef } from "vue";
 import { EventData } from "./eventData.ts";
 import { CalendarMode } from "./calendarMode.ts";
 import { ShiftServices } from "../../services/shiftServices.ts";
-import { ShiftEvent } from "./shiftEvent.ts";
+import { ShiftEventData } from "./shiftEventData.ts";
 import { Employee } from "@classes/database/employee.ts";
 import { en } from "@nuxt/ui/runtime/locale/index.js";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
+import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
+import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
+import { TemplateCalendarData } from "./templateCalendarData.ts";
+import { WeekDay } from "@classes/util/weekDay.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -33,10 +37,39 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
+    public readonly refTemplateData = ref<TemplateCalendarData>();
+    public readonly refHasUnassignedShift = ref(false);
 
-    constructor(selectedView: CalendarMode, selectedDay: CalendarDate) {
+    constructor(
+        selectedView: CalendarMode,
+        selectedDay: CalendarDate,
+        selectedTemplate?: ScheduleTemplate,
+    ) {
+        if (selectedTemplate)
+            this.refTemplateData.value = new TemplateCalendarData(
+                selectedTemplate,
+            );
+
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
+    }
+
+    public static create(
+        selectedView: CalendarMode,
+        selectedDay: CalendarDate,
+    ): CalendarData {
+        return new CalendarData(selectedView, selectedDay);
+    }
+
+    public static createTemplate(
+        selectedView: CalendarMode,
+        selectedTemplate: ScheduleTemplate,
+    ): CalendarData {
+        return new CalendarData(
+            selectedView,
+            today(CalendarData.timeZone),
+            selectedTemplate,
+        );
     }
 
     public get selectedView(): CalendarMode {
@@ -61,6 +94,17 @@ export class CalendarData {
 
         this.refSelectedWeek.value = { start, end };
 
+        if (!this.isTemplate) this.updateRelevantData();
+    }
+
+    public get selectedTemplateDay(): WeekDay | undefined {
+        return this.templateData?.selectedDay;
+    }
+
+    public set selectedTemplateDay(day: WeekDay) {
+        if (!this.templateData) return;
+
+        this.templateData.selectedDay = day;
         this.updateRelevantData();
     }
 
@@ -72,57 +116,20 @@ export class CalendarData {
         return this.refRelevantEmployees.value;
     }
 
-    public async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
-        const beginningOfDay = date.toDate(CalendarData.timeZone);
-        const endOfDay = date.toDate(CalendarData.timeZone);
-        beginningOfDay.setHours(0, 0, 0, 0);
-        endOfDay.setHours(23, 59, 59, 99);
-
-        let events: EventData[] = [];
-        const business = await Store.getBusiness();
-
-        if (!business) {
-            events = [];
-            return events;
-        }
-
-        await ShiftServices.getAllInRangeForBusiness(
-            business.id,
-            beginningOfDay,
-            endOfDay,
-        ).then((shifts) => {
-            events = shifts.map((shift) => new ShiftEvent(shift));
-        });
-
-        return events;
+    public get selectedTemplate(): ScheduleTemplate | undefined {
+        return this.refTemplateData.value?.selectedTemplate;
     }
 
-    public async getEventsInDateRange(
-        start: CalendarDate,
-        end: CalendarDate,
-    ): Promise<EventData[]> {
-        const startDate = start.toDate(CalendarData.timeZone);
-        const endDate = end.toDate(CalendarData.timeZone);
+    public get isTemplate(): boolean {
+        return this.refTemplateData.value !== undefined;
+    }
 
-        endDate.setHours(23, 59, 59, 99);
+    public get templateData(): TemplateCalendarData | undefined {
+        return this.refTemplateData.value;
+    }
 
-        let events: EventData[] = [];
-        const business = await Store.getBusiness();
-
-        if (!business) {
-            events = [];
-            return events;
-        }
-
-        await ShiftServices.getAllInRangeForBusiness(
-            business.id,
-            startDate,
-            endDate,
-        ).then((shifts) => {
-            events = shifts.map((shift) => new ShiftEvent(shift));
-        });
-
-        return events;
+    public get hasUnassignedShift(): boolean {
+        return this.refHasUnassignedShift.value;
     }
 
     public async updateRelevantData() {
@@ -133,7 +140,12 @@ export class CalendarData {
     private async updateRelevantEvents(): Promise<EventData[]> {
         let relevantEvents: EventData[];
 
-        if (this.selectedView === CalendarMode.Day) {
+        if (this.isTemplate)
+            relevantEvents =
+                await this.refTemplateData.value!.getEventsForTemplate(
+                    this.selectedView,
+                );
+        else if (this.selectedView === CalendarMode.Day) {
             const beginningOfDay = this.selectedDay.toDate(
                 CalendarData.timeZone,
             );
@@ -149,15 +161,91 @@ export class CalendarData {
             );
         }
 
+        let unassignedShift = false;
+
+        for (let i = 0; i < relevantEvents.length; i++) {
+            const event = relevantEvents[i];
+
+            if (event instanceof ShiftEventData && !event.shift.employee) {
+                unassignedShift = true;
+                break;
+            } else if (
+                event instanceof ShiftTemplateEventData &&
+                !event.template.employee
+            ) {
+                unassignedShift = true;
+                break;
+            }
+        }
+
+        this.refHasUnassignedShift.value = unassignedShift;
+
         return relevantEvents;
+    }
+
+    private async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
+        const beginningOfDay = date.toDate(CalendarData.timeZone);
+        const endOfDay = date.toDate(CalendarData.timeZone);
+        beginningOfDay.setHours(0, 0, 0, 0);
+        endOfDay.setHours(23, 59, 59, 99);
+
+        let events: EventData[] = [];
+        const business = await Store.businessStore.get();
+
+        if (!business) {
+            events = [];
+            return events;
+        }
+
+        await ShiftServices.getAllInRangeForBusiness(
+            business.id,
+            beginningOfDay,
+            endOfDay,
+        ).then((shifts) => {
+            events = shifts.map((shift) => new ShiftEventData(shift));
+        });
+
+        return events;
+    }
+
+    private async getEventsInDateRange(
+        start: CalendarDate,
+        end: CalendarDate,
+    ): Promise<EventData[]> {
+        const startDate = start.toDate(CalendarData.timeZone);
+        const endDate = end.toDate(CalendarData.timeZone);
+
+        endDate.setHours(23, 59, 59, 99);
+
+        let events: EventData[] = [];
+        const business = await Store.businessStore.get();
+
+        if (!business) {
+            events = [];
+            return events;
+        }
+
+        await ShiftServices.getAllInRangeForBusiness(
+            business.id,
+            startDate,
+            endDate,
+        ).then((shifts) => {
+            events = shifts.map((shift) => new ShiftEventData(shift));
+        });
+
+        return events;
     }
 
     private async updateRelevantEmployees(): Promise<Employee[]> {
         let relevantEmployees: Employee[] = [];
 
         for (const event of this.refRelevantEvents.value) {
-            if (!(event instanceof ShiftEvent)) continue;
-            const employee = event.shift.employee;
+            let employee;
+
+            if (event instanceof ShiftEventData)
+                employee = event.shift.employee;
+            else if (event instanceof ShiftTemplateEventData)
+                employee = event.template.employee;
 
             if (!employee) continue;
 

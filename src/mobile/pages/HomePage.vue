@@ -6,12 +6,13 @@ import { Shift } from "@classes/database/shift";
 import { Employee } from "@classes/database/employee";
 import { Timesheet } from "@classes/database/timesheet";
 import { TimeSheetsServices } from "../../services/timesheetsServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import { Business } from "@classes/database/business.ts";
+import { User } from "@classes/database/user.ts";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 
-const user = ref(Store.getUser());
+const user = ref<User>();
 const business = ref<Business>();
 const employee = ref<Employee | null>(null);
 const currentShift = computed(() => shifts.value[0]);
@@ -28,8 +29,9 @@ upcoming.setDate(today.getDate() + 30);
 upcoming.setHours(23, 59, 59, 99);
 
 onMounted(async () => {
-    business.value = await Store.getBusiness();
-    await loadData();
+    user.value = await Store.userStore.get();
+    business.value = await Store.businessStore.get();
+    loadData();
 });
 
 async function loadData() {
@@ -66,8 +68,8 @@ async function loadData() {
         });
 
         shifts.value = sortedShifts;
-    } catch (err) {
-        console.log(err);
+    } catch (error: any) {
+        console.log(error);
     }
 }
 

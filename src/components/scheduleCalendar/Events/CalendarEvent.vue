@@ -7,8 +7,19 @@ import { EventData } from "../../../classes/calendar/eventData.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { isSameDay, startOfWeek } from "@internationalized/date";
+import {
+    GetClassFunc,
+    GetLabelFunc,
+    GetStyleFunc,
+    UpdateBackendFunc,
+} from "@classes/calendar/eventFunctions.ts";
+import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
+import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftTemplateEvent } from "@classes/calendar/shiftTemplateEvent.ts";
+import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
+import { fromWeekIndex } from "@classes/util/weekDay.ts";
 
 //#region Variables
 enum EventState {
@@ -47,11 +58,17 @@ const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
+const getClassImpl = ref<GetClassFunc>();
+const getStyleImpl = ref<GetStyleFunc>();
+const getLabelImpl = ref<GetLabelFunc>();
+const updateBackendImpl = ref<UpdateBackendFunc>();
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
 let dragStartTime: EventTime;
 let dragEndTime: EventTime;
+let templateDragStartTime: number;
+let templateDragEndTime: number;
 let resizeTime: EventTime;
 let observer: ResizeObserver | null = null;
 let resizePointerStart: number;
@@ -59,6 +76,18 @@ let resizePointerStart: number;
 
 onMounted(() => {
     const elementValue = element.value.$el;
+
+    if (props.calendarData.isTemplate) {
+        getClassImpl.value = ShiftTemplateEvent.getClass;
+        getStyleImpl.value = ShiftTemplateEvent.getStyle;
+        getLabelImpl.value = ShiftTemplateEvent.getLabel;
+        updateBackendImpl.value = ShiftTemplateEvent.updateBackendEvent;
+    } else {
+        getClassImpl.value = ShiftEvent.getClass;
+        getStyleImpl.value = ShiftEvent.getStyle;
+        getLabelImpl.value = ShiftEvent.getLabel;
+        updateBackendImpl.value = ShiftEvent.updateBackendEvent;
+    }
 
     if (!elementValue) return;
 
@@ -78,14 +107,22 @@ onBeforeUnmount(() => {
 function shouldRender(): boolean {
     const calendarData = props.calendarData;
     const startTime = model.value.startTime.calendarDate();
+    const templateDay = fromWeekIndex(model.value.templateStartDay);
 
-    if (calendarData.selectedView === CalendarMode.Day)
-        return isSameDay(startTime, calendarData.selectedDay);
-    else {
-        return isSameDay(
-            startOfWeek(startTime, CalendarData.localeString),
-            startOfWeek(calendarData.selectedDay, CalendarData.localeString),
-        );
+    if (calendarData.selectedView === CalendarMode.Day) {
+        if (calendarData.isTemplate)
+            return templateDay === calendarData.selectedTemplateDay;
+        else return isSameDay(startTime, calendarData.selectedDay);
+    } else {
+        if (calendarData.isTemplate) return true;
+        else
+            return isSameDay(
+                startOfWeek(startTime, CalendarData.localeString),
+                startOfWeek(
+                    calendarData.selectedDay,
+                    CalendarData.localeString,
+                ),
+            );
     }
 }
 
@@ -120,6 +157,9 @@ function onPointerMove(evt: PointerEvent): void {
             state = EventState.Dragging;
             dragStartTime = model.value.startTime.clone();
             dragEndTime = model.value.endTime.clone();
+            templateDragStartTime = model.value.templateStartDay;
+            templateDragEndTime = model.value.templateEndDay;
+
             isPopoverOpen.value = false;
             model.value.zIndex = MAX_Z_INDEX;
 
@@ -147,19 +187,30 @@ function updateDrag(delta: Vector2): void {
         hour = dragStartTime.hour;
         minute = dragStartTime.minute + dY;
 
-        const weekStart = props.calendarData.selectedWeek.start;
-        const weekEnd = props.calendarData.selectedWeek.end;
+        if (!props.calendarData.isTemplate) {
+            const weekStart = props.calendarData.selectedWeek.start;
+            const weekEnd = props.calendarData.selectedWeek.end;
 
-        let weekDate = dragStartTime.calendarDate();
-        weekDate = weekDate.add({ days: dX });
+            let weekDate = dragStartTime.calendarDate();
+            weekDate = weekDate.add({ days: dX });
 
-        if (weekDate < weekStart) weekDate = weekStart;
-        else if (weekDate > weekEnd) weekDate = weekEnd;
+            if (weekDate < weekStart) weekDate = weekStart;
+            else if (weekDate > weekEnd) weekDate = weekEnd;
 
-        const day = weekDate.day;
+            const day = weekDate.day;
 
-        model.value.startTime.day = day;
-        model.value.endTime.day = day;
+            model.value.startTime.day = day;
+            model.value.endTime.day = day;
+        } else {
+            const newDayIndex = MathUtil.clamp(
+                templateDragStartTime + dX,
+                0,
+                7,
+            );
+
+            model.value.templateStartDay = newDayIndex;
+            model.value.templateEndDay = newDayIndex;
+        }
     }
 
     const hourDifference = dragEndTime.hour - dragStartTime.hour;
@@ -317,78 +368,40 @@ function resizeTitle(): void {
     titleMargin.value = TITLE_MARGIN_RANGE.lerp(t);
 }
 
-function getGridArea(): string {
-    const data = model.value;
-    const startTime = data.startTime;
-    const endTime = data.endTime;
+function getClass(): string {
+    if (!getClassImpl.value) return "";
 
-    if (props.calendarData.selectedView == CalendarMode.Day) {
-        let row = 1;
-
-        if (model.value instanceof ShiftEvent) {
-            const employee = model.value.shift.employee;
-
-            if (employee)
-                row =
-                    props.calendarData.relevantEmployees.findIndex(
-                        (relEmployee) => relEmployee.id === employee.id,
-                    ) + 1;
-        }
-
-        return `${row} / ${1 + (60 * startTime.hour + startTime.minute)} / span ${1 + endTime.day - startTime.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)}`;
-    } else
-        return `${1 + (60 * startTime.hour + startTime.minute)} / ${1 + startTime.day - props.calendarData.selectedWeek.start.day} / span ${60 * (endTime.hour - startTime.hour) + (endTime.minute - startTime.minute)} / span ${1 + (endTime.day - startTime.day)}`;
+    return getClassImpl.value(getStyleData());
 }
 
-function getClass() {
-    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
-        return "event";
-    else return `event ring-2 ${model.value.color.ring}`;
-}
-
-function getStyle() {
-    if (!shouldRender())
+function getStyle(): any {
+    if (!shouldRender() || !getStyleImpl.value)
         return {
             visibility: "hidden",
         };
 
-    let style = {
-        "grid-area": getGridArea(),
-        "background-color": `var(${model.value.color.tailwind})`,
-        "z-index": `${model.value.zIndex}`,
-        "border-color": `var(${model.value.color.border})`,
-        "margin-top": `0`,
-        "margin-bottom": `0`,
-        "margin-left": `0`,
-        "margin-right": `0`,
-        cursor: props.editable ? "pointer" : "cursor",
-    };
-
-    if (model.value instanceof ShiftEvent && !model.value.shift.published)
-        style["background-color"] =
-            `color-mix(in srgb, var(${model.value.color.tailwind}), transparent 40%)`;
-
-    if (props.calendarData.selectedView == CalendarMode.Day) {
-        style["margin-top"] =
-            `${(model.value.leftBisectMargin / 100) * props.cellSize.y}px`;
-        style["margin-bottom"] =
-            `${(model.value.rightBisectMargin / 100) * props.cellSize.y}px`;
-    } else {
-        style["margin-left"] = `${model.value.leftBisectMargin}%`;
-        style["margin-right"] = `${model.value.rightBisectMargin}%`;
-    }
-
-    return style;
+    return getStyleImpl.value(getStyleData());
 }
 
 function getLabel(): string {
-    if (!(model.value instanceof ShiftEvent) || model.value.shift.published)
-        return model.value.name;
-    else return `${model.value.name} - Unpublished`;
+    if (!getLabelImpl.value) return "";
+
+    return getLabelImpl.value(getStyleData());
 }
 
 function updateBackendEvent(): void {
-    if (model.value instanceof ShiftEvent) model.value.updateBackend();
+    if (!updateBackendImpl.value) return;
+
+    updateBackendImpl.value(getStyleData());
+}
+
+function getStyleData(): EventStyleData {
+    return new EventStyleData(
+        model.value,
+        props.calendarData,
+        props.cellSize,
+        props.editable,
+    );
 }
 
 function closeModal(): void {
@@ -435,7 +448,8 @@ function onEventDeleted(): void {
                     </div>
                     <div
                         v-if="
-                            model instanceof ShiftEvent && model.shift.employee
+                            model instanceof ShiftEventData &&
+                            model.shift.employee
                         "
                     >
                         {{ model.shift.employee.fullName }}
@@ -486,11 +500,22 @@ function onEventDeleted(): void {
                         }"
                     />
                     <UBadge
+                        v-if="model instanceof ShiftEventData"
                         class="font-normal text-gray-700 flex flex-col items-start"
                         variant="ghost"
                         :label="
-                            model instanceof ShiftEvent && model.shift.employee
+                            model.shift.employee
                                 ? `${model.shift.employee.firstName} ${model.shift.employee.lastName}`
+                                : ''
+                        "
+                    />
+                    <UBadge
+                        v-else-if="model instanceof ShiftTemplateEventData"
+                        class="font-normal text-gray-700 flex flex-col items-start"
+                        variant="ghost"
+                        :label="
+                            model.template.employee
+                                ? `${model.template.employee.firstName} ${model.template.employee.lastName}`
                                 : ''
                         "
                     />
@@ -523,6 +548,7 @@ function onEventDeleted(): void {
         <CalendarEventEditor
             :model-value="model"
             :is-open="isModalOpen"
+            :data="calendarData"
             @close-requested="closeModal()"
             @event-deleted="onEventDeleted()"
         />
