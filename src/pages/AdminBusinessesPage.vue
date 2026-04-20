@@ -7,7 +7,7 @@ import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { BusinessServices } from "../services/businessServices.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { router } from "../routing/router.ts";
-import { routes, subRoutes } from "../routing/routes.ts";
+import { routes } from "../routing/routes.ts";
 
 type BusinessRow = {
     id: number;
