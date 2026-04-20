@@ -6,6 +6,11 @@ defineProps<{
     name: string;
     isTrade: boolean;
 }>();
+
+const emit = defineEmits<{
+    accept: [boolean],
+}>();
+
 </script>
 
 <template>
@@ -38,6 +43,7 @@ defineProps<{
                         class="w-20 justify-center"
                         label="Accept"
                         size="xl"
+                        @click="emit('accept', true)"
                     ></UButton>
                     <UButton
                         class="w-20 justify-center"
