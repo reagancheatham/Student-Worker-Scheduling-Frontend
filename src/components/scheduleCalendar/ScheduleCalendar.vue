@@ -88,14 +88,13 @@ function cancelEdit(): void {
     flex-direction: column;
     min-height: 10px;
     min-width: 100px;
-    height: 100%;
+    height: 95%;
     width: 100%;
 }
 
 .calendarBody {
     width: 100%;
     display: flex;
-    flex: 1;
     min-height: 0;
     max-height: 100%;
     flex-direction: row;

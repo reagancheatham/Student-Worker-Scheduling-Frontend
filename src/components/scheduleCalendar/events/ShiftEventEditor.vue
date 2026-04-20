@@ -4,7 +4,7 @@ import {
     useSortable,
     UseSortableReturn,
 } from "@vueuse/integrations/useSortable";
-import type { ChipProps, FormSubmitEvent, SelectMenuItem } from "@nuxt/ui";
+import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
@@ -71,7 +71,7 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
-        targetRole: v.nullish(v.instance(Role, "Invalid role")),
+        role: v.nullish(v.instance(Role, "Invalid role")),
         employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
