@@ -88,7 +88,7 @@ function cancelEdit(): void {
     flex-direction: column;
     min-height: 10px;
     min-width: 100px;
-    height: 95%;
+    height: 100%;
     width: 100%;
 }
 
@@ -171,7 +171,7 @@ function cancelEdit(): void {
         No shifts to display.
     </div>
     <div v-if="data && data.isTemplate">
-        <div class="flex mt-10 mr-16 items-end">
+        <div class="absolute right-8 bottom-8">
             <UButton
                 class="ml-auto"
                 label="Return to Template Selection"

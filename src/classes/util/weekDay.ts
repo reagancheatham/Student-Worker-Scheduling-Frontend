@@ -1,3 +1,5 @@
+import { CalendarDate } from "@internationalized/date";
+
 export const WeekDay = {
     Sunday: "Sunday",
     Monday: "Monday",
@@ -71,4 +73,13 @@ export function stringToWeekDay(str: string): WeekDay {
         default:
             return WeekDay.Sunday;
     }
+}
+
+export function toCalendarDate(
+    day: WeekDay,
+    sunday: CalendarDate,
+): CalendarDate {
+    const index = toWeekIndex(day);
+
+    return sunday.add({ days: index });
 }

@@ -1,9 +1,16 @@
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
-import { stringToWeekDay, WeekDay } from "@classes/util/weekDay.ts";
+import {
+    stringToWeekDay,
+    toCalendarDate,
+    WeekDay,
+} from "@classes/util/weekDay.ts";
 import { ShiftTaskListTemplate } from "./shiftTaskListTemplate.ts";
 import { Employee } from "./employee.ts";
 import { Role } from "./role.ts";
+import { Shift } from "./shift.ts";
+import { CalendarDate } from "@internationalized/date";
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 
 export class ScheduleShiftTemplate extends DatabaseModel {
     constructor(
@@ -59,6 +66,56 @@ export class ScheduleShiftTemplate extends DatabaseModel {
 
     public isValid(): boolean {
         return this.id > 0;
+    }
+
+    public toShift(businessID: number, date: CalendarDate): Shift {
+        const calendarStartTime = date.toDate(CalendarData.timeZone);
+        const calendarEndTime = date.toDate(CalendarData.timeZone);
+
+        calendarStartTime.setHours(this.startTime.getHours());
+        calendarStartTime.setMinutes(this.startTime.getMinutes());
+
+        calendarEndTime.setHours(this.endTime.getHours());
+        calendarEndTime.setMinutes(this.endTime.getMinutes());
+
+        return new Shift(
+            0,
+            businessID,
+            this.name,
+            calendarStartTime,
+            calendarEndTime,
+            this.color,
+            false,
+            this.employee,
+            this.role,
+        );
+    }
+
+    public toShiftRelative(businessID: number, sunday: CalendarDate): Shift {
+        const calendarStartTime = toCalendarDate(this.weekDay, sunday).toDate(
+            CalendarData.timeZone,
+        );
+        const calendarEndTime = toCalendarDate(this.weekDay, sunday).toDate(
+            CalendarData.timeZone,
+        );
+
+        calendarStartTime.setHours(this.startTime.getHours());
+        calendarStartTime.setMinutes(this.startTime.getMinutes());
+
+        calendarEndTime.setHours(this.endTime.getHours());
+        calendarEndTime.setMinutes(this.endTime.getMinutes());
+
+        return new Shift(
+            0,
+            businessID,
+            this.name,
+            calendarStartTime,
+            calendarEndTime,
+            this.color,
+            false,
+            this.employee,
+            this.role,
+        );
     }
 
     public toJSON() {

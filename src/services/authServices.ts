@@ -44,7 +44,7 @@ export class AuthServices {
             } else {
                 console.error("Login failed: invalid credentials");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Error logging in: ${error}`);
         }
     }
@@ -55,7 +55,7 @@ export class AuthServices {
 
             router.push(routes.Login.path);
             Store.clear();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Logout failed: ", error);
             Store.clear();
             router.push(routes.Login.path);
@@ -71,7 +71,7 @@ export class AuthServices {
             const result = await apiClient.post(`authentication/validate`);
 
             return result.data.valid;
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Error validating session: ${error}`);
 
             return false;

@@ -11,6 +11,7 @@ const { data } = defineProps<{
 }>();
 
 const monthFormatter = new DateFormatter(CalendarData.localeString, {
+    weekday: "long",
     month: "long",
     day: "numeric",
 });

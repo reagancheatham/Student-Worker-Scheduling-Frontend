@@ -28,7 +28,6 @@ const editedEvent = ref<EventData>(
     ),
 );
 const isModalOpen = ref(false);
-const isTemplatePasteOpen = ref(false);
 const templateName = ref("");
 const isUpdatingTemplateName = ref(false);
 const business = ref<Business>();
@@ -164,6 +163,20 @@ async function updateTemplateName(_: Event): Promise<void> {
         isUpdatingTemplateName.value = false;
     }
 }
+
+async function publishAll(): Promise<void> {
+    const promises = data.refRelevantEvents.value.map(async (event) => {
+        if (!(event instanceof ShiftEventData)) return;
+        else if (!event.shift.employee) return;
+
+        event.shift.published = true;
+        await event.updateBackend();
+    });
+
+    await Promise.all(promises);
+
+    data.updateRelevantData();
+}
 </script>
 
 <style>
@@ -227,17 +240,44 @@ async function updateTemplateName(_: Event): Promise<void> {
             />
         </div>
         <div class="headerSegment rightSegment">
-            <UButton
-                label="Paste Template"
-                @click="isTemplatePasteOpen = true"
-            />
+            <UModal
+                :title="`Publish All Shifts in ${data.selectedView === CalendarMode.Week ? 'Week' : 'Day'}?`"
+                description="This will notify relevant employees."
+                :ui="{ content: `sm:max-w-xs` }"
+            >
+                <UButton
+                    :label="`Publish ${data.selectedView === CalendarMode.Week ? 'Week' : 'Day'}`"
+                    :disabled="!data.hasValidUnpublishedShift"
+                />
+                <template #footer="{ close }">
+                    <UButton
+                        label="Publish"
+                        class="ml-auto"
+                        type="submit"
+                        @click="
+                            () => {
+                                close();
+                                publishAll();
+                            }
+                        "
+                    />
+                    <UButton
+                        label="Cancel"
+                        color="neutral"
+                        variant="outline"
+                        class="mr-auto"
+                        @click="close()"
+                    />
+                </template>
+            </UModal>
+            <TemplatePaster v-if="!data.isTemplate" :data="data" />
             <UButton
                 v-if="!data.isTemplate"
                 label="Today"
                 variant="outline"
                 color="neutral"
                 @click="goToToday"
-            ></UButton>
+            />
             <UFormField
                 v-if="!data.isTemplate"
                 class="selectMenuContainer"
@@ -259,5 +299,4 @@ async function updateTemplateName(_: Event): Promise<void> {
         @form-submitted="updateRelevantEvents"
         creator
     />
-    <TemplatePasteModal :is-open="isTemplatePasteOpen" />
 </template>
