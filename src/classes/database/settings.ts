@@ -11,6 +11,7 @@ export class Settings extends DatabaseModel {
         public automaticShiftTrades: boolean,
         public enableOpenShift: boolean,
         public enableShiftTrades: boolean,
+        public defaultTermCode: string,
     ) {
         super();
     }
@@ -26,6 +27,7 @@ export class Settings extends DatabaseModel {
             data["automaticShiftTrades"] ?? false,
             data["enableOpenShift"] ?? false,
             data["enableShiftTrades"] ?? false,
+            data["defaultTermCode"] ?? "",
         );
     }
 
@@ -40,6 +42,7 @@ export class Settings extends DatabaseModel {
             false,
             false,
             false,
+            "",
         );
     }
 }

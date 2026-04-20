@@ -13,6 +13,7 @@ type SwitchSettingKey =
 	| "enableShiftTrades";
 
 type NumberSettingKey = "clockInThreshold" | "onTimeThreshold";
+type TextSettingKey = "defaultTermCode";
 
 const businessID = 1;
 
@@ -123,6 +124,22 @@ const setNumberValue = (key: NumberSettingKey, value: number) => {
 	settings.value[key] = value;
 };
 
+const getTextValue = (key: TextSettingKey): string => {
+	if (!settings.value) {
+		return "";
+	}
+
+	return settings.value[key];
+};
+
+const setTextValue = (key: TextSettingKey, value: string) => {
+	if (!settings.value) {
+		return;
+	}
+
+	settings.value[key] = value;
+};
+
 const loadSettings = async () => {
 	isLoading.value = true;
 	statusMessage.value = "";
@@ -208,6 +225,23 @@ loadSettings();
 					@update:model-value="setNumberValue(field.key, $event)"
 				/>
 
+				<USeparator />
+
+				<div class="setting-row">
+					<div>
+						<h3 class="setting-label">Default Term Code</h3>
+						<p class="setting-description">
+							Used for automatic unavailability refreshes when a student ID is set and no term code is provided in the request.
+						</p>
+					</div>
+
+					<UInput
+						:model-value="getTextValue('defaultTermCode')"
+						placeholder="e.g. 2026SP"
+						@update:model-value="setTextValue('defaultTermCode', String($event ?? ''))"
+					/>
+				</div>
+
 				<div class="actions">
 					<UButton
 						:loading="isSaving"
@@ -249,5 +283,21 @@ loadSettings();
 	align-items: center;
 	gap: 0.75rem;
 	margin-top: 0.5rem;
+}
+
+.setting-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.setting-label {
+	font-weight: 600;
+}
+
+.setting-description {
+	font-size: 0.875rem;
+	color: color-mix(in srgb, var(--ui-text) 65%, transparent);
 }
 </style>
