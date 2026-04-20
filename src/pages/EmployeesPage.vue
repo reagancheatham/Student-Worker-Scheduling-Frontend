@@ -2,6 +2,7 @@
 import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../services/employeeServices";
+import { EmployeeUnavailabilityServices } from "../services/employeeUnavailabilityServices";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
@@ -175,7 +176,7 @@ async function submitRefreshSchoolUnavailabilities(
     isRefreshingSchoolUnavailabilities.value = true;
 
     try {
-        await EmployeeServices.importStudentSchedulesForBusiness(
+        await EmployeeUnavailabilityServices.importStudentSchedulesForBusiness(
             business.id,
             event.data.termCode.trim(),
         );
@@ -191,9 +192,14 @@ async function submitRefreshSchoolUnavailabilities(
         isRefreshOpen.value = false;
     } catch (error) {
         console.error(`Error refreshing school unavailabilities: ${error}`);
+        const responseData = (error as any)?.response?.data;
+        const responseMessage =
+            responseData?.message ??
+            responseData?.Message ??
+            "Could not import student schedules.";
         toastNotification.add({
             title: "Refresh failed",
-            description: "Could not import student schedules.",
+            description: responseMessage,
             color: "error",
             icon: "i-lucide-circle-alert",
         });

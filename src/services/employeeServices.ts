@@ -80,29 +80,4 @@ export class EmployeeServices {
             console.error(`Error fetching employee: ${error}`);
         }
     }
-
-    public static async importStudentSchedulesForBusiness(
-        businessID: number,
-        termCode: string,
-    ) {
-        return await apiClient.post(
-            `employeeUnavailabilities/import/studentSchedules`,
-            {
-                businessID,
-                termCode,
-            },
-        );
-    }
-
-    public static async importStudentScheduleForEmployee(
-        employeeID: number,
-        termCode: string,
-    ) {
-        return await apiClient.post(
-            `employeeUnavailabilities/import/studentSchedules/employee/${employeeID}`,
-            {
-                termCode,
-            },
-        );
-    }
 }
