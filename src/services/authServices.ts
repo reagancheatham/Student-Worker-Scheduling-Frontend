@@ -57,6 +57,7 @@ export class AuthServices {
             await apiClient.post(`${API_ROOT}/logout`);
         } catch (error) {
             console.error("Logout failed: ", error);
+            
             Store.userStore.clear();
             router.push(routes.Login.path);
         }
@@ -69,7 +70,6 @@ export class AuthServices {
             if (!user) return false;
 
             const result = await apiClient.post(`authentication/validate`);
-            console.log("Validating")
 
             return result.data.valid;
         } catch (error) {

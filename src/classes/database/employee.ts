@@ -23,12 +23,11 @@ export class Employee extends DatabaseModel {
 
         const employee = new Employee(0, businessID, "", "", "", email, "");
         (employee as any).isManager = isManager;
-        
+
         return employee;
     }
 
     public static createFromData(data: any): Employee {
-        console.log(data)
         let user = data["User"];
         let studentID = user ? user.studentID : ("" as string);
         let firstName = user ? user.firstName : ("" as string);
