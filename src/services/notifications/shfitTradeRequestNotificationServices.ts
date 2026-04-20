@@ -45,6 +45,12 @@ export class ShiftTradeRequestNotificationServices {
         return finalResult;
     }
 
+    static async dismiss(shiftTradeRequestNotification: ShiftTradeRequestNotification) {
+        await apiClient.put(`${API_ROOT}/dismiss`, {
+            id: shiftTradeRequestNotification.id,
+        });
+    }
+
     static async approve(
         shiftTradeRequestNotification: ShiftTradeRequestNotification,
     ) {
@@ -54,10 +60,10 @@ export class ShiftTradeRequestNotificationServices {
     }
 
     static async deny(
-            timeOffRequestNotification: ShiftTradeRequestNotification,
-        ) {
-            ShiftTradeRequestServices.deny(
-                timeOffRequestNotification.shiftTradeRequest,
-            );
-        }
+        timeOffRequestNotification: ShiftTradeRequestNotification,
+    ) {
+        ShiftTradeRequestServices.deny(
+            timeOffRequestNotification.shiftTradeRequest,
+        );
+    }
 }

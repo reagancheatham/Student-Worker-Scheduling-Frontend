@@ -12,42 +12,57 @@ const notifications = ref<AppNotification[]>([]);
 const toast = useToast();
 
 async function getNotifications() {
-    const timeOffRequests = await TimeOffRequestNotificationServices.getAllForBusiness();
-    const shiftOfferRequests = await ShiftOfferRequestNotificationServices.getAllForBusiness();
-    const messages = await MessageNotificationServices.getAllForBusiness()
-    const shiftTradeRequests = await ShiftTradeRequestNotificationServices.getAllForBusiness();
+    const timeOffRequests =
+        await TimeOffRequestNotificationServices.getAllForBusiness();
+    const shiftOfferRequests =
+        await ShiftOfferRequestNotificationServices.getAllForBusiness();
+    const messages = await MessageNotificationServices.getAllForBusiness();
+    const shiftTradeRequests =
+        await ShiftTradeRequestNotificationServices.getAllForBusiness();
     notifications.value = AppNotification.sortByDate([
         ...timeOffRequests,
         ...shiftOfferRequests,
         ...messages,
         ...shiftTradeRequests,
-    ]);
+    ]).filter((notification) => !notification.dismissed);
 }
 
 function getAvatar(notification: AppNotification) {
     return {
         src: notification.avatar ?? undefined,
-        icon: notification.avatar ? undefined : notificationIcon(notification.notificationType),
+        icon: notification.avatar
+            ? undefined
+            : notificationIcon(notification.notificationType),
     };
 }
 
 function notificationIcon(type: NotificationType): string {
     switch (type) {
-        case NotificationType.Alert:   return "i-lucide-triangle-alert";
-        case NotificationType.Warning: return "i-lucide-circle-alert";
-        case NotificationType.Message: return "i-lucide-message-circle";
-        case NotificationType.TimeOffRequest:    return "i-lucide-calendar-off";
-        case NotificationType.ShiftOfferRequest: return "i-lucide-hand-helping";
-        case NotificationType.ShiftTradeRequest: return "i-lucide-arrow-left-right";
-        default: return "i-lucide-bell";
+        case NotificationType.Alert:
+            return "i-lucide-triangle-alert";
+        case NotificationType.Warning:
+            return "i-lucide-circle-alert";
+        case NotificationType.Message:
+            return "i-lucide-message-circle";
+        case NotificationType.TimeOffRequest:
+            return "i-lucide-calendar-off";
+        case NotificationType.ShiftOfferRequest:
+            return "i-lucide-hand-helping";
+        case NotificationType.ShiftTradeRequest:
+            return "i-lucide-arrow-left-right";
+        default:
+            return "i-lucide-bell";
     }
 }
 
 function notificationColor(type: NotificationType): string {
     switch (type) {
-        case NotificationType.Alert:   return "text-red-500";
-        case NotificationType.Warning: return "text-yellow-500";
-        default: return "text-gray-500";
+        case NotificationType.Alert:
+            return "text-red-500";
+        case NotificationType.Warning:
+            return "text-yellow-500";
+        default:
+            return "text-gray-500";
     }
 }
 
@@ -70,7 +85,40 @@ function isActionable(type: NotificationType): boolean {
 }
 
 async function dismiss(notification: AppNotification, close: () => void) {
-    notifications.value = notifications.value.filter(n => n.id !== notification.id);
+    try {
+        switch (notification.notificationType) {
+            case NotificationType.TimeOffRequest:
+                await TimeOffRequestNotificationServices.dismiss(
+                    notification.timeOffRequestNotification!,
+                );
+                break;
+            case NotificationType.ShiftOfferRequest:
+                await ShiftOfferRequestNotificationServices.dismiss(
+                    notification.shiftOfferRequestNotification!,
+                );
+                break;
+            case NotificationType.ShiftTradeRequest:
+                await ShiftTradeRequestNotificationServices.dismiss(
+                    notification.shiftTradeRequestNotification!,
+                );
+                break;
+            case NotificationType.Message:
+                await MessageNotificationServices.dismiss(
+                    notification.messageNotification!,
+                );
+                break;
+        }
+        notifications.value = notifications.value.filter(
+            (n) => n.id !== notification.id,
+        );
+    } catch {
+        toast.add({
+            title: "Error",
+            description: "Could not dismiss notification.",
+            color: "red",
+            icon: "i-lucide-triangle-alert",
+        });
+    }
     close();
 }
 
@@ -78,16 +126,24 @@ async function deny(notification: AppNotification, close: () => void) {
     try {
         switch (notification.notificationType) {
             case NotificationType.TimeOffRequest:
-                await TimeOffRequestNotificationServices.deny(notification.timeOffRequestNotification!);
+                await TimeOffRequestNotificationServices.deny(
+                    notification.timeOffRequestNotification!,
+                );
                 break;
             case NotificationType.ShiftOfferRequest:
-                await ShiftOfferRequestNotificationServices.deny(notification.shiftOfferRequestNotification!);
+                await ShiftOfferRequestNotificationServices.deny(
+                    notification.shiftOfferRequestNotification!,
+                );
                 break;
             case NotificationType.ShiftTradeRequest:
-                await ShiftTradeRequestNotificationServices.deny(notification.shiftTradeRequestNotification!);
+                await ShiftTradeRequestNotificationServices.deny(
+                    notification.shiftTradeRequestNotification!,
+                );
                 break;
         }
-        notifications.value = notifications.value.filter(n => n.id !== notification.id);
+        notifications.value = notifications.value.filter(
+            (n) => n.id !== notification.id,
+        );
         await getNotifications();
         toast.add({
             title: "Request Denied",
@@ -110,16 +166,24 @@ async function approve(notification: AppNotification, close: () => void) {
     try {
         switch (notification.notificationType) {
             case NotificationType.TimeOffRequest:
-                await TimeOffRequestNotificationServices.approve(notification.timeOffRequestNotification!);
+                await TimeOffRequestNotificationServices.approve(
+                    notification.timeOffRequestNotification!,
+                );
                 break;
             case NotificationType.ShiftOfferRequest:
-                await ShiftOfferRequestNotificationServices.approve(notification.shiftOfferRequestNotification!);
+                await ShiftOfferRequestNotificationServices.approve(
+                    notification.shiftOfferRequestNotification!,
+                );
                 break;
             case NotificationType.ShiftTradeRequest:
-                await ShiftTradeRequestNotificationServices.approve(notification.shiftTradeRequestNotification!);
+                await ShiftTradeRequestNotificationServices.approve(
+                    notification.shiftTradeRequestNotification!,
+                );
                 break;
         }
-        notifications.value = notifications.value.filter(n => n.id !== notification.id);
+        notifications.value = notifications.value.filter(
+            (n) => n.id !== notification.id,
+        );
         await getNotifications();
         toast.add({
             title: "Request Denied",
@@ -174,7 +238,9 @@ onMounted(() => {
                             :avatar="getAvatar(notification as any)"
                             :ui="{
                                 root: 'hover:bg-gray-50 rounded-md cursor-pointer transition-colors duration-150 px-2 py-1',
-                                description: notificationColor(notification.notificationType),
+                                description: notificationColor(
+                                    notification.notificationType,
+                                ),
                             }"
                         />
                         <template #content="{ close }">
@@ -182,11 +248,15 @@ onMounted(() => {
                                 <div class="flex justify-between items-center">
                                     <UUser
                                         :name="notification.name"
-                                        :description="notification.notificationType"
+                                        :description="
+                                            notification.notificationType
+                                        "
                                         :avatar="getAvatar(notification as any)"
                                         :ui="{
                                             root: 'p-0',
-                                            description: notificationColor(notification.notificationType),
+                                            description: notificationColor(
+                                                notification.notificationType,
+                                            ),
                                         }"
                                     />
                                     <UButton
@@ -203,34 +273,51 @@ onMounted(() => {
                                 <p class="text-sm text-gray-600">
                                     {{ notification.description }}
                                 </p>
-                                <div class="flex justify-between items-center pt-1">
+                                <div
+                                    class="flex justify-between items-center pt-1"
+                                >
                                     <UButton
                                         color="neutral"
                                         variant="ghost"
                                         size="sm"
-                                        @click="dismiss(notification as any, close)"
+                                        @click="
+                                            dismiss(notification as any, close)
+                                        "
                                     >
                                         Dismiss
                                     </UButton>
-                                    <div v-if="isActionable(notification.notificationType)" class="flex gap-2">
+                                    <div
+                                        v-if="
+                                            isActionable(
+                                                notification.notificationType,
+                                            )
+                                        "
+                                        class="flex gap-2"
+                                    >
                                         <UButton
                                             color="red"
                                             variant="soft"
                                             size="sm"
-                                            @click="deny(notification as any, close)"
+                                            @click="
+                                                deny(notification as any, close)
+                                            "
                                         >
                                             Deny
                                         </UButton>
                                         <UButton
                                             color="primary"
                                             size="sm"
-                                            @click="approve(notification as any, close)"
+                                            @click="
+                                                approve(
+                                                    notification as any,
+                                                    close,
+                                                )
+                                            "
                                         >
                                             Approve
                                         </UButton>
                                     </div>
                                 </div>
-
                             </UCard>
                         </template>
                     </UPopover>

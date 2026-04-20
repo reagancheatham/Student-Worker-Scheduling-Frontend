@@ -5,13 +5,12 @@ import SettingsPage from "../pages/SettingsPage.vue";
 import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
-import OpenShiftsPage from "../pages/OpenShiftsPage.vue";
+import NotificationsPage from "../pages/NotificationsPage.vue";
 import AdminPage from "../pages/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
-import ScheduleContainerPage from "../pages/ScheduleContainerPage.vue";
 import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
 import RolesPage from "../pages/RolesPage.vue";
 
@@ -65,7 +64,11 @@ const navbarLayout = Route.create(
             ScheduleTemplatePage,
             "Schedule Template Editor",
         ).noAuth(),
-        Route.create("openShifts", OpenShiftsPage, "Open Shifts").noAuth(),
+        Route.create(
+            "notifications",
+            NotificationsPage,
+            "Notifications",
+        ).noAuth(),
         Route.create("employeeList", EmployeesPage, "Employee List").noAuth(),
         Route.create("roles", RolesPage, "Roles").noAuth(),
         Route.create("settings", SettingsPage, "Settings").noAuth(),
@@ -111,7 +114,7 @@ export const subRoutes = {
     Dashboard: navbarLayout.children[0],
     Schedule: navbarLayout.children[1],
     ScheduleTemplate: navbarLayout.children[2],
-    OpenShifts: navbarLayout.children[3],
+    Notifications: navbarLayout.children[3],
     EmployeeList: navbarLayout.children[4],
     Roles: navbarLayout.children[5],
     Settings: navbarLayout.children[6],

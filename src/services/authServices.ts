@@ -69,7 +69,6 @@ export class AuthServices {
             if (!user) return false;
 
             const result = await apiClient.post(`authentication/validate`);
-            console.log("Validating")
 
             return result.data.valid;
         } catch (error) {

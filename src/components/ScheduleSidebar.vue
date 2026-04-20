@@ -43,9 +43,9 @@ const links = computed(() => [
         ],
     },
     {
-        label: "Open Shifts",
+        label: "Notifications",
         icon: "i-lucide-briefcase",
-        to: subRoutes.OpenShifts,
+        to: subRoutes.Notifications,
     },
     {
         label: "Employees",
@@ -151,32 +151,6 @@ const searchGroups = computed(() => [
                     childList: 'ml-6 pl-2',
                 }"
             >
-                <!-- <template #item="{ item, active }">
-                    <div
-                        :class="[
-                            'flex items-center gap-3 w-full',
-                            collapsed ? 'justify-center' : 'justify-start',
-                        ]"
-                    >
-                        <UIcon
-                            v-if="item.icon"
-                            :name="item.icon"
-                            :class="[
-                                'w-5 h-5 shrink-0',
-                                active ? 'text-maroon-500' : 'text-neutral-100',
-                            ]"
-                        />
-
-                        <span
-                            v-if="!collapsed"
-                            :class="[
-                                active ? 'text-maroon-500' : 'text-neutral-100',
-                            ]"
-                        >
-                            {{ item.label }}
-                        </span>
-                    </div>
-                </template> -->
             </UNavigationMenu>
         </template>
     </UDashboardSidebar>

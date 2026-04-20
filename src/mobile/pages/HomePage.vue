@@ -68,8 +68,8 @@ async function loadData() {
         });
 
         shifts.value = sortedShifts;
-    } catch (err) {
-        console.log(err);
+    } catch (error: any) {
+        console.log(error);
     }
 }
 
