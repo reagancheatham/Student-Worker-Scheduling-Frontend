@@ -28,6 +28,7 @@ const editedEvent = ref<EventData>(
     ),
 );
 const isModalOpen = ref(false);
+const isTemplatePasteOpen = ref(false);
 const templateName = ref("");
 const isUpdatingTemplateName = ref(false);
 const business = ref<Business>();
@@ -227,6 +228,10 @@ async function updateTemplateName(_: Event): Promise<void> {
         </div>
         <div class="headerSegment rightSegment">
             <UButton
+                label="Paste Template"
+                @click="isTemplatePasteOpen = true"
+            />
+            <UButton
                 v-if="!data.isTemplate"
                 label="Today"
                 variant="outline"
@@ -254,4 +259,5 @@ async function updateTemplateName(_: Event): Promise<void> {
         @form-submitted="updateRelevantEvents"
         creator
     />
+    <TemplatePasteModal :is-open="isTemplatePasteOpen" />
 </template>
