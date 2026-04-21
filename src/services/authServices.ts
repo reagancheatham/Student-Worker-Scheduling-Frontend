@@ -1,44 +1,80 @@
 import { router } from "../routing/router";
 import { User } from "@classes/database/user";
 import { apiClient } from "./services.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
+import { Admin } from "@classes/util/permissionRole.ts";
+import { routes, subRoutes } from "../routing/routes.ts";
 
-const API_ROOT: string = "authentication/";
+const API_ROOT: string = "authentication";
 
 export class AuthServices {
     public static async login(token: string, code?: string) {
         let user: User;
-        const result = await apiClient.post(API_ROOT, {
-            credential: token,
-            code: code,
-        });
+        try {
+            const result = await apiClient.post(API_ROOT, {
+                credential: token,
+                code: code,
+            });
 
-        if (result.data.valid) {
-            user = result.data.user;
-            user.token = result.data.token;
+            if (result.data.valid) {
+                user = result.data.user;
+                user.token = result.data.token;
 
-            Store.setUser(user);
+                Store.userStore.set(user);
 
-            const businesses = await BusinessServices.getAllForUser(user.id);
-            Store.setBusiness(businesses[0]);
+                if (user.permissionRoleID == Admin.id) {
+                    router.push(routes.Admin.path);
+                    return;
+                } else {
+                    const businesses = await BusinessServices.getAllForUser(
+                        user.id,
+                    );
 
-            router.push(`nav/dashboard`);
-        } else {
-            console.error("Login failed: invalid credentials");
+                    if (businesses && businesses.length > 0) {
+                        const firstBusiness = businesses[0];
+                        Store.businessStore.set(firstBusiness);
+
+                        router.push(subRoutes.Dashboard.path);
+                    } else {
+                        Store.businessStore.clear();
+                        router.push(routes.NoBusiness.path);
+                    }
+                }
+            } else {
+                console.error("Login failed: invalid credentials");
+            }
+        } catch (error: any) {
+            console.error(`Error logging in: ${error}`);
         }
     }
 
     public static async logout() {
         try {
-            Store.clearUser();
-            router.push("/login");
+            await apiClient.post(`${API_ROOT}/logout`);
 
-            await apiClient.post("/authentication/logout");
-        } catch (error) {
-            console.error("Logout failed", error);
-            Store.clearUser();
-            router.push("/login");
+            router.push(routes.Login.path);
+            Store.clear();
+        } catch (error: any) {
+            console.error("Logout failed: ", error);
+            Store.clear();
+            router.push(routes.Login.path);
+        }
+    }
+
+    public static async validateSession(): Promise<boolean> {
+        try {
+            const user = Store.userStore.getImmediate();
+
+            if (!user) return false;
+
+            const result = await apiClient.post(`authentication/validate`);
+
+            return result.data.valid;
+        } catch (error: any) {
+            console.error(`Error validating session: ${error}`);
+
+            return false;
         }
     }
 

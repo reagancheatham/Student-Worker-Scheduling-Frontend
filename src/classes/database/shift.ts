@@ -1,10 +1,9 @@
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 import { Employee } from "./employee.ts";
+import { Role } from "./role.ts";
 
 export class Shift extends DatabaseModel {
-    private _employeeID: number;
-
     public constructor(
         public readonly id: number,
         public readonly businessID: number,
@@ -12,11 +11,11 @@ export class Shift extends DatabaseModel {
         public startTime: Date,
         public endTime: Date,
         public color: EventColor,
-        private _employee: Employee | undefined,
+        public published: boolean,
+        public employee: Employee | undefined = undefined,
+        public role: Role | undefined = undefined,
     ) {
         super();
-
-        this._employeeID = _employee ? _employee.id : 0;
     }
 
     public static createFromData(data: any): Shift {
@@ -30,8 +29,9 @@ export class Shift extends DatabaseModel {
             ? EventColor.fromString(data["color"])
             : EventColor.blue;
         const employee = data["Employee"]
-            ? Employee.create(data["Employee"])
+            ? Employee.createFromData(data["Employee"])
             : undefined;
+        const role = data["Role"] ? Role.create(data["Role"]) : undefined;
 
         return new Shift(
             data["id"] ?? 0,
@@ -40,18 +40,10 @@ export class Shift extends DatabaseModel {
             startTime,
             endTime,
             color,
+            data["published"] ?? false,
             employee,
+            role,
         );
-    }
-
-    public get employee(): Employee | undefined {
-        return this._employee;
-    }
-
-    public set employee(value: Employee | undefined) {
-        this._employee = value;
-
-        if (value) this._employeeID = value.id;
     }
 
     /* date formatting incase we need it */
@@ -176,22 +168,17 @@ export class Shift extends DatabaseModel {
         return {
             id: this.id,
             businessID: this.businessID,
-            employeeID: this._employeeID === 0 ? null : this._employeeID,
+            employeeID:
+                !this.employee || this.employee.id === 0
+                    ? null
+                    : this.employee.id,
+            targetRoleID:
+                !this.role || this.role.id === 0 ? null : this.role.id,
             name: this.name,
             startTime: this.startTime,
             endTime: this.endTime,
             color: this.color,
-            employee: this._employee,
-            day: this.day,
-            month: this.month,
-            shortMonth: this.shortMonth,
-            year: this.year,
-            weekday: this.weekday,
-            shortWeekday: this.shortWeekday,
-            shiftTime: this.shiftTime,
-            startTimeFormatted: this.startTimeFormatted,
-            endTimeFormatted: this.endTimeFormatted,
-            dateFormatted: this.dateFormatted,
+            published: this.published,
         };
     }
 

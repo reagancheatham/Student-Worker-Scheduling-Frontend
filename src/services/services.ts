@@ -1,4 +1,4 @@
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import axios from "axios";
 
 var baseURL: string = "";
@@ -30,8 +30,9 @@ const apiClient = axios.create({
     },
 });
 
-apiClient.interceptors.request.use((config) => {
-    const user = Store.getUser();
+apiClient.interceptors.request.use(async (config) => {
+    const user = await Store.userStore.get();
+
     if (user)
         config.headers.Authorization = `Bearer ${user.token}`;
     

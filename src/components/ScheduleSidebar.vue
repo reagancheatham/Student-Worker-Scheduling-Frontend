@@ -4,6 +4,18 @@ import { useRoute } from "vue-router";
 import { routes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
 import { AuthServices } from "../services/authServices.ts";
+import { useRoute } from "vue-router";
+import { PermissionRoleServices } from "../services/permissionRoleServices.ts";
+import { Store } from "@classes/util/store/store.ts";
+
+const isAdmin = ref(false);
+
+onMounted(async () => {
+    const permissionRoleID = Store.userStore.getImmediate()?.permissionRoleID
+    if (!permissionRoleID) return;
+    const role = await PermissionRoleServices.get(permissionRoleID);
+    isAdmin.value = role.name === "Admin";
+});
 
 const route = useRoute();
 const settingsPath = routes.NavbarLayout.children![4].path;
@@ -13,33 +25,61 @@ const links = computed(() => [
     {
         label: "Dashboard",
         icon: "i-lucide-house",
-        to: routes.NavbarLayout.children![0].path,
-        active: route.path.includes(routes.NavbarLayout.children![0].path),
+        to: subRoutes.Dashboard,
     },
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
-        to: routes.NavbarLayout.children![1].path,
-        active: route.path.includes(routes.NavbarLayout.children![1].path),
+        defaultOpen:
+            route.path.includes(subRoutes.Schedule.path) ||
+            route.path.includes(subRoutes.ScheduleTemplate.path),
+        children: [
+            {
+                label: "Schedule Editor",
+                icon: "i-lucide-calendar-clock",
+                to: subRoutes.Schedule,
+            },
+            {
+                label: "Template Editor",
+                icon: "i-lucide-calendar-cog",
+                to: subRoutes.ScheduleTemplate,
+            },
+        ],
     },
     {
-        label: "Open Shifts",
+        label: "Notifications",
         icon: "i-lucide-briefcase",
-        to: routes.NavbarLayout.children![2].path,
-        active: route.path.includes(routes.NavbarLayout.children![2].path),
+        to: subRoutes.Notifications,
     },
     {
         label: "Employees",
         icon: "i-lucide-users",
-        to: routes.NavbarLayout.children![3].path,
-        active: route.path.includes(routes.NavbarLayout.children![3].path),
+        defaultOpen:
+            route.path.includes(subRoutes.EmployeeList.path) ||
+            route.path.includes(subRoutes.Roles.path),
+        children: [
+            {
+                label: "Employee List",
+                icon: "i-lucide-list",
+                to: subRoutes.EmployeeList,
+            },
+            {
+                label: "Roles",
+                icon: "i-lucide-clipboard-list",
+                to: subRoutes.Roles,
+            },
+        ],
     },
     {
         label: "Settings",
         icon: "i-lucide-settings",
-        to: routes.NavbarLayout.children![4].path,
-        active: route.path.includes(routes.NavbarLayout.children![4].path),
+        to: subRoutes.Settings,
     },
+    ...(isAdmin.value ? [{
+        label: "Go To Admin",
+        icon: "i-lucide-shield",
+        to: routes.Admin,
+    }] : []),
 ]);
 
 const settingsSearchItems = [
@@ -118,7 +158,9 @@ const searchGroups = computed(() => [
     {
         id: "links",
         label: "Go to",
-        items: links.value.flat(),
+        items: links.value.flatMap((link) =>
+            link.children ? [link, ...link.children] : [link],
+        ),
     },
     {
         id: "actions",
@@ -166,33 +208,26 @@ const searchGroups = computed(() => [
                 :kbds="[]"
             />
 
-            <UNavigationMenu orientation="vertical" :items="links">
-                <template #item="{ item, active }">
-                    <div
-                        :class="[
-                            'flex items-center gap-3 w-full',
-                            collapsed ? 'justify-center' : 'justify-start',
-                        ]"
-                    >
-                        <UIcon
-                            v-if="item.icon"
-                            :name="item.icon"
-                            :class="[
-                                'w-5 h-5 shrink-0',
-                                active ? 'text-maroon-500' : 'text-neutral-100',
-                            ]"
-                        />
-
-                        <span
-                            v-if="!collapsed"
-                            :class="[
-                                active ? 'text-maroon-500' : 'text-neutral-100',
-                            ]"
-                        >
-                            {{ item.label }}
-                        </span>
-                    </div>
-                </template>
+            <UNavigationMenu
+                orientation="vertical"
+                :items="links"
+                :ui="{
+                    item: 'gap-3 w-full',
+                    link: [
+                        'group px-2 py-2 rounded-md transition-colors',
+                        collapsed ? 'justify-center' : 'justify-start',
+                        'text-neutral-100 hover:text-white data-active:text-maroon-500',
+                    ],
+                    linkLeadingIcon: [
+                        'w-5 h-5 shrink-0 transition-colors',
+                        'text-neutral-100 group-hover:text-white data-active:text-maroon-500 group-data-active:text-maroon-500',
+                    ],
+                    linkTrailing: collapsed ? 'hidden' : 'block',
+                    linkTrailingIcon: collapsed ? 'hidden' : 'block',
+                    linkLabel: collapsed ? 'hidden' : 'block',
+                    childList: 'ml-6 pl-2',
+                }"
+            >
             </UNavigationMenu>
         </template>
     </UDashboardSidebar>

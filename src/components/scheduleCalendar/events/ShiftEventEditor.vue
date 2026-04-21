@@ -7,10 +7,10 @@ import {
 import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { EventTime } from "@classes/calendar/eventTime.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { DateFormatter, DateValue, Time } from "@internationalized/date";
 import {
-    nextTick,
+    computed,
     onMounted,
     ref,
     shallowReactive,
@@ -25,11 +25,15 @@ import { TaskListServices } from "../../../services/taskListServices.ts";
 import { Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store.ts";
 import { UIIDUtil } from "@classes/util/uiIDUtil.ts";
 import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
+import { TempStore } from "@classes/util/store/tempStore.ts";
+import { Role } from "@classes/database/role.ts";
+import { RoleServices } from "../../../services/roleServices.ts";
 
-const model = defineModel<ShiftEvent>({
+//#region
+const model = defineModel<ShiftEventData>({
     required: true,
 });
 
@@ -40,11 +44,12 @@ const { isOpen, creator = false } = defineProps<{
 
 const emit = defineEmits({
     closeRequested: () => true,
-    formSubmitted: () => true,
     eventDeleted: () => true,
+    formSubmitted: () => true,
 });
 
 const tableElement = useTemplateRef("table");
+const formElement = useTemplateRef("form");
 
 const vTime = v.object({
     hour: v.number(),
@@ -66,7 +71,8 @@ const schema = v.pipe(
         startTime: vTime,
         endTime: vTime,
         color: vColor,
-        employee: v.optional(v.instance(Employee, "Invalid employee")),
+        role: v.nullish(v.instance(Role, "Invalid role")),
+        employee: v.nullish(v.instance(Employee, "Invalid employee")),
     }),
     v.forward(
         v.check(
@@ -94,6 +100,7 @@ const state = shallowReactive<{
     startTime: Time;
     endTime: Time;
     color: ColorItem;
+    role: Role | undefined;
     employee: Employee | undefined;
 }>({
     name: getData().name,
@@ -107,6 +114,7 @@ const state = shallowReactive<{
             color: getData().color.semantic,
         },
     },
+    role: getData().shift.role,
     employee: getData().shift.employee,
 });
 
@@ -119,6 +127,8 @@ const isCancelModalOpen = ref<boolean>(false);
 const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
+const roles = ref<Role[]>([]);
+const alreadyPublished = ref<boolean>(false);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
@@ -143,6 +153,37 @@ const taskColumns = [
     },
 ];
 
+const isValidRole = computed(() => {
+    if (!state.employee || !state.role) return true;
+    else
+        return (
+            state.employee.roles.find((r) => r.id === state.role!.id) !==
+            undefined
+        );
+});
+
+const employeeItems = computed(() => {
+    if (!state.role) {
+        return employees.value;
+    } else {
+        return employees.value.map((employee) => {
+            let chip;
+
+            if (
+                employee.roles.find((r) => r.id === state.role!.id) ===
+                undefined
+            )
+                chip = {
+                    color: "warning",
+                };
+
+            (employee as any).chip = chip;
+
+            return employee;
+        });
+    }
+});
+
 let deletedTasks: Task[] = [];
 let removedCheckOffs: TaskCheckOff[] = [];
 let isDirtyHandle: WatchHandle;
@@ -157,6 +198,7 @@ colors.value = EventColor.colors.map((color) => {
         },
     };
 });
+//#endregion
 
 onMounted(() => {
     deletedTasks = [];
@@ -196,6 +238,11 @@ onMounted(() => {
 async function initializeState() {
     if (!isOpen) return;
 
+    const business = await Store.businessStore.get();
+
+    if (!business) return;
+
+    alreadyPublished.value = getData().shift.published;
     state.name = getData().name;
     state.eventDate = getData().startTime.calendarDate();
     state.startTime = getData().startTime.toTime();
@@ -208,6 +255,7 @@ async function initializeState() {
         },
     };
     state.employee = getData().shift.employee;
+    state.role = getData().shift.role;
 
     if (model.value.shift.isValid()) {
         taskList.value = await TaskListServices.getOrCreateForShift(
@@ -215,9 +263,18 @@ async function initializeState() {
         );
     } else taskList.value = new TaskList(0, 0, "Task List", []);
 
-    employees.value = await EmployeeServices.getAllForBusiness(
-        Store.getBusiness()!.id,
-    );
+    const getEmployees = async () =>
+        (employees.value = await EmployeeServices.getAllForBusiness(
+            business.id,
+        ));
+    const getRoles = async () =>
+        (roles.value = await RoleServices.getAllForBusiness(business.id));
+
+    const promises: Promise<any>[] = [];
+    promises.push(getEmployees());
+    promises.push(getRoles());
+
+    await Promise.all(promises);
 
     initializeTaskUIIDs();
 
@@ -254,6 +311,7 @@ function selectDate(date: DateValue | any): void {
 }
 
 async function submitModalForm(_: FormSubmitEvent<Schema>) {
+    TempStore.isLoading = true;
     isSubmitting.value = true;
 
     const event = model.value;
@@ -281,6 +339,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     event.color = state.color.value;
     event.shift.employee = state.employee;
+    event.shift.role = state.role;
 
     const removeCheckPromises = removedCheckOffs.map(async (check) => {
         if (check.id > 0) return await TaskServices.deleteCheckOff(check);
@@ -292,11 +351,12 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     const totalPromises = [...removeCheckPromises, ...taskPromises];
     await Promise.all(totalPromises);
-    let updatedShift = await event.updateBackend();
+    const updatedShift = await event.updateBackend();
     await taskList.value.updateBackend(updatedShift);
 
-    emit("formSubmitted");
+    TempStore.isLoading = false;
 
+    emit("formSubmitted");
     toggleModal();
 }
 
@@ -349,13 +409,17 @@ function closeTaskModal(): void {
 function createDefaultTask(): Task {
     return new Task(0, taskList.value.id, 0, "New Task", "", []);
 }
+
+function publishShift(): void {
+    model.value.shift.published = true;
+}
 </script>
 
 <template>
     <UModal
         :open="isOpen"
         :title="creator ? 'Shift Creator' : 'Shift Editor'"
-        :dismissible="false"
+        :dismissible="!isDirty"
         description="Edit the details of a shift."
         @update:open="toggleModal()"
     >
@@ -367,6 +431,7 @@ function createDefaultTask(): Task {
             </div>
             <div class="p-4">
                 <UForm
+                    ref="form"
                     :schema="schema"
                     :state="state"
                     class="flex flex-col gap-4"
@@ -379,7 +444,7 @@ function createDefaultTask(): Task {
                         <UFormField label="Date" name="eventDate">
                             <UPopover>
                                 <UButton
-                                    class="h-1/2"
+                                    class="h-1/2 min-w-36"
                                     color="neutral"
                                     variant="subtle"
                                     icon="i-lucide-calendar"
@@ -419,7 +484,9 @@ function createDefaultTask(): Task {
                     <UFormField label="Color" name="color">
                         <USelectMenu
                             v-model="state.color"
+                            class="min-w-36"
                             :items="colors"
+                            :default-value="undefined"
                             label-key="label"
                         >
                             <template #leading="{ modelValue, ui }">
@@ -436,23 +503,50 @@ function createDefaultTask(): Task {
                             </template>
                         </USelectMenu>
                     </UFormField>
-                    <UFormField label="Assigned Employee" name="employee">
-                        <USelectMenu
-                            class="min-w-36"
-                            v-model="state.employee"
-                            :items="employees"
-                            label-key="fullName"
-                        ></USelectMenu>
-                        <UButton
-                            v-if="state.employee"
-                            class="ml-1 relative top-0.5"
-                            size="xs"
-                            variant="subtle"
-                            color="neutral"
-                            icon="i-lucide-x"
-                            @click="state.employee = undefined"
+                    <div class="flex gap-4">
+                        <UFormField label="Role" name="role">
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.role"
+                                    :items="roles"
+                                    label-key="name"
+                                    clear
+                                    placeholder="Select Role"
+                                    :autofocus="false"
+                                />
+                            </div>
+                        </UFormField>
+                        <USeparator
+                            class="h-8 self-end"
+                            orientation="vertical"
+                            size="sm"
+                            decorative
                         />
-                    </UFormField>
+                        <UFormField label="Assigned Employee" name="employee">
+                            <UChip
+                                :show="!isValidRole"
+                                size="3xl"
+                                text="Missing Role"
+                                color="warning"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                            >
+                                <div @pointerdown.stop.prevent>
+                                    <USelectMenu
+                                        class="min-w-36"
+                                        v-model="state.employee"
+                                        label-key="fullName"
+                                        :items="employeeItems"
+                                        clear
+                                        placeholder="Select Employee"
+                                        :autofocus="false"
+                                    />
+                                </div>
+                            </UChip>
+                        </UFormField>
+                    </div>
                     <UFormField name="taskList">
                         <div
                             class="flex flex-col flex-1 w-full border rounded-md border-accented"
@@ -520,6 +614,47 @@ function createDefaultTask(): Task {
                         </div>
                     </UFormField>
                     <div class="flex flex-row gap-2">
+                        <UModal
+                            v-if="!creator && !alreadyPublished"
+                            class="pointer-events-auto"
+                            title="Publish Shift?"
+                            description="This will notify relevant employees."
+                            :ui="{ content: `sm:max-w-xs` }"
+                        >
+                            <UTooltip
+                                :text="
+                                    state.employee
+                                        ? 'Publish Shift to Employees'
+                                        : 'Employee Must Be Assigned to Publish'
+                                "
+                                ignore-non-keyboard-focus
+                            >
+                                <UButton
+                                    label="Publish"
+                                    :disabled="!state.employee"
+                                />
+                            </UTooltip>
+                            <template #footer="{ close }">
+                                <UButton
+                                    label="Publish"
+                                    class="ml-auto"
+                                    type="submit"
+                                    @click="
+                                        () => {
+                                            publishShift();
+                                            formElement?.submit();
+                                        }
+                                    "
+                                />
+                                <UButton
+                                    label="Cancel"
+                                    color="neutral"
+                                    variant="outline"
+                                    class="mr-auto"
+                                    @click="close()"
+                                />
+                            </template>
+                        </UModal>
                         <UTooltip
                             :text="`Submit ${creator ? 'Creation' : 'Edit'}`"
                         >
@@ -531,35 +666,36 @@ function createDefaultTask(): Task {
                                 Submit
                             </UButton>
                         </UTooltip>
-                        <UTooltip text="Delete Shift">
-                            <UModal
-                                title="Delete shift?"
-                                description="Deletion can not be undone."
-                                :dismissible="false"
-                                :ui="{ content: 'sm:max-w-xs' }"
-                            >
+                        <UModal
+                            title="Delete shift?"
+                            description="Deletion can not be undone."
+                            :dismissible="false"
+                            :ui="{ content: 'sm:max-w-xs' }"
+                        >
+                            <UTooltip text="Delete Shift">
                                 <UButton
                                     label="Delete"
                                     color="neutral"
                                     variant="outline"
                                     :disabled="isSubmitting"
                                 />
-                                <template #footer="{ close }">
-                                    <UButton
-                                        label="Delete"
-                                        class="ml-auto"
-                                        @click="deleteEvent()"
-                                    />
-                                    <UButton
-                                        label="Cancel"
-                                        color="neutral"
-                                        variant="outline"
-                                        class="mr-auto"
-                                        @click="close()"
-                                    />
-                                </template>
-                            </UModal>
-                        </UTooltip>
+                            </UTooltip>
+
+                            <template #footer="{ close }">
+                                <UButton
+                                    label="Delete"
+                                    class="ml-auto"
+                                    @click="deleteEvent()"
+                                />
+                                <UButton
+                                    label="Cancel"
+                                    color="neutral"
+                                    variant="outline"
+                                    class="mr-auto"
+                                    @click="close()"
+                                />
+                            </template>
+                        </UModal>
                         <UTooltip
                             :text="`Cancel ${creator ? 'Creation' : 'Edit'}`"
                         >
@@ -574,7 +710,6 @@ function createDefaultTask(): Task {
                             <UModal
                                 title="Discard unsaved changes?"
                                 description="Discarded changes can not be undone."
-                                :dismissable="false"
                                 :ui="{ content: 'sm:max-w-xs' }"
                                 :open="isCancelModalOpen"
                             >

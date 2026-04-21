@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
+import { MathUtil } from "@classes/util/mathUtil.ts";
 import { Month } from "@classes/util/month.ts";
+import { fromWeekIndex, toWeekIndex } from "@classes/util/weekDay.ts";
 import { DateFormatter } from "@internationalized/date";
 
 const { data } = defineProps<{
@@ -9,23 +11,46 @@ const { data } = defineProps<{
 }>();
 
 const monthFormatter = new DateFormatter(CalendarData.localeString, {
+    weekday: "long",
     month: "long",
     day: "numeric",
 });
 
 function incrementTime(): void {
+    if (data.selectedTemplateDay) {
+        let index = toWeekIndex(data.selectedTemplateDay);
+        index = MathUtil.clamp(index + 1, 0, 6);
+
+        data.selectedTemplateDay = fromWeekIndex(index);
+        return;
+    }
+
     if (data.selectedView === CalendarMode.Day)
         data.selectedDay = data.selectedDay.add({ days: 1 });
     else data.selectedDay = data.selectedDay.add({ weeks: 1 });
 }
 
 function decrementTime(): void {
+    if (data.selectedTemplateDay) {
+        let index = toWeekIndex(data.selectedTemplateDay);
+        index = MathUtil.clamp(index - 1, 0, 6);
+
+        data.selectedTemplateDay = fromWeekIndex(index);
+        return;
+    }
+
     if (data.selectedView === CalendarMode.Day)
         data.selectedDay = data.selectedDay.subtract({ days: 1 });
     else data.selectedDay = data.selectedDay.subtract({ weeks: 1 });
 }
 
 function getTimeString(): string {
+    if (data.selectedTemplateDay) {
+        if (data.selectedView === CalendarMode.Day) {
+            return `${data.selectedTemplateDay}`;
+        } else return "";
+    }
+
     if (data.selectedView === CalendarMode.Day)
         return `${monthFormatter.format(data.selectedDay.toDate(CalendarData.timeZone))}, ${data.selectedDay.year}`;
     else {
@@ -52,6 +77,10 @@ function getTimeString(): string {
         square
         class="rounded-full"
         @click="decrementTime"
+        :disabled="
+            data.templateData &&
+            toWeekIndex(data.templateData.selectedDay) === 0
+        "
     />
     <UButton
         icon="i-lucide-arrow-right"
@@ -60,6 +89,10 @@ function getTimeString(): string {
         square
         class="rounded-full"
         @click="incrementTime"
+        :disabled="
+            data.templateData &&
+            toWeekIndex(data.templateData.selectedDay) === 6
+        "
     />
     <label class="mb-0.5 text-lg font-medium text-neutral-500">
         {{ getTimeString() }}

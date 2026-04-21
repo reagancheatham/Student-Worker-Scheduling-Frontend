@@ -5,14 +5,15 @@ import * as v from "valibot";
 import { useColorMode } from "@vueuse/core";
 import { Settings } from "@classes/database/settings.ts";
 import { SettingsServices } from "../services/settingsServices.ts";
+import { Store } from "@classes/util/store/store.ts";
 
 type SwitchSettingKey =
-	| "doubleTaskSignOff"
-	| "employeeSignOff"
-	| "allowClockInOut"
-	| "automaticShiftTrades"
-	| "enableOpenShift"
-	| "enableShiftTrades";
+    | "doubleTaskSignOff"
+    | "employeeSignOff"
+    | "allowClockInOut"
+    | "automaticShiftTrades"
+    | "enableOpenShift"
+    | "enableShiftTrades";
 
 type NumberSettingKey = "clockInThreshold" | "onTimeThreshold";
 
@@ -104,10 +105,10 @@ const initialSettingsSignature = ref("");
 const colorMode = useColorMode();
 
 const darkModeEnabled = computed({
-	get: () => colorMode.value === "dark",
-	set: (isDark: boolean) => {
-		colorMode.value = isDark ? "dark" : "light";
-	},
+    get: () => colorMode.value === "dark",
+    set: (isDark: boolean) => {
+        colorMode.value = isDark ? "dark" : "light";
+    },
 });
 
 const hasUnsavedChanges = computed(() => {
@@ -119,65 +120,62 @@ const hasUnsavedChanges = computed(() => {
 });
 
 const switchFields: Array<{
-	key: SwitchSettingKey;
-	label: string;
-	description: string;
+    key: SwitchSettingKey;
+    label: string;
+    description: string;
 }> = [
-	{
-		key: "doubleTaskSignOff",
-		label: "Double Task Sign Off",
-		description:
-			"Require two sign offs before a task is marked complete.",
-	},
-	{
-		key: "employeeSignOff",
-		label: "Employee Sign Off",
-		description:
-			"Require employee confirmation for completed work on a shift.",
-	},
-	{
-		key: "allowClockInOut",
-		label: "Allow Clock In/Out",
-		description: "Enable time tracking actions for staff.",
-	},
-	{
-		key: "automaticShiftTrades",
-		label: "Automatic Shift Trades",
-		description:
-			"Automatically approve eligible shift trade requests.",
-	},
-	{
-		key: "enableOpenShift",
-		label: "Enable Open Shift",
-		description: "Allow publishing shifts to the open-shift board.",
-	},
-	{
-		key: "enableShiftTrades",
-		label: "Enable Shift Trades",
-		description: "Allow employees to request shift trades.",
-	},
+    {
+        key: "doubleTaskSignOff",
+        label: "Double Task Sign Off",
+        description: "Require two sign offs before a task is marked complete.",
+    },
+    {
+        key: "employeeSignOff",
+        label: "Employee Sign Off",
+        description:
+            "Require employee confirmation for completed work on a shift.",
+    },
+    {
+        key: "allowClockInOut",
+        label: "Allow Clock In/Out",
+        description: "Enable time tracking actions for staff.",
+    },
+    {
+        key: "automaticShiftTrades",
+        label: "Automatic Shift Trades",
+        description: "Automatically approve eligible shift trade requests.",
+    },
+    {
+        key: "enableOpenShift",
+        label: "Enable Open Shift",
+        description: "Allow publishing shifts to the open-shift board.",
+    },
+    {
+        key: "enableShiftTrades",
+        label: "Enable Shift Trades",
+        description: "Allow employees to request shift trades.",
+    },
 ];
 
 const numberFields: Array<{
-	key: NumberSettingKey;
-	label: string;
-	description: string;
-	min: number;
+    key: NumberSettingKey;
+    label: string;
+    description: string;
+    min: number;
 }> = [
-	{
-		key: "clockInThreshold",
-		label: "Clock In Threshold (minutes)",
-		description:
-			"How many minutes early/late are allowed when clocking in.",
-		min: 0,
-	},
-	{
-		key: "onTimeThreshold",
-		label: "On-Time Threshold (minutes)",
-		description:
-			"Grace period before an employee is marked as late.",
-		min: 0,
-	},
+    {
+        key: "clockInThreshold",
+        label: "Clock In Threshold (minutes)",
+        description:
+            "How many minutes early/late are allowed when clocking in.",
+        min: 0,
+    },
+    {
+        key: "onTimeThreshold",
+        label: "On-Time Threshold (minutes)",
+        description: "Grace period before an employee is marked as late.",
+        min: 0,
+    },
 ];
 
 const getSwitchValue = (key: SwitchSettingKey): boolean => {
@@ -391,19 +389,19 @@ loadSettings();
 
 <style scoped>
 .settings-page {
-	display: grid;
-	gap: 1rem;
-	padding: 1.5rem;
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem;
 }
 
 .save-notice {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.625rem 0.75rem;
-	border-radius: 0.5rem;
-	background: color-mix(in srgb, var(--ui-primary) 10%, transparent);
-	font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--ui-primary) 10%, transparent);
+    font-size: 0.875rem;
 }
 
 .header-meta {
@@ -419,7 +417,7 @@ loadSettings();
 }
 
 .save-notice-icon {
-	color: var(--ui-primary);
+    color: var(--ui-primary);
 }
 
 .loading-alert,
