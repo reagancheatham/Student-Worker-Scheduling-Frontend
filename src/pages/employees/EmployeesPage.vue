@@ -228,11 +228,13 @@ async function submitRefreshSchoolUnavailabilities(
         isRefreshOpen.value = false;
     } catch (error) {
         console.error(`Error refreshing school unavailabilities: ${error}`);
+
         const responseData = (error as any)?.response?.data;
         const responseMessage =
             responseData?.message ??
             responseData?.Message ??
             "Could not import student schedules.";
+
         toast.add({
             title: "Refresh failed",
             description: responseMessage,
