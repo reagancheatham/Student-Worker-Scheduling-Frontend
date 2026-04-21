@@ -182,25 +182,14 @@ async function submitRefreshSchoolUnavailabilities(
         );
 
         const payload = response?.data ?? {};
-        const employeesProcessed = Number(payload?.employeesProcessed ?? 0);
-        const employeesSkipped = Number(payload?.employeesSkipped ?? 0);
         const employeeErrors = Array.isArray(payload?.employeeErrors)
             ? payload.employeeErrors
             : [];
 
-        if (employeesProcessed === 0 && (employeesSkipped > 0 || employeeErrors.length > 0)) {
-            toast.add({
-                title: "Refresh completed with issues",
-                description:
-                    employeeErrors[0]?.message ??
-                    "No employee schedules were imported. Check student IDs/emails and term code.",
-                color: "warning",
-                icon: "i-lucide-circle-alert",
-            });
-        } else if (employeeErrors.length > 0 || employeesSkipped > 0) {
+        if (employeeErrors.length > 0) {
             toast.add({
                 title: "School unavailabilities refreshed",
-                description: `${employeesProcessed} employee(s) updated, ${employeesSkipped} skipped.`,
+                description: employeeErrors[0]?.message ?? "Refresh completed with some errors.",
                 color: "warning",
                 icon: "i-lucide-triangle-alert",
             });
