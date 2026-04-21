@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
-import { EmployeeServices } from "../services/employeeServices.ts";
-import { EmployeeUnavailabilityServices } from "../services/employeeUnavailabilityServices";
+import { EmployeeServices } from "../../services/employeeServices.ts";
+import { EmployeeUnavailabilityServices } from "../../services/employeeUnavailabilityServices.ts";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
@@ -10,7 +10,7 @@ import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store/store";
 import * as v from "valibot";
 import { Role } from "@classes/database/role.ts";
-import { RoleServices } from "../services/roleServices.ts";
+import { RoleServices } from "../../services/roleServices.ts";
 import { TempStore } from "@classes/util/store/tempStore.ts";
 
 const toast = useToast();
@@ -42,23 +42,16 @@ const addValidationSchema = v.object({
     ),
     isManager: v.boolean(),
 });
-type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
+type AddValidationSchema = v.InferOutput<typeof addValidationSchema>;
 
 const refreshState = shallowReactive({
     termCode: "",
 });
 
-const refreshValidationSchema = valibot.object({
-    termCode: valibot.pipe(
-        valibot.string(),
-        valibot.nonEmpty("Term code is required"),
-    ),
+const refreshValidationSchema = v.object({
+    termCode: v.pipe(v.string(), v.nonEmpty("Term code is required")),
 });
-type RefreshValidationSchema = valibot.InferOutput<
-    typeof refreshValidationSchema
->;
-
-let data = ref<Employee[]>([]);
+type RefreshValidationSchema = v.InferOutput<typeof refreshValidationSchema>;
 
 const columns: TableColumn<Employee>[] = [
     {
@@ -204,9 +197,9 @@ async function submitRefreshSchoolUnavailabilities(
     try {
         const response =
             await EmployeeUnavailabilityServices.importStudentSchedulesForBusiness(
-            business.id,
-            event.data.termCode.trim(),
-        );
+                business.id,
+                event.data.termCode.trim(),
+            );
 
         const payload = response?.data ?? {};
         const employeeErrors = Array.isArray(payload?.employeeErrors)
@@ -216,7 +209,9 @@ async function submitRefreshSchoolUnavailabilities(
         if (employeeErrors.length > 0) {
             toast.add({
                 title: "School unavailabilities refreshed",
-                description: employeeErrors[0]?.message ?? "Refresh completed with some errors.",
+                description:
+                    employeeErrors[0]?.message ??
+                    "Refresh completed with some errors.",
                 color: "warning",
                 icon: "i-lucide-triangle-alert",
             });
@@ -493,9 +488,7 @@ onMounted(() => {
         </template>
         <template #footer>
             <div class="ml-auto flex flex-row gap-2">
-                <UButton @click="submitRoleEdit()">
-                    Submit
-                </UButton>
+                <UButton @click="submitRoleEdit()"> Submit </UButton>
                 <UButton
                     variant="outline"
                     color="neutral"

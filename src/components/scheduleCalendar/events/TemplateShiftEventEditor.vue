@@ -4,7 +4,7 @@ import {
     useSortable,
     UseSortableReturn,
 } from "@vueuse/integrations/useSortable";
-import type { ChipProps, FormSubmitEvent } from "@nuxt/ui";
+import type { ChipProps, DropdownMenuItem, FormSubmitEvent } from "@nuxt/ui";
 import { EventTime } from "@classes/calendar/eventTime.ts";
 import { Time } from "@internationalized/date";
 import {
@@ -29,6 +29,10 @@ import { fromWeekIndex, WeekDay } from "@classes/util/weekDay.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
 import { Role } from "@classes/database/role.ts";
 import { RoleServices } from "../../../services/roleServices.ts";
+import { TaskListTemplate } from "@classes/database/taskListTemplate.ts";
+import { TaskListTemplateServices } from "../../../services/taskListTemplateServices.ts";
+import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
+import { ShiftTaskListTemplateServices } from "../../../services/shiftTaskListTemplateServices.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({
@@ -50,6 +54,11 @@ const emit = defineEmits({
     eventDeleted: () => true,
     formSubmitted: () => true,
 });
+
+type PasteableTaskList = {
+    template: TaskListTemplate;
+    onSelect: () => void;
+};
 
 const tableElement = useTemplateRef("table");
 
@@ -121,6 +130,7 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
+const tasks = ref<ShiftTaskTemplate[]>([]);
 const editedTask = ref<ShiftTaskTemplate>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
@@ -129,6 +139,7 @@ const isDirty = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
 const roles = ref<Role[]>([]);
+const pasteableTaskLists = ref<PasteableTaskList[]>([]);
 
 const taskColumns = [
     {
@@ -136,7 +147,7 @@ const taskColumns = [
         header: "Name",
         meta: {
             class: {
-                td: "max-w-[200px] truncate whitespace-normal",
+                td: "min-w-[120px] max-w-[200px] truncate whitespace-normal",
             },
         },
     },
@@ -206,21 +217,18 @@ onMounted(() => {
             const el = element.$el as HTMLElement;
             if (sortableInstance) sortableInstance.stop();
 
-            const taskList = model.value.template.taskList;
-
             sortableInstance = useSortable(
                 el.querySelector("tbody"),
-                taskList.shiftTaskTemplates,
+                tasks.value,
                 {
                     animation: 150,
                     onUpdate: (e: any) => {
-                        const tasks = taskList.shiftTaskTemplates;
-                        const movedItem = tasks.splice(e.oldIndex, 1)[0];
+                        const movedItem = tasks.value.splice(e.oldIndex, 1)[0];
 
-                        tasks.splice(e.newIndex, 0, movedItem);
+                        tasks.value.splice(e.newIndex, 0, movedItem);
 
                         // force Vue to redraw
-                        taskList.shiftTaskTemplates = [...tasks];
+                        tasks.value = [...tasks.value];
                     },
                 } as any,
             );
@@ -248,6 +256,7 @@ async function initializeState() {
     };
     state.employee = getData().template.employee;
     state.role = getData().template.role;
+    tasks.value = [...getData().template.taskList.shiftTaskTemplates];
 
     const getEmployees = async () =>
         (employees.value = await EmployeeServices.getAllForBusiness(
@@ -255,10 +264,23 @@ async function initializeState() {
         ));
     const getRoles = async () =>
         (roles.value = await RoleServices.getAllForBusiness(business.id));
+    const getTaskTemplates = async () => {
+        const templates = await TaskListTemplateServices.getAllForBusiness(
+            business.id,
+        );
+
+        pasteableTaskLists.value = templates.map((template) => {
+            return {
+                template,
+                onSelect: () => pasteTemplate(template),
+            };
+        });
+    };
 
     const promises: Promise<any>[] = [];
     promises.push(getEmployees());
     promises.push(getRoles());
+    promises.push(getTaskTemplates());
 
     await Promise.all(promises);
 
@@ -271,9 +293,9 @@ async function initializeState() {
 }
 
 function initializeTaskUIIDs() {
-    const taskList = model.value.template.taskList;
+    const taskList = tasks.value;
 
-    taskList.shiftTaskTemplates.forEach((task) => {
+    taskList.forEach((task) => {
         if (!(task as any)._uiID) UIIDUtil.attachUUID(task, "task");
     });
 }
@@ -313,6 +335,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     event.color = state.color.value;
     event.template.employee = state.employee;
     event.template.role = state.role;
+    event.template.taskList.shiftTaskTemplates = tasks.value;
 
     const taskPromises = deletedTasks.map(async (task) => {
         if (task.isValid()) return await ShiftTaskTemplateServices.delete(task);
@@ -345,12 +368,10 @@ function openAddTaskModal(): void {
 }
 
 function onTaskAddRequested(): void {
-    const taskList = model.value.template.taskList;
-
     UIIDUtil.attachUUID(editedTask.value, "task");
 
-    editedTask.value.listOrder = taskList.shiftTaskTemplates.length;
-    taskList.shiftTaskTemplates.push(editedTask.value);
+    editedTask.value.listOrder = tasks.value.length;
+    tasks.value.push(editedTask.value);
     editedTask.value = createDefaultTask();
     isDirty.value = true;
 }
@@ -362,11 +383,8 @@ function editTask(task: ShiftTaskTemplate): void {
 }
 
 function deleteTask(task: ShiftTaskTemplate): void {
-    const taskList = model.value.template.taskList;
-
     deletedTasks.push(task);
-    const tasks = taskList.shiftTaskTemplates;
-    tasks.splice(tasks.indexOf(task), 1);
+    tasks.value.splice(tasks.value.indexOf(task), 1);
 }
 
 function closeTaskModal(): void {
@@ -377,6 +395,19 @@ function createDefaultTask(): ShiftTaskTemplate {
     const taskList = model.value.template.taskList;
 
     return new ShiftTaskTemplate(0, taskList.id, 0, "New Task", "");
+}
+
+function pasteTemplate(template: TaskListTemplate): void {
+    const taskList = model.value.template.taskList;
+    const pasteTasks = template.toShiftTemplateTasks();
+
+    pasteTasks.forEach((t) => {
+        t.shiftTaskListID = taskList.id;
+        t.listOrder = tasks.value.length;
+        tasks.value.push(t);
+    });
+
+    isDirty.value = true;
 }
 </script>
 
@@ -392,7 +423,11 @@ function createDefaultTask(): ShiftTaskTemplate {
         <template #content>
             <div class="p-2 flex flex-row">
                 <p class="text-xl font-semibold ml-2">
-                    {{ creator ? "Template Shift Creator" : "Template Shift Editor" }}
+                    {{
+                        creator
+                            ? "Template Shift Creator"
+                            : "Template Shift Editor"
+                    }}
                 </p>
             </div>
             <div class="p-4">
@@ -483,14 +518,26 @@ function createDefaultTask(): ShiftTaskTemplate {
                             class="flex flex-col flex-1 w-full border rounded-md border-accented"
                         >
                             <div
-                                class="flex px-4 py-1 border-b border-accented"
+                                class="flex px-4 py-1 border-b border-accented gap-2"
                             >
                                 <div class="font-medium text-default mt-2">
                                     Task List
                                 </div>
-                                <UButton
+                                <UDropdownMenu
                                     class="ml-auto"
-                                    label="Add Task"
+                                    :items="pasteableTaskLists"
+                                    label-key="template.name"
+                                    key="template"
+                                >
+                                    <UButton
+                                        label="Paste"
+                                        color="neutral"
+                                        variant="outline"
+                                        trailing-icon="i-lucide-clipboard-paste"
+                                    />
+                                </UDropdownMenu>
+                                <UButton
+                                    label="Add"
                                     color="neutral"
                                     variant="outline"
                                     trailing-icon="i-lucide-list-plus"
@@ -499,12 +546,10 @@ function createDefaultTask(): ShiftTaskTemplate {
                                 />
                             </div>
                             <UTable
-                                v-if="model.template.taskList"
+                                v-if="tasks"
                                 ref="table"
                                 class="overflow-y-auto h-48 flex-1 max-h-64"
-                                :data="
-                                    model.template.taskList.shiftTaskTemplates
-                                "
+                                :data="tasks"
                                 :columns="taskColumns"
                                 :ui="{
                                     tbody: 'my-table-tbody',
@@ -624,7 +669,7 @@ function createDefaultTask(): ShiftTaskTemplate {
                     </div>
                 </UForm>
             </div>
-            <TemplateTaskEditor
+            <TemplateShiftTaskEditor
                 ref="table"
                 v-model="editedTask"
                 :is-open="isTaskEditorOpen"

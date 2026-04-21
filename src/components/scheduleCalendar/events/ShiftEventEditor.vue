@@ -31,6 +31,8 @@ import { TaskCheckOff } from "@classes/database/taskCheckOff.ts";
 import { TempStore } from "@classes/util/store/tempStore.ts";
 import { Role } from "@classes/database/role.ts";
 import { RoleServices } from "../../../services/roleServices.ts";
+import { TaskListTemplate } from "@classes/database/taskListTemplate.ts";
+import { TaskListTemplateServices } from "../../../services/taskListTemplateServices.ts";
 
 //#region
 const model = defineModel<ShiftEventData>({
@@ -94,6 +96,11 @@ type ColorItem = {
     };
 };
 
+type PasteableTaskList = {
+    template: TaskListTemplate;
+    onSelect: () => void;
+};
+
 const state = shallowReactive<{
     name: string;
     eventDate: DateValue;
@@ -119,7 +126,7 @@ const state = shallowReactive<{
 });
 
 const colors = ref<ColorItem[]>([]);
-const taskList = ref<TaskList>(new TaskList(0, 0, "Task List", []));
+const tasks = ref<Task[]>([]);
 const editedTask = ref<Task>(createDefaultTask());
 const isCreatingTask = ref<boolean>(false);
 const isTaskEditorOpen = ref<boolean>(false);
@@ -129,6 +136,7 @@ const isSubmitting = ref<boolean>(false);
 const employees = ref<Employee[]>([]);
 const roles = ref<Role[]>([]);
 const alreadyPublished = ref<boolean>(false);
+const pasteableTaskLists = ref<PasteableTaskList[]>([]);
 
 const formatter = new DateFormatter(CalendarData.localeString, {
     dateStyle: "medium",
@@ -217,17 +225,16 @@ onMounted(() => {
 
             sortableInstance = useSortable(
                 el.querySelector("tbody"),
-                taskList.value.tasks,
+                tasks.value,
                 {
                     animation: 150,
                     onUpdate: (e: any) => {
-                        const tasks = taskList.value.tasks;
-                        const movedItem = tasks.splice(e.oldIndex, 1)[0];
+                        const movedItem = tasks.value.splice(e.oldIndex, 1)[0];
 
-                        tasks.splice(e.newIndex, 0, movedItem);
+                        tasks.value.splice(e.newIndex, 0, movedItem);
 
                         // force Vue to redraw
-                        taskList.value.tasks = [...tasks];
+                        tasks.value = [...tasks.value];
                     },
                 } as any,
             );
@@ -256,12 +263,7 @@ async function initializeState() {
     };
     state.employee = getData().shift.employee;
     state.role = getData().shift.role;
-
-    if (model.value.shift.isValid()) {
-        taskList.value = await TaskListServices.getOrCreateForShift(
-            model.value.shift.id,
-        );
-    } else taskList.value = new TaskList(0, 0, "Task List", []);
+    tasks.value = [...getData().shift.taskList.tasks];
 
     const getEmployees = async () =>
         (employees.value = await EmployeeServices.getAllForBusiness(
@@ -269,10 +271,23 @@ async function initializeState() {
         ));
     const getRoles = async () =>
         (roles.value = await RoleServices.getAllForBusiness(business.id));
+    const getTaskTemplates = async () => {
+        const templates = await TaskListTemplateServices.getAllForBusiness(
+            business.id,
+        );
+
+        pasteableTaskLists.value = templates.map((template) => {
+            return {
+                template,
+                onSelect: () => pasteTemplate(template),
+            };
+        });
+    };
 
     const promises: Promise<any>[] = [];
     promises.push(getEmployees());
     promises.push(getRoles());
+    promises.push(getTaskTemplates());
 
     await Promise.all(promises);
 
@@ -285,7 +300,7 @@ async function initializeState() {
 }
 
 function initializeTaskUIIDs() {
-    taskList.value.tasks.forEach((task) => {
+    tasks.value.forEach((task) => {
         if (!(task as any)._uiID) UIIDUtil.attachUUID(task, "task");
     });
 }
@@ -340,6 +355,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
     event.color = state.color.value;
     event.shift.employee = state.employee;
     event.shift.role = state.role;
+    event.shift.taskList.tasks = tasks.value;
 
     const removeCheckPromises = removedCheckOffs.map(async (check) => {
         if (check.id > 0) return await TaskServices.deleteCheckOff(check);
@@ -351,8 +367,7 @@ async function submitModalForm(_: FormSubmitEvent<Schema>) {
 
     const totalPromises = [...removeCheckPromises, ...taskPromises];
     await Promise.all(totalPromises);
-    const updatedShift = await event.updateBackend();
-    await taskList.value.updateBackend(updatedShift);
+    await event.updateBackend();
 
     TempStore.isLoading = false;
 
@@ -380,8 +395,8 @@ function openAddTaskModal(): void {
 function onTaskAddRequested(): void {
     UIIDUtil.attachUUID(editedTask.value, "task");
 
-    editedTask.value.listOrder = taskList.value.tasks.length;
-    taskList.value.tasks.push(editedTask.value);
+    editedTask.value.listOrder = tasks.value.length;
+    tasks.value.push(editedTask.value);
     editedTask.value = createDefaultTask();
     isDirty.value = true;
 }
@@ -398,8 +413,7 @@ function editTask(task: Task): void {
 
 function deleteTask(task: Task): void {
     deletedTasks.push(task);
-    const tasks = taskList.value.tasks;
-    tasks.splice(tasks.indexOf(task), 1);
+    tasks.value.splice(tasks.value.indexOf(task), 1);
 }
 
 function closeTaskModal(): void {
@@ -407,11 +421,26 @@ function closeTaskModal(): void {
 }
 
 function createDefaultTask(): Task {
-    return new Task(0, taskList.value.id, 0, "New Task", "", []);
+    const listID = model.value?.shift?.taskList?.id ?? 0;
+
+    return new Task(0, listID, 0, "New Task", "", []);
 }
 
 function publishShift(): void {
     model.value.shift.published = true;
+}
+
+function pasteTemplate(template: TaskListTemplate): void {
+    const taskList = model.value.shift.taskList;
+    const pasteTasks = template.toTasks();
+
+    pasteTasks.forEach((t) => {
+        t.taskListID = taskList.id;
+        t.listOrder = tasks.value.length;
+        tasks.value.push(t);
+    });
+
+    isDirty.value = true;
 }
 </script>
 
@@ -552,13 +581,25 @@ function publishShift(): void {
                             class="flex flex-col flex-1 w-full border rounded-md border-accented"
                         >
                             <div
-                                class="flex px-4 py-1 border-b border-accented"
+                                class="flex px-4 py-1 border-b border-accented gap-2"
                             >
                                 <div class="font-medium text-default mt-2">
                                     Task List
                                 </div>
-                                <UButton
+                                <UDropdownMenu
                                     class="ml-auto"
+                                    :items="pasteableTaskLists"
+                                    label-key="template.name"
+                                    key="template"
+                                >
+                                    <UButton
+                                        label="Paste"
+                                        color="neutral"
+                                        variant="outline"
+                                        trailing-icon="i-lucide-clipboard-paste"
+                                    />
+                                </UDropdownMenu>
+                                <UButton
                                     label="Add Task"
                                     color="neutral"
                                     variant="outline"
@@ -568,10 +609,10 @@ function publishShift(): void {
                                 />
                             </div>
                             <UTable
-                                v-if="taskList"
+                                v-if="tasks"
                                 ref="table"
                                 class="overflow-y-auto h-48 flex-1 max-h-64"
-                                :data="taskList.tasks"
+                                :data="tasks"
                                 :columns="taskColumns"
                                 :ui="{
                                     tbody: 'my-table-tbody',

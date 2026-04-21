@@ -2,7 +2,7 @@
 import { Role } from "@classes/database/role.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { h, onMounted, ref, resolveComponent, shallowReactive } from "vue";
-import { RoleServices } from "../services/roleServices.ts";
+import { RoleServices } from "../../services/roleServices.ts";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import * as v from "valibot";
 import { TempStore } from "@classes/util/store/tempStore.ts";
@@ -155,9 +155,9 @@ async function submitModalForm(_: FormSubmitEvent<RoleSchema>): Promise<void> {
 </script>
 
 <template>
-    <div class="w-80 self-center justify-self-center">
+    <div class="w-full self-center justify-self-center">
         <div
-            class="w-full flex justify-between px-4 py-3.5 border-b border-accented gap-4"
+            class="flex justify-between px-4 py-3.5 border-b border-accented gap-4"
         >
             <UInput
                 v-model="globalFilter"
@@ -168,7 +168,6 @@ async function submitModalForm(_: FormSubmitEvent<RoleSchema>): Promise<void> {
             <UButton label="Add Role" color="primary" @click="openAddModal()" />
         </div>
         <UTable
-            class="w-full"
             :columns="columns"
             :data="roles"
             ref="table"

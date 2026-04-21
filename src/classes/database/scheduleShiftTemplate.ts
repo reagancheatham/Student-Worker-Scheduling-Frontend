@@ -86,6 +86,7 @@ export class ScheduleShiftTemplate extends DatabaseModel {
             calendarEndTime,
             this.color,
             false,
+            this.taskList.toTaskList(),
             this.employee,
             this.role,
         );
@@ -113,6 +114,7 @@ export class ScheduleShiftTemplate extends DatabaseModel {
             calendarEndTime,
             this.color,
             false,
+            this.taskList.toTaskList(),
             this.employee,
             this.role,
         );

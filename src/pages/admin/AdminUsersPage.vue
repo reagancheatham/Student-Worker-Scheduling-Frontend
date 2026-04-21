@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, shallowReactive, onMounted } from "vue";
-import type { Row } from "@tanstack/vue-table";
 import type { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import * as valibot from "valibot";
 import { User } from "@classes/database/user.ts";
-import { UserServices } from "../services/userServices.ts";
+import { UserServices } from "../../services/userServices.ts";
 
 type BusinessMembership = {
     id: number;
@@ -228,10 +227,12 @@ async function getData() {
                 <UDropdownMenu
                     v-else
                     :content="{ align: 'start' }"
-                    :items="row.original.businesses.map((b) => ({
-                        label: b.businessName,
-                        suffix: b.role,
-                    }))"
+                    :items="
+                        row.original.businesses.map((b) => ({
+                            label: b.businessName,
+                            suffix: b.role,
+                        }))
+                    "
                 >
                     <UButton
                         variant="subtle"
@@ -240,7 +241,11 @@ async function getData() {
                         trailing-icon="i-lucide-chevron-down"
                     >
                         {{ row.original.businesses.length }}
-                        {{ row.original.businesses.length > 1 ? "Businesses" : "Business" }}
+                        {{
+                            row.original.businesses.length > 1
+                                ? "Businesses"
+                                : "Business"
+                        }}
                     </UButton>
                 </UDropdownMenu>
             </template>

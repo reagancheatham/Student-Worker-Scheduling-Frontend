@@ -2,6 +2,7 @@ import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 import { Employee } from "./employee.ts";
 import { Role } from "./role.ts";
+import { TaskList } from "./taskList.ts";
 
 export class Shift extends DatabaseModel {
     public constructor(
@@ -12,6 +13,7 @@ export class Shift extends DatabaseModel {
         public endTime: Date,
         public color: EventColor,
         public published: boolean,
+        public taskList: TaskList,
         public employee: Employee | undefined = undefined,
         public role: Role | undefined = undefined,
     ) {
@@ -19,6 +21,7 @@ export class Shift extends DatabaseModel {
     }
 
     public static createFromData(data: any): Shift {
+        const id = data["id"] ?? 0;
         const startTime = data["startTime"]
             ? new Date(data["startTime"])
             : new Date();
@@ -28,19 +31,23 @@ export class Shift extends DatabaseModel {
         const color = data["color"]
             ? EventColor.fromString(data["color"])
             : EventColor.blue;
+        const taskList = data["TaskList"]
+            ? TaskList.create(data["TaskList"])
+            : new TaskList(0, id, "New Task List", []);
         const employee = data["Employee"]
             ? Employee.createFromData(data["Employee"])
             : undefined;
         const role = data["Role"] ? Role.create(data["Role"]) : undefined;
 
         return new Shift(
-            data["id"] ?? 0,
+            id,
             data["businessID"] ?? 0,
             data["name"] ?? 0,
             startTime,
             endTime,
             color,
             data["published"] ?? false,
+            taskList,
             employee,
             role,
         );
