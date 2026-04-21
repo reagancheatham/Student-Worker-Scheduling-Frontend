@@ -8,7 +8,7 @@
   "start_url": "./mobile/homePage",
   "icons": [
     {
-      "src": "avatar.png",
+      "src": "appImage.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
