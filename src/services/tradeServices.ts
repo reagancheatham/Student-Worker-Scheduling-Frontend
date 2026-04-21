@@ -50,6 +50,8 @@ export class TradeServices {
         );
     }
 
+    //TODO: rag said this is fixed in most recent version. Need to refactor to use standard.
+
     //since the getAll was throwing an error, i had AI build this to avoid modifying high traffic code...
     //We can come back and modify the original function but this is the fix for now
     //databaseServices getAll assumed that results.data is an array and threw a type error, i dont fully understand the issue

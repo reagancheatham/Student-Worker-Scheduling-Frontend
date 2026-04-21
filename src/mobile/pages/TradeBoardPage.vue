@@ -6,10 +6,14 @@ import { ShiftTradeRequest } from "@classes/database/shiftTradeRequests";
 import { ShiftOfferRequest } from "@classes/database/shiftOfferRequests";
 import { Business } from "@classes/database/business";
 import { DateFormatter } from "../../classes/util/dateFormatter";
-import { ApprovalStatus } from "@classes/util/approvalStatus";
 import ShiftDetailsModal from "../modals/ShiftDetailsModal.vue";
+import { User } from "@classes/database/user";
+import { Employee } from "@classes/database/employee";
+import { EmployeeServices } from "../../services/employeeServices";
 
 const business = ref<Business>();
+const user = ref<User>();
+const userEmployee = ref<Employee>();
 const tradeRequests = ref<ShiftTradeRequest[]>([]);
 const offerRequests = ref<ShiftOfferRequest[]>([]);
 const pendingTradeRequests = ref<ShiftTradeRequest[]>([]);
@@ -36,8 +40,13 @@ const shiftModal = overlay.create(ShiftDetailsModal);
 console.log("trades", tradeRequests);
 console.log("offers", offerRequests);
 
+console.log(pendingRequests);
+
 onMounted(async () => {
     business.value = await Store.businessStore.get();
+    user.value = await Store.userStore.get();
+    userEmployee.value = await EmployeeServices.getEmployeeByUser(user.value.id);
+
     await loadData();
 });
 
@@ -63,18 +72,26 @@ const tabs = [
 
 async function loadData() {
     try {
-        tradeRequests.value = await TradeServices.getAllAvailableTradeRequests(
-            business.value.id,
-        );
-        offerRequests.value = await TradeServices.getAllAvailableOfferedShifts(
-            business.value.id,
-        );
-        pendingTradeRequests.value =
-            await TradeServices.getAllPendingTradeRequests(business.value.id);
-        pendingOfferRequests.value =
-            await TradeServices.getAllPendingOfferedShifts(business.value.id);
 
-        
+        //I need to filter this by target
+        tradeRequests.value = (
+            await TradeServices.getAllAvailableTradeRequests(business.value.id)
+        ).filter(r => r.targetEmployeeID === userEmployee.value.id);
+
+        //removes your own shift offers...
+        offerRequests.value = (
+            await TradeServices.getAllAvailableOfferedShifts(business.value.id)
+        ).filter(r => r.userID !== user.value.id);
+
+        //filter to only see your own pending items
+        pendingTradeRequests.value = (
+            await TradeServices.getAllPendingTradeRequests(business.value.id)
+        ).filter(r => r.userID === user.value.id || r.targetEmployeeID === userEmployee.value.id);
+
+        pendingOfferRequests.value = (
+            await TradeServices.getAllPendingOfferedShifts(business.value.id)
+        ).filter(r => r.userID === user.value.id || r.claimingEmployeeID === userEmployee.value.id);
+
     } catch (err) {
         console.error(err);
     }
@@ -190,7 +207,9 @@ async function loadData() {
                                         }}
                                     </div>
                                     <div>
-                                        Swaping with {{ shift.fullName }},
+                                        Swaping with {{ shift.firstName }}  {{ shift.lastName }}
+                                    </div>
+                                    <div>
                                         {{
                                             DateFormatter.shiftTime(
                                                 shift.startTime,
@@ -199,21 +218,21 @@ async function loadData() {
                                         }}
                                     </div>
                                     <div
-                                        v-if="shift.status === 'Pending'"
+                                        v-if="shift.approvalStatus === 'Pending'"
                                         class="flex items-center gap-2 text-warning"
                                     >
                                         <UIcon name="i-lucide-clock" />
                                         <span> Pending Approval... </span>
                                     </div>
                                     <div
-                                        v-if="shift.status === 'Approved'"
+                                        v-if="shift.approvalStatus === 'Approved'"
                                         class="flex items-center gap-2 text-success"
                                     >
                                         <UIcon name="i-lucide-circle-check" />
                                         <span> Swap Approved! </span>
                                     </div>
                                     <div
-                                        v-if="shift.status === 'Denied'"
+                                        v-if="shift.approvalStatus === 'Denied'"
                                         class="flex items-center gap-2 text-error"
                                     >
                                         <UIcon name="i-lucide-circle-x" />

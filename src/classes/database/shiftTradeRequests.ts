@@ -1,3 +1,4 @@
+import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseModel } from "./databaseModel";
 
 export class ShiftTradeRequest extends DatabaseModel {
@@ -7,9 +8,10 @@ export class ShiftTradeRequest extends DatabaseModel {
         public targetEmployeeID: number,
         public employeeMessage: string,
         public timeSent: Date,
-        public status: string,
+        public approvalStatus: ApprovalStatus,
         public startTime: Date,
         public endTime: Date,
+        public userID: number,
         public firstName: string,
         public lastName: string,
     ) {
@@ -27,9 +29,10 @@ export class ShiftTradeRequest extends DatabaseModel {
             data.targetEmployeeID ?? 0,
             data.employeeMessage ?? "",
             data.timeSent ? new Date(data.timeSent) : new Date(),
-            data.status ?? null,
+            data.approvalStatus ?? null,
             shift.startTime ? new Date(shift.startTime) : new Date(),
             shift.endTime ? new Date(shift.endTime) : new Date(),
+            user.id ?? 0,
             user.firstName ?? "",
             user.lastName ?? "",
         );
