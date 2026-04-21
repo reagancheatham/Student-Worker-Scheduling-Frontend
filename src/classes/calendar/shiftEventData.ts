@@ -19,8 +19,17 @@ export class ShiftEventData extends EventData {
         this.shift.endTime = this.endTime.toDate();
         this.shift.color = this.color;
 
-        if (this.shift.isValid()) return ShiftServices.update(this.shift);
-        else return ShiftServices.create(this.shift);
+        let updatedShift: Shift = this.shift;
+
+        if (this.shift.isValid())
+            updatedShift = await ShiftServices.update(this.shift);
+        else updatedShift = await ShiftServices.create(this.shift);
+
+        const taskList = await this.shift.taskList.updateBackend(updatedShift);
+
+        this.shift.taskList = taskList;
+
+        return updatedShift;
     }
 
     public override async destroy(): Promise<void> {

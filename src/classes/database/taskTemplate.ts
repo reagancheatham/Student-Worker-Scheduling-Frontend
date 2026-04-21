@@ -1,10 +1,9 @@
 import { DatabaseModel } from "./databaseModel.ts";
-import { Task } from "./task.ts";
 
-export class ShiftTaskTemplate extends DatabaseModel {
+export class TaskTemplate extends DatabaseModel {
     public constructor(
         public readonly id: number,
-        public shiftTaskListID: number,
+        public readonly taskListTemplateID: number,
         public listOrder: number,
         public name: string,
         public description: string,
@@ -12,10 +11,10 @@ export class ShiftTaskTemplate extends DatabaseModel {
         super();
     }
 
-    public static createFromData(data: any): ShiftTaskTemplate {
-        return new ShiftTaskTemplate(
+    public static createFromData(data: any): TaskTemplate {
+        return new TaskTemplate(
             data["id"] ?? 0,
-            data["shiftTaskListID"] ?? 0,
+            data["taskListID"] ?? 0,
             data["listOrder"] ?? 0,
             data["name"] ?? 0,
             data["description"] ?? "",
@@ -24,9 +23,5 @@ export class ShiftTaskTemplate extends DatabaseModel {
 
     public isValid(): boolean {
         return this.id > 0;
-    }
-
-    public toTask(): Task {
-        return new Task(0, 0, 0, this.name, this.description, []);
     }
 }

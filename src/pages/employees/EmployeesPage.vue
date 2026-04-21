@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
-import { EmployeeServices } from "../services/employeeServices";
+import { EmployeeServices } from "../../services/employeeServices.ts";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
@@ -9,7 +9,7 @@ import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store/store";
 import * as v from "valibot";
 import { Role } from "@classes/database/role.ts";
-import { RoleServices } from "../services/roleServices.ts";
+import { RoleServices } from "../../services/roleServices.ts";
 import { TempStore } from "@classes/util/store/tempStore.ts";
 
 const toast = useToast();

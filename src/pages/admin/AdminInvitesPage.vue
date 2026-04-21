@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { Invite } from "@classes/database/invite";
-import { InviteServices } from "../services/inviteServices.ts";
+import { InviteServices } from "../../services/inviteServices.ts";
 
 type InviteRow = {
     code: number;

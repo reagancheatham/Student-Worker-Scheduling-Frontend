@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, shallowReactive, onMounted } from "vue";
 import { Business } from "@classes/database/business";
-import { EmployeeServices } from "../services/employeeServices";
+import { EmployeeServices } from "../../services/employeeServices";
 import * as valibot from "valibot";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
-import { BusinessServices } from "../services/businessServices.ts";
+import { BusinessServices } from "../../services/businessServices.ts";
 import { Store } from "@classes/util/store/store.ts";
-import { router } from "../routing/router.ts";
-import { routes } from "../routing/routes.ts";
+import { router } from "../../routing/router.ts";
+import { routes } from "../../routing/routes.ts";
 
 type BusinessRow = {
     id: number;

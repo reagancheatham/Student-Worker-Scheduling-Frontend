@@ -1,18 +1,19 @@
 import DashboardPage from "../pages/DashboardPage.vue";
-import SchedulePage from "../pages/SchedulePage.vue";
-import EmployeesPage from "../pages/EmployeesPage.vue";
+import SchedulePage from "../pages/schedule/SchedulePage.vue";
+import EmployeesPage from "../pages/employees/EmployeesPage.vue";
 import SettingsPage from "../pages/SettingsPage.vue";
 import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import NotificationsPage from "../pages/NotificationsPage.vue";
-import AdminPage from "../pages/AdminPage.vue";
+import AdminPage from "../pages/admin/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
-import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
-import RolesPage from "../pages/RolesPage.vue";
+import ScheduleTemplatePage from "../pages/schedule/ScheduleTemplatePage.vue";
+import RolesPage from "../pages/employees/RolesPage.vue";
+import TaskListsPage from "../pages/schedule/TaskListsPage.vue";
 
 class Route {
     constructor(
@@ -64,6 +65,7 @@ const navbarLayout = Route.create(
             ScheduleTemplatePage,
             "Schedule Template Editor",
         ).noAuth(),
+        Route.create("taskLists", TaskListsPage, "Task Lists"),
         Route.create(
             "notifications",
             NotificationsPage,
@@ -114,8 +116,9 @@ export const subRoutes = {
     Dashboard: navbarLayout.children[0],
     Schedule: navbarLayout.children[1],
     ScheduleTemplate: navbarLayout.children[2],
-    Notifications: navbarLayout.children[3],
-    EmployeeList: navbarLayout.children[4],
-    Roles: navbarLayout.children[5],
-    Settings: navbarLayout.children[6],
+    TaskLists: navbarLayout.children[3],
+    Notifications: navbarLayout.children[4],
+    EmployeeList: navbarLayout.children[5],
+    Roles: navbarLayout.children[6],
+    Settings: navbarLayout.children[7],
 };

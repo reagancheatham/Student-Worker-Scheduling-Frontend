@@ -2,6 +2,7 @@ import { ShiftTaskListTemplateServices } from "../../services/shiftTaskListTempl
 import { DatabaseModel } from "./databaseModel.ts";
 import { ScheduleShiftTemplate } from "./scheduleShiftTemplate.ts";
 import { ShiftTaskTemplate } from "./shiftTaskTemplate.ts";
+import { TaskList } from "./taskList.ts";
 
 export class ShiftTaskListTemplate extends DatabaseModel {
     public constructor(
@@ -46,5 +47,20 @@ export class ShiftTaskListTemplate extends DatabaseModel {
 
             return this;
         }
+    }
+
+    public clone(): ShiftTaskListTemplate {
+        return new ShiftTaskListTemplate(
+            this.id,
+            this.scheduleShiftID,
+            this.name,
+            [...this.shiftTaskTemplates],
+        );
+    }
+
+    public toTaskList(): TaskList {
+        const tasks = this.shiftTaskTemplates.map((t) => t.toTask());
+
+        return new TaskList(0, 0, this.name, tasks);
     }
 }
