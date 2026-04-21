@@ -8,7 +8,10 @@ import { h, resolveComponent } from "vue";
 import { useClipboard } from "@vueuse/core";
 import { Row } from "@tanstack/vue-table";
 import { Store } from "@classes/util/store/store";
-import * as valibot from "valibot";
+import * as v from "valibot";
+import { Role } from "@classes/database/role.ts";
+import { RoleServices } from "../services/roleServices.ts";
+import { TempStore } from "@classes/util/store/tempStore.ts";
 
 const toast = useToast();
 const { copy } = useClipboard();
@@ -22,17 +25,22 @@ const isRefreshOpen = ref(false);
 const isRefreshingSchoolUnavailabilities = ref(false);
 
 const isAddOpen = ref(false);
+const isRoleEditOpen = ref(false);
+const employees = ref<Employee[]>([]);
+const roles = ref<Role[]>([]);
+const newEditedRoleIDs = ref<number[]>([]);
 const addState = shallowReactive({
     email: "",
     isManager: false,
 });
-const addValidationSchema = valibot.object({
-    email: valibot.pipe(
-        valibot.string(),
-        valibot.nonEmpty("Email is required"),
-        valibot.email("Invalid email address"),
+
+const addValidationSchema = v.object({
+    email: v.pipe(
+        v.string(),
+        v.nonEmpty("Email is required"),
+        v.email("Invalid email address"),
     ),
-    isManager: valibot.boolean(),
+    isManager: v.boolean(),
 });
 type AddValidationSchema = valibot.InferOutput<typeof addValidationSchema>;
 
@@ -55,7 +63,7 @@ let data = ref<Employee[]>([]);
 const columns: TableColumn<Employee>[] = [
     {
         accessorKey: "studentID",
-        header: "ID",
+        header: "Student ID",
     },
     {
         id: "name",
@@ -70,6 +78,25 @@ const columns: TableColumn<Employee>[] = [
         accessorKey: "phoneNumber",
         header: "Phone Number",
         cell: ({ row }) => row.original.formattedPhoneNumber,
+    },
+    {
+        id: "roles",
+        header: "Roles",
+        cell: ({ row }) => {
+            return h(UButton, {
+                icon: "i-lucide-pencil",
+                color: "neutral",
+                variant: "outline",
+                label: "Edit Roles",
+                onClick() {
+                    selectedEmployee.value = row.original;
+                    newEditedRoleIDs.value = row.original.roles.map(
+                        (role) => role.id,
+                    );
+                    isRoleEditOpen.value = true;
+                },
+            });
+        },
     },
     {
         id: "actions",
@@ -152,7 +179,7 @@ function deleteEmployee() {
     EmployeeServices.delete(selectedEmployee.value);
     deleteDoubleConfirm.value = false;
 
-    data.value = data.value.filter(
+    employees.value = employees.value.filter(
         (e) => e.studentID !== selectedEmployee.value!.studentID,
     );
 }
@@ -235,16 +262,67 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
     });
 }
 
+async function submitRoleEdit(): Promise<void> {
+    if (!selectedEmployee.value) return;
+
+    TempStore.isLoading = true;
+    isRoleEditOpen.value = false;
+
+    const rolesToRemove: Role[] = [];
+    const rolesToAdd: Role[] = [];
+
+    const newEditedRoles = roles.value.filter((role) =>
+        newEditedRoleIDs.value.includes(role.id),
+    );
+
+    selectedEmployee.value.roles.forEach((role) => {
+        if (!newEditedRoles.includes(role)) rolesToRemove.push(role);
+    });
+
+    newEditedRoles.forEach((role) => {
+        if (!selectedEmployee.value) return;
+
+        if (!selectedEmployee.value.roles.includes(role)) rolesToAdd.push(role);
+    });
+
+    const promises: Promise<any>[] = [];
+
+    rolesToRemove.forEach((role) => {
+        if (!selectedEmployee.value) return;
+
+        promises.push(
+            RoleServices.deleteRoleFromEmployee(role, selectedEmployee.value),
+        );
+    });
+
+    rolesToAdd.forEach((role) => {
+        if (!selectedEmployee.value) return;
+
+        promises.push(
+            RoleServices.addRoleToEmployee(role, selectedEmployee.value),
+        );
+    });
+
+    await Promise.all(promises);
+
+    const index = employees.value.indexOf(selectedEmployee.value);
+    if (index > -1)
+        employees.value[index] = await EmployeeServices.get(
+            selectedEmployee.value.id,
+        );
+
+    TempStore.isLoading = false;
+}
+
 async function getData() {
     const business = await Store.businessStore.get();
 
     if (!business) return;
 
     try {
-        const result = await EmployeeServices.getAllForBusiness(business.id);
-
-        data.value = result;
-    } catch (error) {
+        employees.value = await EmployeeServices.getAllForBusiness(business.id);
+        roles.value = await RoleServices.getAllForBusiness(business.id);
+    } catch (error: any) {
         console.error(`Error getting employees: ${error}`);
     }
 }
@@ -255,11 +333,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <UModal
-        v-model:open="deleteDoubleConfirm"
-        title="Are you sure?"
-        close-icon="i-lucide-x"
-    >
+    <UModal v-model:open="deleteDoubleConfirm" title="Are you sure?">
         <template #body>
             <div class="text-center text-2xl font-medium">
                 Are you sure you want to delete
@@ -350,7 +424,7 @@ onMounted(() => {
         <UTable
             class="flex-1"
             :columns="columns"
-            :data="data"
+            :data="employees"
             ref="table"
             v-model:global-filter="globalFilter"
         >
@@ -368,7 +442,7 @@ onMounted(() => {
             </template>
         </UTable>
     </div>
-    <UModal v-model:open="isAddOpen" title="Add Business">
+    <UModal :v-model:open="isAddOpen" title="Add Business">
         <template #content>
             <div class="p-4">
                 <UForm
@@ -398,6 +472,37 @@ onMounted(() => {
                         </UButton>
                     </div>
                 </UForm>
+            </div>
+        </template>
+    </UModal>
+    <UModal
+        v-model:open="isRoleEditOpen"
+        title="Edit Employee Roles"
+        :ui="{ content: 'sm:max-w-sm' }"
+    >
+        <template #body>
+            <USelectMenu
+                v-if="selectedEmployee"
+                v-model="newEditedRoleIDs"
+                class="min-w-32"
+                label-key="name"
+                value-key="id"
+                :items="roles"
+                multiple
+            />
+        </template>
+        <template #footer>
+            <div class="ml-auto flex flex-row gap-2">
+                <UButton @click="submitRoleEdit()">
+                    Submit
+                </UButton>
+                <UButton
+                    variant="outline"
+                    color="neutral"
+                    @click="isRoleEditOpen = false"
+                >
+                    Cancel
+                </UButton>
             </div>
         </template>
     </UModal>

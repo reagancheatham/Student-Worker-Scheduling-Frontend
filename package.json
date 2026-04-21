@@ -18,6 +18,8 @@
         "bundle": "mv .env dist"
     },
     "dependencies": {
+        "@iconify-json/simple-icons": "^1.2.79",
+        "@iconify/vue": "^5.0.0",
         "@internationalized/date": "^3.11.0",
         "@nuxt/ui": "^4.5.1",
         "@sidebase/nuxt-auth": "^1.2.0",

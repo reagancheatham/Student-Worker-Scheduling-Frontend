@@ -3,7 +3,7 @@ import { DatabaseModel } from "./databaseModel.ts";
 export class Role extends DatabaseModel {
     constructor(
         public readonly id: number,
-        public readonly businessID: number,
+        public businessID: number,
         public name: string,
     ) {
         super();

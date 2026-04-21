@@ -4,7 +4,7 @@ import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
 import { Admin } from "@classes/util/permissionRole.ts";
-import { routes } from "../routing/routes.ts";
+import { routes, subRoutes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication";
 
@@ -35,7 +35,7 @@ export class AuthServices {
                         const firstBusiness = businesses[0];
                         Store.businessStore.set(firstBusiness);
 
-                        router.push(routes.NavbarLayout.children![0].path);
+                        router.push(subRoutes.Dashboard.path);
                     } else {
                         Store.businessStore.clear();
                         router.push(routes.NoBusiness.path);
@@ -44,21 +44,20 @@ export class AuthServices {
             } else {
                 console.error("Login failed: invalid credentials");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Error logging in: ${error}`);
         }
     }
 
     public static async logout() {
         try {
-            Store.userStore.clear();
-            router.push(routes.Login.path);
-
             await apiClient.post(`${API_ROOT}/logout`);
-        } catch (error) {
+
+            router.push(routes.Login.path);
+            Store.clear();
+        } catch (error: any) {
             console.error("Logout failed: ", error);
-            
-            Store.userStore.clear();
+            Store.clear();
             router.push(routes.Login.path);
         }
     }
@@ -72,7 +71,7 @@ export class AuthServices {
             const result = await apiClient.post(`authentication/validate`);
 
             return result.data.valid;
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Error validating session: ${error}`);
 
             return false;

@@ -37,8 +37,9 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
-    public readonly refTemplateData = ref<TemplateCalendarData>();
-    public readonly refHasUnassignedShift = ref(false);
+    private readonly refTemplateData = ref<TemplateCalendarData>();
+    private readonly refHasUnassignedShift = ref(false);
+    private readonly refHasValidUnpublishedShift = ref(false);
 
     constructor(
         selectedView: CalendarMode,
@@ -132,6 +133,10 @@ export class CalendarData {
         return this.refHasUnassignedShift.value;
     }
 
+    public get hasValidUnpublishedShift(): boolean {
+        return this.refHasValidUnpublishedShift.value;
+    }
+
     public async updateRelevantData() {
         this.refRelevantEvents.value = await this.updateRelevantEvents();
         this.refRelevantEmployees.value = await this.updateRelevantEmployees();
@@ -162,23 +167,25 @@ export class CalendarData {
         }
 
         let unassignedShift = false;
+        let unpublishedShift = false;
 
         for (let i = 0; i < relevantEvents.length; i++) {
+            if (unassignedShift && unpublishedShift) break;
+
             const event = relevantEvents[i];
 
-            if (event instanceof ShiftEventData && !event.shift.employee) {
-                unassignedShift = true;
-                break;
+            if (event instanceof ShiftEventData) {
+                if (!event.shift.employee) unassignedShift = true;
+                else if (!event.shift.published) unpublishedShift = true;
             } else if (
                 event instanceof ShiftTemplateEventData &&
                 !event.template.employee
-            ) {
+            )
                 unassignedShift = true;
-                break;
-            }
         }
 
         this.refHasUnassignedShift.value = unassignedShift;
+        this.refHasValidUnpublishedShift.value = unpublishedShift;
 
         return relevantEvents;
     }

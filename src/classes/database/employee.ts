@@ -1,5 +1,6 @@
 import { Store } from "@classes/util/store/store.ts";
 import { DatabaseModel } from "./databaseModel.ts";
+import { Role } from "./role.ts";
 
 export class Employee extends DatabaseModel {
     constructor(
@@ -10,6 +11,7 @@ export class Employee extends DatabaseModel {
         public readonly lastName: string,
         public readonly email: string,
         public readonly phoneNumber: string,
+        public roles: Role[] = [],
     ) {
         super();
     }
@@ -28,12 +30,13 @@ export class Employee extends DatabaseModel {
     }
 
     public static createFromData(data: any): Employee {
-        let user = data["User"];
-        let studentID = user ? user.studentID : ("" as string);
-        let firstName = user ? user.firstName : ("" as string);
-        let lastName = user ? user.lastName : ("" as string);
-        let email = user ? user.email : ("" as string);
-        let phoneNumber = user ? user.phoneNumber : ("" as string);
+        const user = data["User"];
+        const studentID = user ? user.studentID : ("" as string);
+        const firstName = user ? user.firstName : ("" as string);
+        const lastName = user ? user.lastName : ("" as string);
+        const email = user ? user.email : ("" as string);
+        const phoneNumber = user ? user.phoneNumber : ("" as string);
+        const roles = data["Roles"] ? data["Roles"] : [];
 
         return new Employee(
             data["id"] ?? 0,
@@ -43,6 +46,7 @@ export class Employee extends DatabaseModel {
             lastName,
             email,
             phoneNumber,
+            roles,
         );
     }
 
