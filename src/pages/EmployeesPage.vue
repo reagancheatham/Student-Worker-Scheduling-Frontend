@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, shallowReactive } from "vue";
 import { Employee } from "@classes/database/employee";
-import { EmployeeServices } from "../services/employeeServices";
+import { EmployeeServices } from "../services/employeeServices.ts";
 import { EmployeeUnavailabilityServices } from "../services/employeeUnavailabilityServices";
 import { FormSubmitEvent, TableColumn } from "@nuxt/ui";
 import { h, resolveComponent } from "vue";
