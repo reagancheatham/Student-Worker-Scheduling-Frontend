@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { routes, subRoutes } from "../routing/routes.ts";
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+import { routes } from "../routing/routes.ts";
 import AvatarMenu from "./AvatarMenu.vue";
 import { AuthServices } from "../services/authServices.ts";
 import { useRoute } from "vue-router";
@@ -17,6 +18,9 @@ onMounted(async () => {
 });
 
 const route = useRoute();
+const settingsPath = routes.NavbarLayout.children![4].path;
+const searchTerm = ref("");
+
 const links = computed(() => [
     {
         label: "Dashboard",
@@ -78,13 +82,77 @@ const links = computed(() => [
     }] : []),
 ]);
 
-const actions = computed(() => [
+const settingsSearchItems = [
     {
-        label: "Log Out",
-        icon: "i-lucide-log-out",
-        onSelect: () => AuthServices.logout(),
+        label: "Dark Mode",
+        icon: "i-lucide-moon-star",
+        to: `${settingsPath}#darkMode`,
+        keywords: "theme appearance browser",
     },
-]);
+    {
+        label: "Double Task Sign Off",
+        icon: "i-lucide-check-check",
+        to: `${settingsPath}#doubleTaskSignOff`,
+        keywords: "task approval complete",
+    },
+    {
+        label: "Employee Sign Off",
+        icon: "i-lucide-signpost",
+        to: `${settingsPath}#employeeSignOff`,
+        keywords: "employee confirmation shift",
+    },
+    {
+        label: "Allow Clock In/Out",
+        icon: "i-lucide-clock-3",
+        to: `${settingsPath}#allowClockInOut`,
+        keywords: "time tracking clock",
+    },
+    {
+        label: "Automatic Shift Trades",
+        icon: "i-lucide-refresh-cw",
+        to: `${settingsPath}#automaticShiftTrades`,
+        keywords: "trade auto approve",
+    },
+    {
+        label: "Enable Open Shift",
+        icon: "i-lucide-briefcase",
+        to: `${settingsPath}#enableOpenShift`,
+        keywords: "open board publish",
+    },
+    {
+        label: "Enable Shift Trades",
+        icon: "i-lucide-repeat-2",
+        to: `${settingsPath}#enableShiftTrades`,
+        keywords: "trades requests",
+    },
+    {
+        label: "Clock In Threshold",
+        icon: "i-lucide-alarm-clock",
+        to: `${settingsPath}#clockInThreshold`,
+        keywords: "minutes early late",
+    },
+    {
+        label: "On-Time Threshold",
+        icon: "i-lucide-timer",
+        to: `${settingsPath}#onTimeThreshold`,
+        keywords: "grace period late",
+    },
+];
+
+const filteredSettingsSearchItems = computed(() => {
+    const query = searchTerm.value.trim().toLowerCase();
+
+    if (!query) {
+        return [];
+    }
+
+    const tokens = query.split(/\s+/).filter(Boolean);
+
+    return settingsSearchItems.filter((item) => {
+        const haystack = `${item.label} ${item.keywords}`.toLowerCase();
+        return tokens.some((token) => haystack.includes(token));
+    });
+});
 
 const searchGroups = computed(() => [
     {
@@ -99,6 +167,15 @@ const searchGroups = computed(() => [
         label: "Actions",
         items: actions.value.flat(),
     },
+    ...(filteredSettingsSearchItems.value.length
+        ? [
+              {
+                  id: "settings",
+                  label: "Settings",
+                  items: filteredSettingsSearchItems.value,
+              },
+          ]
+        : []),
 ]);
 </script>
 
@@ -155,5 +232,5 @@ const searchGroups = computed(() => [
         </template>
     </UDashboardSidebar>
 
-    <UDashboardSearch :groups="searchGroups" :color-mode="false" />
+    <UDashboardSearch v-model:search-term="searchTerm" :groups="searchGroups" />
 </template>

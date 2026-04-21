@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { FormSubmitEvent } from "@nuxt/ui";
 import { computed, ref } from "vue";
+import * as v from "valibot";
 import { useColorMode } from "@vueuse/core";
 import { Settings } from "@classes/database/settings.ts";
 import { SettingsServices } from "../services/settingsServices.ts";
@@ -15,10 +17,91 @@ type SwitchSettingKey =
 
 type NumberSettingKey = "clockInThreshold" | "onTimeThreshold";
 
+type SettingsFormState = {
+	doubleTaskSignOff: boolean;
+	employeeSignOff: boolean;
+	allowClockInOut: boolean;
+	automaticShiftTrades: boolean;
+	enableOpenShift: boolean;
+	enableShiftTrades: boolean;
+	clockInThreshold: number;
+	onTimeThreshold: number;
+};
+
+const settingsFormSchema = v.pipe(
+	v.object({
+		doubleTaskSignOff: v.boolean(),
+		employeeSignOff: v.boolean(),
+		allowClockInOut: v.boolean(),
+		automaticShiftTrades: v.boolean(),
+		enableOpenShift: v.boolean(),
+		enableShiftTrades: v.boolean(),
+		clockInThreshold: v.number(),
+		onTimeThreshold: v.number(),
+	}),
+	v.forward(
+		v.check(
+			(data) => Number.isFinite(data.clockInThreshold),
+			"Clock In Threshold must be a valid number.",
+		),
+		["clockInThreshold"],
+	),
+	v.forward(
+		v.check(
+			(data) => Number.isInteger(data.clockInThreshold),
+			"Clock In Threshold must be a whole number.",
+		),
+		["clockInThreshold"],
+	),
+	v.forward(
+		v.check(
+			(data) => data.clockInThreshold >= 0,
+			"Clock In Threshold cannot be negative.",
+		),
+		["clockInThreshold"],
+	),
+	v.forward(
+		v.check(
+			(data) => Number.isFinite(data.onTimeThreshold),
+			"On-Time Threshold must be a valid number.",
+		),
+		["onTimeThreshold"],
+	),
+	v.forward(
+		v.check(
+			(data) => Number.isInteger(data.onTimeThreshold),
+			"On-Time Threshold must be a whole number.",
+		),
+		["onTimeThreshold"],
+	),
+	v.forward(
+		v.check(
+			(data) => data.onTimeThreshold >= 0,
+			"On-Time Threshold cannot be negative.",
+		),
+		["onTimeThreshold"],
+	),
+);
+type SettingsValidationSchema = v.InferOutput<typeof settingsFormSchema>;
+
+const businessID = 1;
+
 const settings = ref<Settings | null>(null);
+const formState = ref<SettingsFormState>({
+	doubleTaskSignOff: false,
+	employeeSignOff: false,
+	allowClockInOut: true,
+	automaticShiftTrades: false,
+	enableOpenShift: false,
+	enableShiftTrades: false,
+	clockInThreshold: 0,
+	onTimeThreshold: 0,
+});
 const isLoading = ref(true);
 const isSaving = ref(false);
 const statusMessage = ref("");
+const statusTone = ref<"success" | "error" | null>(null);
+const initialSettingsSignature = ref("");
 const colorMode = useColorMode();
 
 const darkModeEnabled = computed({
@@ -26,6 +109,14 @@ const darkModeEnabled = computed({
     set: (isDark: boolean) => {
         colorMode.value = isDark ? "dark" : "light";
     },
+});
+
+const hasUnsavedChanges = computed(() => {
+	if (!settings.value || !initialSettingsSignature.value) {
+		return false;
+	}
+
+	return JSON.stringify(formState.value) !== initialSettingsSignature.value;
 });
 
 const switchFields: Array<{
@@ -87,145 +178,213 @@ const numberFields: Array<{
     },
 ];
 
-function getSwitchValue(key: SwitchSettingKey): boolean {
-    if (!settings.value) {
-        return false;
-    }
+const getSwitchValue = (key: SwitchSettingKey): boolean => {
+	return formState.value[key];
+};
 
-    return settings.value[key];
-}
+const setSwitchValue = (key: SwitchSettingKey, value: boolean) => {
+	formState.value[key] = value;
+};
 
-function setSwitchValue(key: SwitchSettingKey, value: boolean) {
-    if (!settings.value) {
-        return;
-    }
+const getNumberValue = (key: NumberSettingKey): number => {
+	return formState.value[key];
+};
 
-    settings.value[key] = value;
-}
+const setNumberValue = (key: NumberSettingKey, value: number) => {
+	formState.value[key] = value;
+};
 
-function getNumberValue(key: NumberSettingKey): number {
-    if (!settings.value) {
-        return 0;
-    }
+const setFormStateFromSettings = (loadedSettings: Settings) => {
+	formState.value = {
+		doubleTaskSignOff: loadedSettings.doubleTaskSignOff,
+		employeeSignOff: loadedSettings.employeeSignOff,
+		allowClockInOut: loadedSettings.allowClockInOut,
+		automaticShiftTrades: loadedSettings.automaticShiftTrades,
+		enableOpenShift: loadedSettings.enableOpenShift,
+		enableShiftTrades: loadedSettings.enableShiftTrades,
+		clockInThreshold: loadedSettings.clockInThreshold,
+		onTimeThreshold: loadedSettings.onTimeThreshold,
+	};
+};
 
-    return settings.value[key];
-}
+const loadSettings = async () => {
+	isLoading.value = true;
+	statusMessage.value = "";
+	statusTone.value = null;
 
-function setNumberValue(key: NumberSettingKey, value: number) {
-    if (!settings.value) {
-        return;
-    }
+	try {
+		settings.value = await SettingsServices.getOrCreateDefault(businessID);
+		setFormStateFromSettings(settings.value);
+		initialSettingsSignature.value = JSON.stringify(formState.value);
+	} catch (err) {
+		console.error("Failed to load settings", err);
+		statusMessage.value = "Unable to load settings.";
+		statusTone.value = "error";
+	} finally {
+		isLoading.value = false;
+	}
+};
 
-    settings.value[key] = value;
-}
+const saveSettings = async (_event: FormSubmitEvent<SettingsValidationSchema>) => {
+	if (!settings.value) {
+		return;
+	}
 
-async function loadSettings() {
-    isLoading.value = true;
-    statusMessage.value = "";
+	isSaving.value = true;
+	statusMessage.value = "";
+	statusTone.value = null;
 
-    const business = await Store.businessStore.get();
+	try {
+		const updatedSettings = new Settings(
+			settings.value.businessID,
+			formState.value.doubleTaskSignOff,
+			formState.value.employeeSignOff,
+			formState.value.allowClockInOut,
+			formState.value.clockInThreshold,
+			formState.value.onTimeThreshold,
+			formState.value.automaticShiftTrades,
+			formState.value.enableOpenShift,
+			formState.value.enableShiftTrades,
+		);
 
-    if (!business) return;
-
-    try {
-        settings.value = await SettingsServices.getOrCreateDefault(business.id);
-    } catch (err) {
-        console.error("Failed to load settings", err);
-        statusMessage.value = "Unable to load settings.";
-    } finally {
-        isLoading.value = false;
-    }
-}
-
-async function saveSettings() {
-    if (!settings.value) {
-        return;
-    }
-
-    isSaving.value = true;
-    statusMessage.value = "";
-
-    try {
-        await SettingsServices.save(settings.value);
-        statusMessage.value = "Settings saved.";
-    } catch (err) {
-        console.error("Failed to save settings", err);
-        statusMessage.value = "Failed to save settings.";
-    } finally {
-        isSaving.value = false;
-    }
-}
+		await SettingsServices.save(updatedSettings);
+		settings.value = updatedSettings;
+		statusMessage.value = "Settings saved.";
+		statusTone.value = "success";
+		initialSettingsSignature.value = JSON.stringify(formState.value);
+	} catch (err) {
+		console.error("Failed to save settings", err);
+		statusMessage.value = "Failed to save settings.";
+		statusTone.value = "error";
+	} finally {
+		isSaving.value = false;
+	}
+};
 
 loadSettings();
 </script>
 
 <template>
-    <div class="settings-page">
-        <SettingsContainer
-            title="Browser Settings"
-            description="Settings unique to this device that will not affect other users."
-        >
-            <SettingSwitchRow
-                label="Dark Mode"
-                description="Theme preference for this device/browser."
-                :model-value="darkModeEnabled"
-                @update:model-value="darkModeEnabled = $event"
-            />
-        </SettingsContainer>
+	<div class="settings-page">
+		<SettingsContainer
+			title="Browser Settings"
+			description="Settings unique to this device that will not affect other users."
+		>
+			<div id="darkMode" class="setting-anchor">
+				<SettingSwitchRow
+					label="Dark Mode"
+					description="Theme preference for this device/browser."
+					:model-value="darkModeEnabled"
+					@update:model-value="darkModeEnabled = $event"
+				/>
+			</div>
+		</SettingsContainer>
 
-        <SettingsContainer
-            title="Scheduling Settings"
-            description="Business-level scheduling rules. Changes are staged until you press Save Settings."
-        >
-            <template #header-extra>
-                <div class="save-notice">
-                    <UIcon name="i-lucide-save" class="save-notice-icon" />
-                    <span
-                        >These settings do not apply until you click
-                        <strong>Save Settings</strong>.</span
-                    >
-                </div>
-            </template>
+		<SettingsContainer
+			title="Scheduling Settings"
+			description="Business-level scheduling rules. Changes are staged until you press Save Settings."
+		>
+			<template #header-extra>
+				<div class="header-meta">
+					<div class="save-notice">
+						<UIcon name="i-lucide-save" class="save-notice-icon" />
+						<span>These settings do not apply until you click <strong>Save Settings</strong>.</span>
+					</div>
+					<UBadge
+						:color="hasUnsavedChanges ? 'warning' : 'success'"
+						variant="subtle"
+						class="changes-badge"
+					>
+						{{ hasUnsavedChanges ? "Unsaved Changes" : "Saved" }}
+					</UBadge>
+				</div>
+			</template>
 
-            <div v-if="isLoading" class="text-sm">Loading settings...</div>
+			<UAlert
+				v-if="isLoading"
+				icon="i-lucide-loader-circle"
+				title="Loading Settings"
+				description="Fetching current scheduling configuration."
+				color="info"
+				variant="soft"
+				class="loading-alert"
+			/>
 
-            <template v-else-if="settings">
-                <SettingSwitchRow
-                    v-for="field in switchFields"
-                    :key="field.key"
-                    :label="field.label"
-                    :description="field.description"
-                    :model-value="getSwitchValue(field.key)"
-                    @update:model-value="setSwitchValue(field.key, $event)"
-                />
+			<template v-else-if="settings">
+				<UAlert
+					v-if="statusMessage"
+					:icon="statusTone === 'error' ? 'i-lucide-circle-alert' : 'i-lucide-circle-check'"
+					:title="statusTone === 'error' ? 'Action Needed' : 'Success'"
+					:description="statusMessage"
+					:color="statusTone === 'error' ? 'error' : 'success'"
+					variant="soft"
+					class="status-alert"
+				/>
 
-                <USeparator />
+				<UForm
+					:schema="settingsFormSchema"
+					:state="formState"
+					class="space-y-4"
+					@submit="saveSettings"
+				>
+					<div
+						v-for="field in switchFields"
+						:id="field.key"
+						:key="field.key"
+						class="setting-anchor"
+					>
+						<UFormField :name="field.key">
+							<SettingSwitchRow
+								:label="field.label"
+								:description="field.description"
+								:model-value="getSwitchValue(field.key)"
+								@update:model-value="setSwitchValue(field.key, $event)"
+							/>
+						</UFormField>
+					</div>
 
-                <SettingNumberRow
-                    v-for="field in numberFields"
-                    :key="field.key"
-                    :label="field.label"
-                    :description="field.description"
-                    :model-value="getNumberValue(field.key)"
-                    :min="field.min"
-                    @update:model-value="setNumberValue(field.key, $event)"
-                />
+					<USeparator />
 
-                <div class="actions">
-                    <UButton
-                        :loading="isSaving"
-                        :disabled="isSaving"
-                        @click="saveSettings"
-                    >
-                        Save Settings
-                    </UButton>
-                    <span v-if="statusMessage" class="text-sm">{{
-                        statusMessage
-                    }}</span>
-                </div>
-            </template>
-        </SettingsContainer>
-    </div>
+					<div
+						v-for="field in numberFields"
+						:id="field.key"
+						:key="field.key"
+						class="setting-anchor"
+					>
+						<UFormField :name="field.key">
+							<SettingNumberRow
+								:label="field.label"
+								:description="field.description"
+								:model-value="getNumberValue(field.key)"
+								:min="field.min"
+								@update:model-value="setNumberValue(field.key, $event)"
+							/>
+						</UFormField>
+					</div>
+
+					<div class="actions">
+						<UButton
+							type="submit"
+							:loading="isSaving"
+							:disabled="isSaving || !hasUnsavedChanges"
+							icon="i-lucide-save"
+						>
+							Save Settings
+						</UButton>
+						<UButton
+							variant="ghost"
+							color="neutral"
+							icon="i-lucide-rotate-ccw"
+							:disabled="isSaving"
+							@click="loadSettings"
+						>
+							Reset
+						</UButton>
+					</div>
+				</UForm>
+			</template>
+		</SettingsContainer>
+	</div>
 </template>
 
 <style scoped>
@@ -245,14 +404,36 @@ loadSettings();
     font-size: 0.875rem;
 }
 
+.header-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.changes-badge {
+	white-space: nowrap;
+}
+
 .save-notice-icon {
     color: var(--ui-primary);
 }
 
+.loading-alert,
+.status-alert {
+	margin-bottom: 0.25rem;
+}
+
 .actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+}
+
+.setting-anchor {
+	scroll-margin-top: 5rem;
 }
 </style>
