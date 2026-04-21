@@ -147,7 +147,7 @@ const taskColumns = [
         header: "Name",
         meta: {
             class: {
-                td: "max-w-[200px] truncate whitespace-normal",
+                td: "min-w-[120px] max-w-[200px] truncate whitespace-normal",
             },
         },
     },
@@ -537,7 +537,6 @@ function pasteTemplate(template: TaskListTemplate): void {
                                     />
                                 </UDropdownMenu>
                                 <UButton
-                                    class="ml-auto"
                                     label="Add"
                                     color="neutral"
                                     variant="outline"
