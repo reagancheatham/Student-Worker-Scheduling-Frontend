@@ -39,6 +39,27 @@ function getStyle() {
 
 <template>
     <div class="employeeContainer" :style="getStyle()">
+        <div v-if="data.hasUnassignedShift" class="employeeAvatar">
+            <UPopover mode="hover" :content="{ side: 'top' }">
+                <UButton
+                    size="icon"
+                    class="employeePicture p-0 rounded-full overflow-hidden"
+                    variant="ghost"
+                >
+                    <UAvatar
+                        alt="?"
+                        :ui="{ fallback: 'text-neutral-100' }"
+                        class="employeePicture bg-neutral-500 pointer-events-auto"
+                        size="lg"
+                    />
+                </UButton>
+                <template #content>
+                    <div class="p-2">
+                        Unassigned Shifts
+                    </div>
+                </template>
+            </UPopover>
+        </div>
         <div v-for="employee in data.relevantEmployees" class="employeeAvatar">
             <UPopover mode="hover" :content="{ side: 'top' }">
                 <UButton

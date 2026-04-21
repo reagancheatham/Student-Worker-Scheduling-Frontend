@@ -1,8 +1,31 @@
 <script setup lang="ts">
 import { isMobileApp } from "@classes/util/isMobile";
 import MobileTabs from "@components/MobileTabs.vue";
+import { ref } from "vue";
+import ProfileSettingsModal from "../../mobile/modals/ProfileSettingsModal.vue";
+import { Store } from "@classes/util/store/store.ts";
+
+const user = ref(Store.userStore.getImmediate());
 
 const isMobile = isMobileApp();
+const overlay = useOverlay();
+const modal = overlay.create(ProfileSettingsModal);
+
+async function openSettings() {
+    const storeUser = user.value;
+
+    if (!storeUser) {
+        console.error(`No valid user for settings!`);
+        return;
+    }
+
+    modal.open({
+        user: storeUser,
+        onUpdated: (updatedUser) => {
+            user.value = updatedUser;
+        },
+    });
+}
 </script>
 
 <template>
@@ -25,7 +48,7 @@ const isMobile = isMobileApp();
                 <img class="h-10 w-65" src="/mobileOC.png" alt="OC Logo" />
             </template>
             <template #right>
-                <UAvatar alt="Davey Clonts" />
+                <UAvatar alt="Davey Clonts" @click="openSettings" @updated="" />
             </template>
         </UHeader>
 

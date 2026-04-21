@@ -26,4 +26,16 @@ export class User extends DatabaseModel {
             data["phoneNumber"] ?? "",
         );
     }
+
+    public get fullName(): string {
+        return `${this.firstName} ${this.lastName}`;
+    }
+
+    public get formattedPhoneNumber(): string {
+        const match = this.phoneNumber.match(/^(\d{3})(\d{3})(\d{4})$/)!;
+
+        if (!match) return "";
+
+        return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
 }

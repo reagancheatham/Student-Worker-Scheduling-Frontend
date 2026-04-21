@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
+import { ShiftEventData } from "@classes/calendar/shiftEventData";
+import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 
 type EventSlot = {
     index: number;
@@ -171,13 +172,20 @@ function findLongestBisectChain(event: EventData): EventData[] {
 function getAllBisectingEvents(event: EventData): EventData[] {
     return calendarData.refRelevantEvents.value.filter((e) => {
         if (calendarData.selectedView === CalendarMode.Day) {
-            const event1 = event as ShiftEvent;
-            const event2 = e as ShiftEvent;
-
-            return (
-                event1.bisects(event2) &&
-                event1.shift.employee?.id === event2.shift.employee?.id
-            );
+            if (event instanceof ShiftEventData && e instanceof ShiftEventData)
+                return (
+                    event.bisects(e) &&
+                    event.shift.employee?.id === e.shift.employee?.id
+                );
+            else if (
+                event instanceof ShiftTemplateEventData &&
+                e instanceof ShiftTemplateEventData
+            )
+                return (
+                    event.bisects(e) &&
+                    event.template.employee?.id === e.template.employee?.id
+                );
+            else return event.bisects(e);
         } else return event.bisects(e);
     });
 }
