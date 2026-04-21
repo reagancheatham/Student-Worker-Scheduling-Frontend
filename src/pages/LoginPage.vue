@@ -31,26 +31,48 @@ function createLoginButton() {
         prompt_parent_id: "googleButton",
         auto_select: false,
     });
-
     window.google.accounts.id.renderButton(
         document.getElementById("googleButton"),
         {
             theme: "outline",
             size: "large",
+            width: "320",
         },
     );
 }
 </script>
 
 <template>
-    <div class="mt-36 flex flex-col items-center justify-center gap-4 p-4">
-        <UPageCard class="w-full max-w-md">
-            <UAuthForm
-                title="Scheduler Login"
-                description="Please enter your Oklahoma Christian credentials to continue."
-                icon="i-lucide-user"
-            />
-            <div id="googleButton"></div>
-        </UPageCard>
+    <div class="min-h-screen flex items-center justify-center bg-(--ui-bg-muted) p-6">
+        <UCard class="w-full max-w-lg overflow-hidden" :ui="{ body: '!p-0' }">
+            <div class="px-10 py-10 flex flex-col items-center gap-5">
+                <img
+                    src="../../public/OCIcon.png"
+                    alt="Oklahoma Christian University"
+                    class="w-28 h-auto object-contain"
+                />
+                <div class="text-center">
+                    <h1 class="text-3xl font-semibold tracking-tight text-(--ui-text)">
+                        OC Scheduling
+                    </h1>
+                    <p class="text-(--ui-text-muted) text-base mt-2 leading-relaxed">
+                        Sign in with your Oklahoma Christian<br />credentials to continue.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-[#7B1C1C] px-10 py-8 flex flex-col items-center gap-5">
+                <div class="flex items-center gap-3 w-full">
+                    <div class="flex-1 h-px bg-white/20" />
+                    <span class="text-sm text-white/60">continue with</span>
+                    <div class="flex-1 h-px bg-white/20" />
+                </div>
+                <div id="googleButton" class="flex justify-center w-full" />
+                <p class="text-sm text-white/50 text-center leading-relaxed">
+                    Use your <span class="font-medium text-white/80">@oc.edu</span> account.
+                    Access is restricted to authorized OC employees only.
+                </p>
+            </div>
+
+        </UCard>
     </div>
 </template>
