@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { TradeServices } from "../../services/tradeServices";
-import { Store } from "@classes/util/store.ts";
+import { Store } from "@classes/util/store/store";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequests";
 import { ShiftOfferRequest } from "@classes/database/shiftOfferRequests";
 import { Business } from "@classes/database/business";
@@ -37,7 +37,7 @@ console.log("trades", tradeRequests);
 console.log("offers", offerRequests);
 
 onMounted(async () => {
-    business.value = await Store.getBusiness();
+    business.value = await Store.businessStore.get();
     await loadData();
 });
 
