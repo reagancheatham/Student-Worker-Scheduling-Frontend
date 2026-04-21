@@ -4,7 +4,7 @@ import { TaskCheckOff } from "./taskCheckOff.ts";
 export class Task extends DatabaseModel {
     public constructor(
         public readonly id: number,
-        public readonly taskListID: number,
+        public taskListID: number,
         public listOrder: number,
         public name: string,
         public description: string,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { onMounted, ref, watch } from "vue";
-import { ScheduleTemplateServices } from "../services/scheduleTemplateServices.ts";
+import { ScheduleTemplateServices } from "../../services/scheduleTemplateServices.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { TempStore } from "@classes/util/store/tempStore.ts";
 
