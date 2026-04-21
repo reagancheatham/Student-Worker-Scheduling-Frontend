@@ -44,10 +44,10 @@ function signInWithGoogle() {
                         class="w-28 h-auto object-contain"
                     />
                     <div class="text-center">
-                        <h1 class="text-2xl font-semibold tracking-tight text-default">
+                        <h1 class="text-2xl font-semibold tracking-tight text-(--ui-text)">
                             OC Scheduling
                         </h1>
-                        <p class="text-muted text-sm mt-1 leading-relaxed">
+                        <p class="text-(--ui-text-muted) text-sm mt-1 leading-relaxed">
                             Sign in with your Oklahoma Christian<br />credentials to continue.
                         </p>
                     </div>
