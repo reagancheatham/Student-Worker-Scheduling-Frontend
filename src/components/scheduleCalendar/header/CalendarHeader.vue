@@ -250,7 +250,7 @@ async function publishAll(): Promise<void> {
                 />
             </UFormField>
             <UModal
-                v-if="!employeeView"
+                v-if="!employeeView && !data.isTemplate"
                 :title="`Publish All Shifts in ${data.selectedView === CalendarMode.Week ? 'Week' : 'Day'}?`"
                 description="This will notify relevant employees."
                 :ui="{ content: `sm:max-w-xs` }"

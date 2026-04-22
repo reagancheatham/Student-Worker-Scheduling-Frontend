@@ -24,6 +24,9 @@ export abstract class EventData {
     }
 
     bisects(data: EventData): boolean {
+        if (this.startTime.day !== this.endTime.day) return false;
+        else if (data.startTime.day !== data.endTime.day) return false;
+
         return (
             (this.startTime.isAfterOrEqual(data.startTime) &&
                 this.startTime.isBefore(data.endTime) &&

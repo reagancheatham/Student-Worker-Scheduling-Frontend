@@ -64,9 +64,9 @@ const isEditable = computed(
         ),
 );
 
-const isManagerEditable = computed(() =>
-    isEditable && !props.calendarData.isEmployeeView
-)
+const isManagerEditable = computed(
+    () => isEditable.value && !props.calendarData.isEmployeeView,
+);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -80,9 +80,6 @@ let resizePointerStart: number;
 //#endregion
 
 onMounted(() => {
-    if (model.value instanceof EmployeeUnavailabilityEventData)
-        console.log("HERE");
-
     const elementValue = element.value.$el;
 
     if (!elementValue) return;
