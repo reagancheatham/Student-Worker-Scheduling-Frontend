@@ -53,7 +53,7 @@ const emit = defineEmits<{
 
 const toast = useToast();
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
+async function onSubmit() {
 
     //Schema already validates inputs
     const payload = new User(
@@ -69,15 +69,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     try {
         await UserServices.update(payload);
 
-        toast.add({title: "User info updated!", color: 'green'});
-
         props.onUpdated?.(payload);
         emit("updated", payload);
         emit("close");
+        toast.add({title: "User info updated!", color: 'success'});
     } catch (err) {
         console.error(err);
         toast.add({title: "Update failed... Sorry, please try again later", color: 'red'});
-    }
+    } 
 }
 </script>
 

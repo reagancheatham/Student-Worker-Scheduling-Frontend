@@ -9,6 +9,9 @@ import { TimeSheetsServices } from "../../services/timesheetsServices";
 import { Store } from "@classes/util/store/store";
 import { Business } from "@classes/database/business.ts";
 import { User } from "@classes/database/user.ts";
+import MobileTaskListModal from "../modals/MobileTaskListModal.vue";
+import { TaskListServices } from "../../services/taskListServices";
+import { TaskServices } from "../../services/taskServices";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 
@@ -27,6 +30,18 @@ let today = new Date();
 let upcoming = new Date();
 upcoming.setDate(today.getDate() + 30);
 upcoming.setHours(23, 59, 59, 99);
+
+const overlay = useOverlay();
+const taskModal = overlay.create(MobileTaskListModal);
+
+async function openTaskListModal() {
+    const taskList = await TaskListServices.getOrCreateForShift(currentShift.value.id);
+    console.log(JSON.stringify(taskList));
+
+    taskModal.open({
+        taskList: taskList,
+    });
+}
 
 onMounted(async () => {
     user.value = await Store.userStore.get();
@@ -139,10 +154,9 @@ async function clockOut() {
                     <UIcon name="i-lucide-clock" class="size-5" />
                     <div>{{ shifts[0]?.shiftTime }}</div>
                 </div>
-                <!-- TODO: will need to get business name, hardcoded for now -->
                 <div class="flex flex-row items-end gap-3">
                     <UIcon name="i-lucide-building-2" class="size-5" />
-                    <div>Business Name</div>
+                    <div>{{ business?.name }}</div>
                 </div>
                 <div class="flex flex-row pt-8">
                     <UButton
@@ -169,6 +183,7 @@ async function clockOut() {
                         class="w-75 items-center justify-center p-3"
                         label="View Shift Tasks"
                         size="xl"
+                        @click="openTaskListModal()"
                     />
                 </div>
             </div>
