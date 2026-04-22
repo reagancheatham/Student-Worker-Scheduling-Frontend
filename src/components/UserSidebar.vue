@@ -6,24 +6,29 @@ import { userSubRoutes } from "../routing/routes.ts";
 
 const links = computed(() => [
     {
-        label: "Time Sheets",
+        label: "Clock In",
         icon: "i-lucide-clock",
-        to: userSubRoutes.TimeSheets,
-    },
-    {
-        label: "Time Off",
-        icon: "i-lucide-calendar-off",
-        to: userSubRoutes.TimeOff,
+        to: userSubRoutes.ClockIn,
     },
     {
         label: "Calendar",
-        icon: "i-lucide-calendar-off",
+        icon: "i-lucide-calendar",
         to: userSubRoutes.Calendar,
     },
     {
         label: "Shift Board",
-        icon: "i-lucide-calendar-off",
+        icon: "i-lucide-kanban",
         to: userSubRoutes.ShiftBoard,
+    },
+    {
+        label: "Time Sheets",
+        icon: "i-lucide-clipboard-list",
+        to: userSubRoutes.TimeSheets,
+    },
+    {
+        label: "Time Off",
+        icon: "i-lucide-plane",
+        to: userSubRoutes.TimeOff,
     },
 ]);
 

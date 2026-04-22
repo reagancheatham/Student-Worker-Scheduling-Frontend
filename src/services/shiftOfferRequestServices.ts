@@ -3,6 +3,8 @@ import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseServices } from "@classes/util/databaseServices";
 import { ShiftOfferRequest } from "@classes/database/shiftOfferRequest";
 import { apiClient } from "./services";
+import { Store } from "@classes/util/store/store";
+import { Shift } from "@classes/database/shift";
 
 const API_ROOT: string = "shiftOfferRequests";
 
@@ -34,6 +36,15 @@ export class ShiftOfferRequestServices {
         );
     }
 
+    static async getAllAcceptedRequestsForBusiness() {
+        const business = await Store.businessStore.get();
+        if (!business) return [];
+        return await DatabaseServices.getAll<ShiftOfferRequest>(
+            ShiftOfferRequest,
+            `${API_ROOT}/accepted/${business.id}`,
+        );
+    }
+
     static async approve(shiftOfferRequest: ShiftOfferRequest) {
         await apiClient.put(`${API_ROOT}/approve`, {
             id: shiftOfferRequest.id,
@@ -41,7 +52,7 @@ export class ShiftOfferRequestServices {
     }
 
     static async deny(shiftOfferRequest: ShiftOfferRequest) {
-        await apiClient.put(`${API_ROOT}/deny`, {
+        return await apiClient.put(`${API_ROOT}/deny`, {
             id: shiftOfferRequest.id,
         });
     }
