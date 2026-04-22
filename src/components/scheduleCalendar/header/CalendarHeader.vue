@@ -211,6 +211,7 @@ async function publishAll(): Promise<void> {
 <template>
     <div class="headerContainer" :style="getStyle()">
         <UDropdownMenu
+            v-if="!data.isEmployeeView"
             :items="data.isTemplate ? createTemplateItems : createItems"
         >
             <UButton
@@ -232,7 +233,8 @@ async function publishAll(): Promise<void> {
             />
             <CalendarDateShifter
                 v-if="
-                    !data.isEmployeeView && (!data.isTemplate || data.selectedView === CalendarMode.Day)
+                    !data.isEmployeeView &&
+                    (!data.isTemplate || data.selectedView === CalendarMode.Day)
                 "
                 :data="data"
             />
