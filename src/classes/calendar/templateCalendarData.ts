@@ -4,6 +4,7 @@ import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
 import { ScheduleShiftTemplateServices } from "../../services/scheduleShiftTemplateServices.ts";
 import { WeekDay } from "@classes/util/weekDay.ts";
 import { CalendarMode } from "./calendarMode.ts";
+import { reactive } from "vue";
 
 export class TemplateCalendarData {
     public readonly selectedTemplate: ScheduleTemplate;
@@ -29,10 +30,12 @@ export class TemplateCalendarData {
                 .filter((template) => {
                     return template.weekDay === this.selectedDay;
                 })
-                .map((template) => new ShiftTemplateEventData(template));
+                .map((template) =>
+                    reactive(new ShiftTemplateEventData(template)),
+                );
         else
-            events = shiftTemplates.map(
-                (template) => new ShiftTemplateEventData(template),
+            events = shiftTemplates.map((template) =>
+                reactive(new ShiftTemplateEventData(template)),
             );
 
         return events;

@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { ShiftTradeRequestServices } from "../../services/shiftTradeRequestServices.ts";
-import { Shift } from "@classes/database/shift.ts";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequest.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { TimeFormatter } from "@classes/util/timeFormat.ts";

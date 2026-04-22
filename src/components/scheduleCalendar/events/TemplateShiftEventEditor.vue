@@ -31,8 +31,6 @@ import { Role } from "@classes/database/role.ts";
 import { RoleServices } from "../../../services/roleServices.ts";
 import { TaskListTemplate } from "@classes/database/taskListTemplate.ts";
 import { TaskListTemplateServices } from "../../../services/taskListTemplateServices.ts";
-import { ShiftTaskListTemplate } from "@classes/database/shiftTaskListTemplate.ts";
-import { ShiftTaskListTemplateServices } from "../../../services/shiftTaskListTemplateServices.ts";
 
 //#region
 const model = defineModel<ShiftTemplateEventData>({

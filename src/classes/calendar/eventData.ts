@@ -1,4 +1,6 @@
+import { CalendarData } from "./calendarData.ts";
 import { EventColor } from "./eventColor.ts";
+import { EventStyleData } from "./eventStyleData.ts";
 import { EventTime } from "./eventTime.ts";
 
 export abstract class EventData {
@@ -37,4 +39,12 @@ export abstract class EventData {
     abstract destroy(): Promise<void>;
 
     abstract isValid(): boolean;
+
+    abstract getClass(styleData: EventStyleData): string;
+
+    abstract getStyle(styleData: EventStyleData): any;
+
+    abstract getLabel(styleData: EventStyleData): string;
+
+    abstract getGridArea(calendarData: CalendarData): string;
 }

@@ -6,7 +6,7 @@ import { TaskList } from "./taskList.ts";
 
 export class Shift extends DatabaseModel {
     public constructor(
-        public readonly id: number,
+        public id: number,
         public readonly businessID: number,
         public name: string,
         public startTime: Date,
@@ -38,7 +38,7 @@ export class Shift extends DatabaseModel {
             ? Employee.createFromData(data["Employee"])
             : undefined;
         const role = data["Role"] ? Role.create(data["Role"]) : undefined;
-
+        
         return new Shift(
             id,
             data["businessID"] ?? 0,

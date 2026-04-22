@@ -20,8 +20,6 @@ import {
 } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { TaskList } from "@classes/database/taskList.ts";
-import { TaskListServices } from "../../../services/taskListServices.ts";
 import { Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";

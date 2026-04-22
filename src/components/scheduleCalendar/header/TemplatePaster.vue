@@ -82,6 +82,7 @@ function resetState(): void {
 <template>
     <UModal title="Paste Template" :ui="{ content: 'sm:max-w-xs' }">
         <UButton
+            icon="i-lucide-clipboard-paste"
             label="Paste Template"
             color="neutral"
             variant="outline"

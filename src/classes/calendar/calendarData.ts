@@ -16,6 +16,10 @@ import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
 import { TemplateCalendarData } from "./templateCalendarData.ts";
 import { WeekDay } from "@classes/util/weekDay.ts";
+import { UserClassServices } from "../../services/userClassServices.ts";
+import { UserClass } from "@classes/database/userClass.ts";
+import { EmployeeUnavailability } from "@classes/database/employeeUnavailability.ts";
+import { EmployeeUnavailabilityServices } from "../../services/employeeUnavailabilityServices.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -37,6 +41,11 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
+    public readonly refUserClasses = ref<UserClass[]>([]);
+    public readonly refEmployeeUnavailabilities = ref<EmployeeUnavailability[]>(
+        [],
+    );
+    public readonly refEmployeeClassFilter = ref<number[]>([]);
     private readonly refTemplateData = ref<TemplateCalendarData>();
     private readonly refHasUnassignedShift = ref(false);
     private readonly refHasValidUnpublishedShift = ref(false);
@@ -144,6 +153,13 @@ export class CalendarData {
 
     private async updateRelevantEvents(): Promise<EventData[]> {
         let relevantEvents: EventData[];
+
+        const business = await Store.businessStore.get();
+
+        if (business) {
+            this.refUserClasses.value =
+                await UserClassServices.getAllClassesForBusiness(business);
+        } else this.refUserClasses.value = [];
 
         if (this.isTemplate)
             relevantEvents =
@@ -261,8 +277,30 @@ export class CalendarData {
             relevantEmployees.push(employee);
         }
 
-        relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+        for (const userClass of this.refUserClasses.value) {
+            const employee = userClass.employee;
 
+            if (!relevantEmployees.find((e) => e.id === employee.id))
+                relevantEmployees.push(employee);
+        }
+
+        relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+        const unavailabilities: EmployeeUnavailability[] = [];
+
+        const promises: Promise<void>[] = relevantEmployees.map(
+            async (employee) => {
+                const found =
+                    await EmployeeUnavailabilityServices.getAllForEmployee(
+                        employee,
+                    );
+                    
+                unavailabilities.push(...found);
+            },
+        );
+
+        await Promise.all(promises);
+
+        this.refEmployeeUnavailabilities.value = unavailabilities;
         return relevantEmployees;
     }
 }

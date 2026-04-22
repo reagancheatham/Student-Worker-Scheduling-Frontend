@@ -2,10 +2,6 @@
 .scheduleContainer {
     height: 100%;
 }
-
-body {
-    overflow: hidden;
-}
 </style>
 
 <template>

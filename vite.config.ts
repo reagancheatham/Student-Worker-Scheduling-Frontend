@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
                         "event-red",
                         "event-yellow",
                         "event-purple",
+                        "event-mist",
                     ],
                 },
                 ui: {
@@ -45,6 +46,7 @@ export default defineConfig(({ mode }) => {
                         "event-red": "red",
                         "event-yellow": "yellow",
                         "event-purple": "purple",
+                        "event-mist": "mist",
                     },
                 },
                 autoImport: {},
