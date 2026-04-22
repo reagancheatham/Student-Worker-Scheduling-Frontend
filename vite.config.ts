@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
         plugins: [
             vue(),
             ui({
+                icons: {
+                    collections: ["simple-icons"],
+                },
                 theme: {
                     colors: [
                         "primary",

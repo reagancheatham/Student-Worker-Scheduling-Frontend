@@ -31,4 +31,11 @@ export class TimeSheetsServices {
             `${API_ROOT}/${id}`,
         );
     }
+
+    static async getAllForEmployee(employeeID: number) {
+        return await DatabaseServices.getAll<Timesheet>(
+            Timesheet,
+            `${API_ROOT}/employee/${employeeID}`,
+        )
+    }
 }
