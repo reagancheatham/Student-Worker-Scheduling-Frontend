@@ -57,6 +57,33 @@ async function openShiftModal(shiftData, isTrade) {
         shift: shiftData,
         name: business.value.name,
         isTrade: isTrade,
+
+        onAccept: async (accepted: boolean) => {
+            if (!accepted) return; //not sure when ill hit this
+
+            try {
+                if (isTrade) {
+                    const trade: ShiftTradeRequest = {
+                        ...shiftData,
+                        approvalStatus: "Pending",
+                    };
+
+                    await TradeServices.updateTradeRequest(trade);
+                } else {
+                    const offer: ShiftOfferRequest = {
+                        ...shiftData,
+                        approvalStatus: "Pending",
+                    };
+
+                    await TradeServices.updateOfferedShift(offer);
+                }
+
+                await loadData();
+                shiftModal.close();
+            } catch (err) {
+                console.error("Error submitting request:", err);
+            }
+        },
     });
 }
 
@@ -193,12 +220,6 @@ async function loadData() {
                     </div>
                 </div>
             </div>
-            <UButton
-                icon="i-heroicons-plus"
-                size="lg"
-                class="fixed bottom-20 right-6 flex items-center justify-center w-14 h-14 rounded-full"
-                @click="addRequestModal()"
-            />
         </template>
         <template #pending>
             <div

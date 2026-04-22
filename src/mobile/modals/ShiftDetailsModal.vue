@@ -45,12 +45,6 @@ const emit = defineEmits<{
                         size="xl"
                         @click="emit('accept', true)"
                     ></UButton>
-                    <UButton
-                        class="w-20 justify-center"
-                        label="Deny"
-                        size="xl"
-                        v-if="isTrade === true"
-                    ></UButton>
                 </div>
             </div>
         </template>
