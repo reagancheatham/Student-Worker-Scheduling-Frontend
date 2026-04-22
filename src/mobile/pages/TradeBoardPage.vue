@@ -10,7 +10,6 @@ import ShiftDetailsModal from "../modals/ShiftDetailsModal.vue";
 import { User } from "@classes/database/user";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../../services/employeeServices";
-import CreateRequestModal from "../modals/createRequestModal.vue";
 
 const business = ref<Business>();
 const user = ref<User>();
@@ -37,7 +36,6 @@ const pendingRequests = computed<PendingRequestItem[]>(() => [
 
 const overlay = useOverlay();
 const shiftModal = overlay.create(ShiftDetailsModal);
-const AddRequestModal = overlay.create(CreateRequestModal);
 
 console.log("trades", tradeRequests);
 console.log("offers", offerRequests);
@@ -59,12 +57,6 @@ async function openShiftModal(shiftData, isTrade) {
         shift: shiftData,
         name: business.value.name,
         isTrade: isTrade,
-    });
-}
-
-async function addRequestModal() {
-    AddRequestModal.open({
-        business: business.value;
     });
 }
 
@@ -205,6 +197,7 @@ async function loadData() {
                 icon="i-heroicons-plus"
                 size="lg"
                 class="fixed bottom-20 right-6 flex items-center justify-center w-14 h-14 rounded-full"
+                @click="addRequestModal()"
             />
         </template>
         <template #pending>
