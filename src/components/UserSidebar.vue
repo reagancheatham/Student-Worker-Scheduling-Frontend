@@ -1,33 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import AvatarMenu from "./AvatarMenu.vue";
 import { AuthServices } from "../services/authServices.ts";
-import { useRoute } from "vue-router";
-
-const route = useRoute();
-
-const activeTab = defineModel<"businesses" | "users" | "timeSheets">("activeTab", {
-    default: "businesses",
-});
+import { userSubRoutes } from "../routing/routes.ts";
 
 const links = computed(() => [
     {
-        label: "Businesses",
-        icon: "i-lucide-building-2",
-        active: activeTab.value === "businesses",
-        onSelect: () => (activeTab.value = "businesses"),
-    },
-    {
-        label: "Users",
-        icon: "i-lucide-users",
-        active: activeTab.value === "users",
-        onSelect: () => (activeTab.value = "users"),
-    },
-    {
         label: "Time Sheets",
-        icon: "i-lucide-mail",
-        active: activeTab.value === "timeSheets",
-        onSelect: () => (activeTab.value = "timeSheets"),
+        icon: "i-lucide-clock",
+        to: userSubRoutes.TimeSheets,
+    },
+    {
+        label: "Time Off",
+        icon: "i-lucide-calendar-off",
+        to: userSubRoutes.TimeOff,
+    },
+    {
+        label: "Calendar",
+        icon: "i-lucide-calendar-off",
+        to: userSubRoutes.Calendar,
     },
 ]);
 
@@ -74,14 +65,12 @@ const searchGroups = computed(() => [
         <template #header="{ collapsed }">
             <AvatarMenu :collapsed="collapsed" />
         </template>
-
         <template #default="{ collapsed }">
             <UDashboardSearchButton
                 :collapsed="collapsed"
                 class="bg-transparent ring-default text-neutral-200 hover:text-black"
                 :kbds="[]"
             />
-
             <UNavigationMenu
                 orientation="vertical"
                 :items="links"
@@ -103,6 +92,5 @@ const searchGroups = computed(() => [
             />
         </template>
     </UDashboardSidebar>
-
     <UDashboardSearch :groups="searchGroups" :color-mode="false" />
 </template>

@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, shallowReactive } from "vue";
+import { ref, onMounted, shallowReactive, reactive } from "vue";
 import type { TableColumn, FormSubmitEvent } from "@nuxt/ui";
 import { Store } from "@classes/util/store/store.ts";
 import { ApprovalStatus } from "@classes/util/approvalStatus.ts";
 import { TimeOffRequestServices } from "../../services/timeOffServices.ts";
 import * as valibot from "valibot";
-import { CalendarDate, getLocalTimeZone, today, Time } from "@internationalized/date";
-
+import {
+    CalendarDate,
+    getLocalTimeZone,
+    today,
+    Time,
+} from "@internationalized/date";
+import { TimeOffRequest } from "@classes/database/timeOffRequest.ts";
 
 type TimeOffRow = {
     id: number;
@@ -21,14 +26,18 @@ const data = ref<TimeOffRow[]>([]);
 const globalFilter = ref("");
 const isAddOpen = ref(false);
 const toastNotification = useToast();
+const startOpen = ref(false);
+const endOpen = ref(false);
 
-const addState = shallowReactive({
+const addState = reactive({
     startDate: today(getLocalTimeZone()) as CalendarDate,
     endDate: today(getLocalTimeZone()) as CalendarDate,
     startTime: new Time(8, 0),
     endTime: new Time(17, 0),
     reason: "",
 });
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
 const addValidationSchema = valibot.object({
     reason: valibot.pipe(
@@ -42,6 +51,7 @@ const statusColor: Record<ApprovalStatus, "warning" | "success" | "error"> = {
     [ApprovalStatus.Pending]: "warning",
     [ApprovalStatus.Approved]: "success",
     [ApprovalStatus.Denied]: "error",
+    [ApprovalStatus.Unsubmitted]: "warning",
 };
 
 const columns: TableColumn<TimeOffRow>[] = [
@@ -62,7 +72,8 @@ async function getData() {
     try {
         const employee = await Store.employeeStore.get();
         if (!employee) return;
-        const requests = await TimeOffRequestServices.getAllForEmployee(employee.id);
+        const requests =
+            await TimeOffRequestServices.getAllForEmployee(employee);
         data.value = requests.map((r: any) => ({
             id: r.id,
             date: new Date(r.startDate).toLocaleDateString(),
@@ -88,21 +99,27 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
         const employee = await Store.employeeStore.get();
         if (!employee) return;
 
-        const startDate = addState.startDate
-            .toDate(getLocalTimeZone());
-        startDate.setHours(addState.startTime.hour, addState.startTime.minute, 0, 0);
+        const startDate = addState.startDate.toDate(getLocalTimeZone());
+        startDate.setHours(
+            addState.startTime.hour,
+            addState.startTime.minute,
+            0,
+            0,
+        );
 
-        const endDate = addState.endDate
-            .toDate(getLocalTimeZone());
+        const endDate = addState.endDate.toDate(getLocalTimeZone());
         endDate.setHours(addState.endTime.hour, addState.endTime.minute, 0, 0);
 
-        await TimeOffRequestServices.create({
-            employeeID: employee.id,
-            startDate,
-            endDate,
-            reason: addState.reason,
-            status: ApprovalStatus.Pending,
-        });
+        await TimeOffRequestServices.create(
+            new TimeOffRequest(
+                -1,
+                employee,
+                startDate,
+                endDate,
+                addState.reason,
+                ApprovalStatus.Pending,
+            ),
+        );
 
         toastNotification.add({
             title: "Request Submitted",
@@ -112,7 +129,8 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
     } catch (err: any) {
         toastNotification.add({
             title: "Submission Failed",
-            description: err?.response?.data?.message ?? "Could not submit request.",
+            description:
+                err?.response?.data?.message ?? "Could not submit request.",
             color: "error",
         });
     }
@@ -151,7 +169,6 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
             </template>
         </UTable>
     </div>
-
     <UModal
         v-model:open="isAddOpen"
         title="Submit Time Off Request"
@@ -165,31 +182,62 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
                     class="flex flex-col gap-5"
                     @submit="submitAdd"
                 >
-                    <!-- Start -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium">Start Date</label>
-                        <UCalendar
-                            v-model="addState.startDate"
-                            prevent-deselect
-                        />
-                    </div>
+                    <UFormField label="Start Date" name="startDate">
+                        <UPopover v-model:open="startOpen">
+                            <UButton
+                                color="neutral"
+                                variant="outline"
+                                icon="i-lucide-calendar"
+                                class="w-full justify-start"
+                            >
+                                {{
+                                    dateFormatter.format(
+                                        addState.startDate.toDate(
+                                            getLocalTimeZone(),
+                                        ),
+                                    )
+                                }}
+                            </UButton>
+                            <template #content>
+                                <UCalendar
+                                    v-model="addState.startDate as CalendarDate"
+                                    prevent-deselect
+                                    @update:model-value="startOpen = false"
+                                />
+                            </template>
+                        </UPopover>
+                    </UFormField>
                     <UFormField label="Start Time" name="startTime">
-                        <UInputTime v-model="addState.startTime" />
+                        <UInputTime v-model="addState.startTime as Time" />
                     </UFormField>
-
-                    <!-- End -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-sm font-medium">End Date</label>
-                        <UCalendar
-                            v-model="addState.endDate"
-                            prevent-deselect
-                        />
-                    </div>
+                    <UFormField label="End Date" name="endDate">
+                        <UPopover v-model:open="endOpen">
+                            <UButton
+                                color="neutral"
+                                variant="outline"
+                                icon="i-lucide-calendar"
+                                class="w-full justify-start"
+                            >
+                                {{
+                                    dateFormatter.format(
+                                        addState.endDate.toDate(
+                                            getLocalTimeZone(),
+                                        ),
+                                    )
+                                }}
+                            </UButton>
+                            <template #content>
+                                <UCalendar
+                                    v-model="addState.endDate as CalendarDate"
+                                    prevent-deselect
+                                    @update:model-value="endOpen = false"
+                                />
+                            </template>
+                        </UPopover>
+                    </UFormField>
                     <UFormField label="End Time" name="endTime">
-                        <UInputTime v-model="addState.endTime" />
+                        <UInputTime v-model="addState.endTime as Time" />
                     </UFormField>
-
-                    <!-- Reason -->
                     <UFormField label="Reason" name="reason">
                         <UTextarea
                             v-model="addState.reason"
@@ -198,7 +246,6 @@ async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
                             placeholder="Please describe the reason for your time off request..."
                         />
                     </UFormField>
-
                     <div class="flex gap-2 justify-end">
                         <UButton type="submit">Submit</UButton>
                         <UButton

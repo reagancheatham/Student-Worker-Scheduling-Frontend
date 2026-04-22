@@ -16,6 +16,8 @@ import RolesPage from "../pages/employees/RolesPage.vue";
 import TaskListsPage from "../pages/schedule/TaskListsPage.vue";
 import UserDesktopLayout from "@components/templates/UserDesktopLayout.vue";
 import TimeSheetsPage from "../pages/userDesktop/TimeSheetsPage.vue";
+import TimeOffPage from "../pages/userDesktop/TimeOffPage.vue";
+import UserCalendarPage from "../pages/userDesktop/UserCalendarPage.vue";
 
 class Route {
     constructor(
@@ -85,7 +87,9 @@ const userDesktopLayout = Route.create(
     UserDesktopLayout,
     "UserLayout",
     [
-        Route.create("timeSheet", TimeSheetsPage, "Time Sheets").noAuth()
+        Route.create("timeSheet", TimeSheetsPage, "Time Sheets").noAuth(),
+        Route.create("timeOff", TimeOffPage, "Time Off").noAuth(),
+        Route.create("calendar", UserCalendarPage, "Calendar").noAuth(),
     ],
     "/user/timeSheet"
 )
@@ -137,5 +141,7 @@ export const subRoutes = {
 };
 
 export const userSubRoutes = {
-    TimeSheets: userDesktopLayout.children[0]
+    TimeSheets: userDesktopLayout.children[0],
+    TimeOff: userDesktopLayout.children[1],
+    Calendar: userDesktopLayout.children[2],
 }
