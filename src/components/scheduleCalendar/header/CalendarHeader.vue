@@ -65,6 +65,11 @@ function getStyle() {
         return {
             marginLeft: `${cellSize.x}px`,
         };
+    else if (data.isEmployeeView)
+        return {
+            marginLeft: `${cellSize.x}px`,
+            marginBottom: `24px`,
+        };
     else
         return {
             marginLeft: `${0.25 * cellSize.x}px`,
@@ -233,8 +238,7 @@ async function publishAll(): Promise<void> {
             />
             <CalendarDateShifter
                 v-if="
-                    !data.isEmployeeView &&
-                    (!data.isTemplate || data.selectedView === CalendarMode.Day)
+                    !data.isTemplate || data.selectedView === CalendarMode.Day
                 "
                 :data="data"
             />
