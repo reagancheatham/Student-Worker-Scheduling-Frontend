@@ -33,10 +33,10 @@ type TradeRequestRow = {
 const openShiftRows = computed<OpenShiftRow[]>(() =>
     openShifts.value.map((offer) => ({
         offer,
-        date: TimeFormatter.formatDate(offer.shift.startTime),
-        shiftStart: TimeFormatter.formatTime(offer.shift.startTime),
-        shiftEnd: TimeFormatter.formatTime(offer.shift.endTime),
-        role: offer.shift.role?.name ?? "—",
+        date: TimeFormatter.formatDate(offer.startTime),
+        shiftStart: TimeFormatter.formatTime(offer.startTime),
+        shiftEnd: TimeFormatter.formatTime(offer.endTime),
+        role: offer.role?.name ?? "—",
     }))
 );
 

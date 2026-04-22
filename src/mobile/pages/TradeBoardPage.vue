@@ -3,13 +3,13 @@ import { computed, onMounted, ref } from "vue";
 import { TradeServices } from "../../services/tradeServices";
 import { Store } from "@classes/util/store/store";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequests";
-import { ShiftOfferRequest } from "@classes/database/shiftOfferRequests";
 import { Business } from "@classes/database/business";
 import { DateFormatter } from "../../classes/util/dateFormatter";
 import ShiftDetailsModal from "../modals/ShiftDetailsModal.vue";
 import { User } from "@classes/database/user";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../../services/employeeServices";
+import { ShiftOfferRequest } from "@classes/database/shiftOfferRequest.ts";
 
 const business = ref<Business>();
 const user = ref<User>();

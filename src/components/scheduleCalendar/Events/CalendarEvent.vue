@@ -15,6 +15,7 @@ import { fromWeekIndex } from "@classes/util/weekDay.ts";
 import { UserClassEventData } from "@classes/calendar/userClassEventData.ts";
 import { EmployeeUnavailabilityEventData } from "@classes/calendar/employeeUnavailabilityEventData.ts";
 import { Employee } from "@classes/database/employee.ts";
+import UserCalendarModal from "../../../pages/userDesktop/UserCalendarModal.vue";
 
 //#region Variables
 enum EventState {
@@ -62,6 +63,10 @@ const isEditable = computed(
             model.value instanceof EmployeeUnavailabilityEventData
         ),
 );
+
+const isManagerEditable = computed(() =>
+    isEditable && !props.calendarData.isEmployeeView
+)
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -132,6 +137,8 @@ function onPointerDown(evt: PointerEvent): void {
 }
 
 function onPointerMove(evt: PointerEvent): void {
+    if (!isManagerEditable.value) return;
+
     if (state == EventState.Resizing) return;
 
     let delta = new Vector2(
@@ -508,7 +515,7 @@ function getEmployee(): Employee | undefined {
                 <div
                     v-if="
                         props.calendarData.selectedView === CalendarMode.Day &&
-                        isEditable
+                        isManagerEditable
                     "
                     class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
                     style="width: 8px"
@@ -520,7 +527,7 @@ function getEmployee(): Employee | undefined {
                 #footer
                 v-if="
                     props.calendarData.selectedView === CalendarMode.Week &&
-                    isEditable
+                    isManagerEditable
                 "
             >
                 <div
@@ -531,12 +538,21 @@ function getEmployee(): Employee | undefined {
             </template>
         </UCard>
         <CalendarEventEditor
+            v-if="!calendarData.isEmployeeView"
             :model-value="model"
             :is-open="isModalOpen"
             :data="calendarData"
             @close-requested="closeModal()"
             @event-deleted="onEventDeleted()"
             @form-submitted="calendarData.updateRelevantData()"
+        />
+        <UserCalendarModal
+            v-if="
+                calendarData.isEmployeeView && model instanceof ShiftEventData
+            "
+            :model-value="model"
+            :is-open="isModalOpen"
+            @close-requested="closeModal()"
         />
     </UPopover>
 </template>

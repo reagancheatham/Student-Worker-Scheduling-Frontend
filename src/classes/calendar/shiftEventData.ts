@@ -5,6 +5,8 @@ import { ShiftServices } from "../../services/shiftServices.ts";
 import { CalendarData } from "./calendarData.ts";
 import { EventStyleData } from "./eventStyleData.ts";
 import { CalendarMode } from "./calendarMode.ts";
+import { Store } from "@classes/util/store/store.ts";
+import { EventColor } from "./eventColor.ts";
 
 export class ShiftEventData extends EventData {
     constructor(public readonly shift: Shift) {
@@ -69,7 +71,13 @@ export class ShiftEventData extends EventData {
             cursor: editable ? "pointer" : "cursor",
         };
 
-        if (!this.shift.published)
+        if (styleData.calendarData.isEmployeeView) {
+            const user = Store.userStore.getImmediate();
+
+            if (!user || this.shift.employee?.userID !== user.id)
+                style["background-color"] =
+                    `color-mix(in srgb, var(${EventColor.mist.tailwind}), transparent 40%)`;
+        } else if (!this.shift.published)
             style["background-color"] =
                 `color-mix(in srgb, var(${this.color.tailwind}), transparent 40%)`;
 

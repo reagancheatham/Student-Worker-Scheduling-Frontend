@@ -247,16 +247,11 @@ async function submitRefreshSchoolUnavailabilities(
 }
 
 async function submitAdd(_: FormSubmitEvent<AddValidationSchema>) {
-    const employee = await Employee.createInviteEmployee(
-        addState.email,
-        addState.isManager,
-    );
-
     isAddOpen.value = false;
 
-    await EmployeeServices.create(employee).then(() => {
-        getData();
-    });
+    await EmployeeServices.invite(addState.email, addState.isManager);
+
+    getData();
 }
 
 async function submitRoleEdit(): Promise<void> {
@@ -439,7 +434,7 @@ onMounted(() => {
             </template>
         </UTable>
     </div>
-    <UModal :v-model:open="isAddOpen" title="Add Business">
+    <UModal v-model:open="isAddOpen" title="Add Business">
         <template #content>
             <div class="p-4">
                 <UForm

@@ -4,7 +4,7 @@ import { apiClient } from "./services.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { BusinessServices } from "./businessServices.ts";
 import { Admin } from "@classes/util/permissionRole.ts";
-import { routes, subRoutes } from "../routing/routes.ts";
+import { routes } from "../routing/routes.ts";
 
 const API_ROOT: string = "authentication";
 
@@ -35,7 +35,9 @@ export class AuthServices {
                         const firstBusiness = businesses[0];
                         Store.businessStore.set(firstBusiness);
 
-                        router.push(subRoutes.Dashboard.path);
+                        if (user.permissionRoleID > 1)
+                            router.push(routes.NavbarLayout.path);
+                        else router.push(routes.UserDesktopLayout.path);
                     } else {
                         Store.businessStore.clear();
                         router.push(routes.NoBusiness.path);

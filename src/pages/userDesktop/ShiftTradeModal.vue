@@ -31,16 +31,15 @@ async function init() {
 async function submitTrade() {
     if (!selectedTradeEmployee.value) return;
     try {
-        await ShiftTradeRequestServices.create(
-            new ShiftTradeRequest(
-                -1,
-                model.value.shift.employee ?? null,
-                selectedTradeEmployee.value,
-                model.value.shift,
-                tradeReason.value,
-                new Date(),
-            )
+        const request = new ShiftTradeRequest(
+            0,
+            selectedTradeEmployee.value,
+            model.value.shift,
+            tradeReason.value,
+            new Date(),
         );
+
+        await ShiftTradeRequestServices.create(request);
         toastNotification.add({
             title: "Trade Requested",
             description: "Your shift trade request has been submitted.",
@@ -51,7 +50,8 @@ async function submitTrade() {
     } catch (err: any) {
         toastNotification.add({
             title: "Failed",
-            description: err?.response?.data?.message ?? "Could not submit trade.",
+            description:
+                err?.response?.data?.message ?? "Could not submit trade.",
             color: "error",
         });
     }
@@ -59,7 +59,11 @@ async function submitTrade() {
 </script>
 
 <template>
-    <UModal :open="isOpen" title="Trade Shift" description="Request a specific employee to swap shifts with you.">
+    <UModal
+        :open="isOpen"
+        title="Trade Shift"
+        description="Request a specific employee to swap shifts with you."
+    >
         <template #content>
             <div class="p-4 flex flex-col gap-4">
                 <UFormField label="Trade With">
@@ -80,8 +84,17 @@ async function submitTrade() {
                     />
                 </UFormField>
                 <div class="flex justify-end gap-2">
-                    <UButton :disabled="!selectedTradeEmployee" @click="submitTrade">Submit</UButton>
-                    <UButton variant="outline" color="neutral" @click="emit('closeRequested')">Cancel</UButton>
+                    <UButton
+                        :disabled="!selectedTradeEmployee"
+                        @click="submitTrade"
+                        >Submit</UButton
+                    >
+                    <UButton
+                        variant="outline"
+                        color="neutral"
+                        @click="emit('closeRequested')"
+                        >Cancel</UButton
+                    >
                 </div>
             </div>
         </template>

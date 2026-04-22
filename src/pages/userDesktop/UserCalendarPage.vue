@@ -9,5 +9,5 @@ body {
 </style>
 
 <template>
-    <div class="scheduleContainer"><ScheduleCalendar header /></div>
+    <div class="scheduleContainer"><ScheduleCalendar header employee-view editable /></div>
 </template>
