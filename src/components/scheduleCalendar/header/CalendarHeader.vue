@@ -232,7 +232,7 @@ async function publishAll(): Promise<void> {
             />
             <CalendarDateShifter
                 v-if="
-                    !data.isTemplate || data.selectedView === CalendarMode.Day
+                    !data.isEmployeeView && (!data.isTemplate || data.selectedView === CalendarMode.Day)
                 "
                 :data="data"
             />
