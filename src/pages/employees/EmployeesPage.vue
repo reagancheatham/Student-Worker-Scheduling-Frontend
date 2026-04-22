@@ -12,6 +12,7 @@ import * as v from "valibot";
 import { Role } from "@classes/database/role.ts";
 import { RoleServices } from "../../services/roleServices.ts";
 import { TempStore } from "@classes/util/store/tempStore.ts";
+import { UserClassServices } from "../../services/userClassServices.ts";
 
 const toast = useToast();
 const { copy } = useClipboard();
@@ -195,22 +196,21 @@ async function submitRefreshSchoolUnavailabilities(
     isRefreshingSchoolUnavailabilities.value = true;
 
     try {
-        const response =
-            await EmployeeUnavailabilityServices.importStudentSchedulesForBusiness(
-                business.id,
-                event.data.termCode.trim(),
-            );
+        const response = await UserClassServices.importSchedulesForBusiness(
+            business,
+            event.data.termCode.trim(),
+        );
 
         const payload = response?.data ?? {};
-        const employeeErrors = Array.isArray(payload?.employeeErrors)
-            ? payload.employeeErrors
+        const userErrors = Array.isArray(payload?.userErrors)
+            ? payload.userErrors
             : [];
 
-        if (employeeErrors.length > 0) {
+        if (userErrors.length > 0) {
             toast.add({
                 title: "School unavailabilities refreshed",
                 description:
-                    employeeErrors[0]?.message ??
+                    userErrors[0]?.message ??
                     "Refresh completed with some errors.",
                 color: "warning",
                 icon: "i-lucide-triangle-alert",

@@ -1,30 +1,22 @@
-import { apiClient } from "./services";
+import { Business } from "@classes/database/business.ts";
+import { DatabaseServices } from "@classes/util/databaseServices.ts";
+import { EmployeeUnavailability } from "@classes/database/employeeUnavailability.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 const API_ROOT: string = "employeeUnavailabilities";
 
 export class EmployeeUnavailabilityServices {
-    public static async importStudentSchedulesForBusiness(
-        businessID: number,
-        termCode: string,
-    ) {
-        return await apiClient.post(
-            `${API_ROOT}/import/studentSchedules`,
-            {
-                businessID,
-                termCode,
-            },
+    public static async getAllForBusiness(business: Business) {
+        return await DatabaseServices.getAll(
+            EmployeeUnavailability,
+            `${API_ROOT}/business/${business.id}`,
         );
     }
 
-    public static async importStudentScheduleForEmployee(
-        employeeID: number,
-        termCode: string,
-    ) {
-        return await apiClient.post(
-            `${API_ROOT}/import/studentSchedules/employee/${employeeID}`,
-            {
-                termCode,
-            },
+    public static async getAllForEmployee(employee: Employee) {
+        return await DatabaseServices.getAll(
+            EmployeeUnavailability,
+            `${API_ROOT}/employee/${employee.id}`,
         );
     }
 }
