@@ -18,7 +18,7 @@ export class Settings extends DatabaseModel {
 
     public static createFromData(data: any): Settings {
         return new Settings(
-            data["businessID"] ?? 1,
+            data["businessID"] ?? 0,
             data["doubleTaskSignOff"] ?? false,
             data["employeeSignOff"] ?? false,
             data["allowClockInOut"] ?? true,
