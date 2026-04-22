@@ -1,15 +1,17 @@
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
 import {
+    fromWeekIndex,
     stringToWeekDay,
     toCalendarDate,
+    toWeekIndex,
     WeekDay,
 } from "@classes/util/weekDay.ts";
 import { ShiftTaskListTemplate } from "./shiftTaskListTemplate.ts";
 import { Employee } from "./employee.ts";
 import { Role } from "./role.ts";
 import { Shift } from "./shift.ts";
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, getDayOfWeek } from "@internationalized/date";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 
 export class ScheduleShiftTemplate extends DatabaseModel {
@@ -70,7 +72,13 @@ export class ScheduleShiftTemplate extends DatabaseModel {
 
     public toShift(businessID: number, date: CalendarDate): Shift {
         const calendarStartTime = date.toDate(CalendarData.timeZone);
+
+        if (this.endTime.getHours() === 0) date = date.add({ days: 1 });
+
         const calendarEndTime = date.toDate(CalendarData.timeZone);
+
+        console.log("start: " + JSON.stringify(calendarStartTime));
+        console.log("end: " + JSON.stringify(calendarEndTime));
 
         calendarStartTime.setHours(this.startTime.getHours());
         calendarStartTime.setMinutes(this.startTime.getMinutes());
@@ -96,9 +104,19 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         const calendarStartTime = toCalendarDate(this.weekDay, sunday).toDate(
             CalendarData.timeZone,
         );
-        const calendarEndTime = toCalendarDate(this.weekDay, sunday).toDate(
+
+        let endDay = this.weekDay;
+        if (this.endTime.getHours() === 0) {
+            const index = toWeekIndex(this.weekDay);
+            endDay = fromWeekIndex(index + 1);
+        }
+
+        const calendarEndTime = toCalendarDate(endDay, sunday).toDate(
             CalendarData.timeZone,
         );
+
+        console.log("start relative: " + JSON.stringify(calendarStartTime));
+        console.log("end: " + JSON.stringify(calendarEndTime));
 
         calendarStartTime.setHours(this.startTime.getHours());
         calendarStartTime.setMinutes(this.startTime.getMinutes());
