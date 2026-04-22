@@ -164,6 +164,25 @@ const isValidRole = computed(() => {
         );
 });
 
+const isUnavailable = computed(() => {
+    const employee = state.employee;
+    const startTime = model.value.template.startTime;
+    const endTime = model.value.template.endTime;
+
+    if (!employee) return false;
+    else
+        return (
+            data.refEmployeeUnavailabilities.value.find((eu) => {
+                return (
+                    eu.employee.id === employee.id &&
+                    ((startTime >= eu.startTime && startTime < eu.endTime) ||
+                        (eu.startTime >= startTime && eu.startTime < endTime))
+                );
+            }) !== undefined
+        );
+});
+
+
 const employeeItems = computed(() => {
     if (!state.role) {
         return employees.value;
@@ -499,6 +518,19 @@ function pasteTemplate(template: TaskListTemplate): void {
                             decorative
                         />
                         <UFormField label="Assigned Employee" name="employee">
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.employee"
+                                    label-key="fullName"
+                                    :items="employeeItems"
+                                    clear
+                                    placeholder="Select Employee"
+                                    :autofocus="false"
+                                />
+                            </div>
+                        </UFormField>
+                        <div class="flex flex-col justify-end gap-1">
                             <UChip
                                 :show="!isValidRole"
                                 size="3xl"
@@ -507,20 +539,21 @@ function pasteTemplate(template: TaskListTemplate): void {
                                 :ui="{
                                     base: 'p-2',
                                 }"
-                            >
-                                <div @pointerdown.stop.prevent>
-                                    <USelectMenu
-                                        class="min-w-36"
-                                        v-model="state.employee"
-                                        label-key="fullName"
-                                        :items="employeeItems"
-                                        clear
-                                        placeholder="Select Employee"
-                                        :autofocus="false"
-                                    />
-                                </div>
-                            </UChip>
-                        </UFormField>
+                                standalone
+                                inset
+                            />
+                            <UChip
+                                :show="isUnavailable"
+                                size="3xl"
+                                text="Unavailable"
+                                color="error"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                                standalone
+                                inset
+                            />
+                        </div>
                     </div>
                     <UFormField name="taskList">
                         <div

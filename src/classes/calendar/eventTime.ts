@@ -99,11 +99,19 @@ export class EventTime {
     }
 
     public toDate(): Date {
+        let day = this.day;
+        let hour = this.hour;
+
+        if (this.hour === 24) {
+            day++;
+            hour = 0;
+        }
+
         const date = new Date(
             this.year,
             this.month - 1,
-            this.day,
-            this.hour,
+            day,
+            hour,
             this.minute,
         );
 
