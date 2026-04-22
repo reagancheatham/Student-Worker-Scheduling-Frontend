@@ -130,6 +130,9 @@ function getUserClassEvents(): UserClassEventData[] {
                     const weekIndex = toWeekIndex(weekDay);
                     const eventDate = weekStart.add({ days: weekIndex });
 
+                    console.log("week index: " + weekIndex);
+                    console.log("date: " + JSON.stringify(eventDate));
+
                     const eventData = reactive(
                         new UserClassEventData(
                             c,

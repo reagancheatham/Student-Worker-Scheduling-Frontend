@@ -5,6 +5,12 @@ import { EventColor } from "./eventColor.ts";
 import { CalendarData } from "./calendarData.ts";
 import { EventStyleData } from "./eventStyleData.ts";
 import { CalendarMode } from "./calendarMode.ts";
+import { DateFormatter } from "@internationalized/date";
+import { stringToWeekDay, toWeekIndex } from "@classes/util/weekDay.ts";
+
+const weekFormatter = new DateFormatter(CalendarData.localeString, {
+    weekday: "long",
+});
 
 export class UserClassEventData extends EventData {
     constructor(
@@ -98,7 +104,12 @@ export class UserClassEventData extends EventData {
         } else {
             const dayColumn = calendarData.isTemplate
                 ? this.templateStartDay
-                : startTime.day - calendarData.selectedWeek.start.day;
+                : getDaysBetween(
+                      calendarData.selectedWeek.start.toDate(
+                          CalendarData.timeZone,
+                      ),
+                      startTime.toDate(),
+                  );
 
             const daySpan = calendarData.isTemplate
                 ? this.templateEndDay - this.templateStartDay
@@ -110,4 +121,9 @@ export class UserClassEventData extends EventData {
                 / span ${1 + daySpan}`;
         }
     }
+}
+
+function getDaysBetween(date1: Date, date2: Date): number {
+    const diffInMs = Math.abs(date2.getTime() - date1.getTime());
+    return Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 }
