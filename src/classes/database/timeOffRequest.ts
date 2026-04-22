@@ -19,8 +19,6 @@ export class TimeOffRequest extends DatabaseModel {
             ? Employee.createFromData(data["Employee"])
             : undefined;
 
-        console.log("BODY: " + JSON.stringify(data));
-
         return new TimeOffRequest(
             data["id"] ?? 0,
             employee,

@@ -13,8 +13,6 @@ export class TaskCheckOff extends DatabaseModel {
     public static createFromData(data: any): TaskCheckOff {
         const employeeData = data["Employee"];
 
-        console.log("data: " + JSON.stringify(data));
-
         return new TaskCheckOff(
             data["id"] ?? 0,
             data["taskID"] ?? 0,

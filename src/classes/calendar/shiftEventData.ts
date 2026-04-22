@@ -103,9 +103,6 @@ export class ShiftEventData extends EventData {
         const startTime = this.startTime;
         const endTime = this.endTime;
 
-        console.log("startTime: " + JSON.stringify(startTime));
-        console.log("endtime: " + JSON.stringify(endTime));
-
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
 

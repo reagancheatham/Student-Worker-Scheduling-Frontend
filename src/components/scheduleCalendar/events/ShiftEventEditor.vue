@@ -178,16 +178,14 @@ const isUnavailable = computed(() => {
     const startTime = model.value.shift.startTime;
     const endTime = model.value.shift.endTime;
 
-    console.log("test");
-
     if (!employee) return false;
     else
         return (
             data.refEmployeeUnavailabilities.value.find((eu) => {
                 return (
                     eu.employee.id === employee.id &&
-                    ((startTime >= eu.startTime && startTime <= eu.endTime) ||
-                        (startTime >= eu.startTime && startTime <= eu.endTime))
+                    ((startTime >= eu.startTime && startTime < eu.endTime) ||
+                        (eu.startTime >= startTime && eu.startTime < endTime))
                 );
             }) !== undefined
         );
