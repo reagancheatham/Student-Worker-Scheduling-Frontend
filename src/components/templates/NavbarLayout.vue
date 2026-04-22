@@ -48,7 +48,7 @@ async function openSettings() {
                 <img class="h-10 w-65" src="/mobileOC.png" alt="OC Logo" />
             </template>
             <template #right>
-                <UAvatar alt="Davey Clonts" @click="openSettings" @updated="" />
+                <UAvatar :alt="user.fullName" @click="openSettings" @updated="" />
             </template>
         </UHeader>
 

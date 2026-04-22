@@ -4,7 +4,7 @@ import ui from "@nuxt/ui/vue-plugin";
 import App from "./App.vue";
 import "../css/main.css";
 import { registerSW } from "virtual:pwa-register";
-import { Icon } from '@iconify/vue'
+import { Icon } from "@iconify/vue";
 
 if (import.meta.env.PROD) {
     registerSW({
@@ -12,9 +12,4 @@ if (import.meta.env.PROD) {
     });
 }
 
-
-createApp(App)
-    .use(router)
-    .use(ui)
-    .component('Icon', Icon)
-    .mount("#app");
+createApp(App).use(router).use(ui).component("Icon", Icon).mount("#app");
