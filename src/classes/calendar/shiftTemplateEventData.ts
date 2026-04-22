@@ -12,7 +12,7 @@ export class ShiftTemplateEventData extends EventData {
         super(
             template.name,
             EventTime.fromDate(template.startTime),
-            EventTime.fromDate(template.endTime),
+            EventTime.fromDate(template.endTime, true),
             template.color,
         );
 
@@ -97,6 +97,9 @@ export class ShiftTemplateEventData extends EventData {
         const endTime = this.endTime;
         const startDayIndex = this.templateStartDay;
         const endDayIndex = this.templateEndDay;
+
+        console.log("start day: " + JSON.stringify(startTime));
+        console.log("end day: " + JSON.stringify(endTime));
 
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
