@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import type { TableColumn } from "@nuxt/ui";
-import { ShiftServices } from "../../services/shiftServices.ts";
 import { ShiftTradeRequestServices } from "../../services/shiftTradeRequestServices.ts";
-import { Shift } from "@classes/database/shift.ts";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequest.ts";
 import { Store } from "@classes/util/store/store.ts";
 import { TimeFormatter } from "@classes/util/timeFormat.ts";
+import { ShiftOfferRequestServices } from "../../services/shiftOfferRequestServices.ts";
+import { ShiftOfferRequest } from "@classes/database/shiftOfferRequest.ts";
 
 const toast = useToast();
 
-const openShifts = ref<Shift[]>([]);
+const openShifts = ref<ShiftOfferRequest[]>([]);
 const tradeRequests = ref<ShiftTradeRequest[]>([]);
 
 type OpenShiftRow = {
-    shift: Shift;
+    offer: ShiftOfferRequest;
     date: string;
     shiftStart: string;
     shiftEnd: string;
@@ -31,12 +31,12 @@ type TradeRequestRow = {
 };
 
 const openShiftRows = computed<OpenShiftRow[]>(() =>
-    openShifts.value.map((shift) => ({
-        shift,
-        date: TimeFormatter.formatDate(shift.startTime),
-        shiftStart: TimeFormatter.formatTime(shift.startTime),
-        shiftEnd: TimeFormatter.formatTime(shift.endTime),
-        role: shift.role?.name ?? "—",
+    openShifts.value.map((offer) => ({
+        offer,
+        date: TimeFormatter.formatDate(offer.shift.startTime),
+        shiftStart: TimeFormatter.formatTime(offer.shift.startTime),
+        shiftEnd: TimeFormatter.formatTime(offer.shift.endTime),
+        role: offer.shift.role?.name ?? "—",
     }))
 );
 
@@ -73,10 +73,11 @@ async function takeOpenShift(row: OpenShiftRow) {
         const employee = await Store.employeeStore.get();
         if (!employee) return;
 
-        row.shift.employee = employee;
-        await ShiftServices.update(row.shift);
+        await ShiftOfferRequestServices.approve(row.offer);
 
-        openShifts.value = openShifts.value.filter((s) => s.id !== row.shift.id);
+        openShifts.value = openShifts.value.filter(
+            (o) => o.id !== row.offer.id
+        );
 
         toast.add({
             title: "Shift Taken",
@@ -114,7 +115,7 @@ onMounted(async () => {
     const employee = await Store.employeeStore.get();
     if (!employee) return;
 
-    openShifts.value = await ShiftServices.getAllWithoutEmployee();
+    openShifts.value = await ShiftOfferRequestServices.getAllAcceptedRequestsForBusiness();
     tradeRequests.value = await ShiftTradeRequestServices.getAllForTargetEmployee(employee);
 });
 </script>

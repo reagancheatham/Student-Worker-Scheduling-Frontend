@@ -19,6 +19,7 @@ import TimeSheetsPage from "../pages/userDesktop/TimeSheetsPage.vue";
 import TimeOffPage from "../pages/userDesktop/TimeOffPage.vue";
 import UserCalendarPage from "../pages/userDesktop/UserCalendarPage.vue";
 import UserShiftBoardPage from "../pages/userDesktop/UserShiftBoardPage.vue";
+import UserClockInPage from "../pages/userDesktop/UserClockInPage.vue";
 
 class Route {
     constructor(
@@ -71,11 +72,7 @@ const navbarLayout = Route.create(
             "Schedule Template Editor",
         ),
         Route.create("taskLists", TaskListsPage, "Task Lists"),
-        Route.create(
-            "notifications",
-            NotificationsPage,
-            "Notifications",
-        ),
+        Route.create("notifications", NotificationsPage, "Notifications"),
         Route.create("employeeList", EmployeesPage, "Employee List"),
         Route.create("roles", RolesPage, "Roles"),
         Route.create("settings", SettingsPage, "Settings"),
@@ -91,10 +88,11 @@ const userDesktopLayout = Route.create(
         Route.create("timeSheet", TimeSheetsPage, "Time Sheets").noAuth(),
         Route.create("timeOff", TimeOffPage, "Time Off").noAuth(),
         Route.create("calendar", UserCalendarPage, "Calendar").noAuth(),
-        Route.create("shiftBoard", UserShiftBoardPage, "Shift Board").noAuth()
+        Route.create("shiftBoard", UserShiftBoardPage, "Shift Board").noAuth(),
+        Route.create("clockIn", UserClockInPage, "Clock In").noAuth(),
     ],
-    "/user/timeSheet"
-)
+    "/user/timeSheet",
+);
 
 export const routes = {
     Default: Route.create(
@@ -147,4 +145,5 @@ export const userSubRoutes = {
     TimeOff: userDesktopLayout.children[1],
     Calendar: userDesktopLayout.children[2],
     ShiftBoard: userDesktopLayout.children[3],
-}
+    ClockIn: userDesktopLayout.children[4],
+};
