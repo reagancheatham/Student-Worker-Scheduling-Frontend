@@ -31,6 +31,7 @@ import { Role } from "@classes/database/role.ts";
 import { RoleServices } from "../../../services/roleServices.ts";
 import { TaskListTemplate } from "@classes/database/taskListTemplate.ts";
 import { TaskListTemplateServices } from "../../../services/taskListTemplateServices.ts";
+import { toWeekIndex } from "@classes/util/weekDay.ts";
 
 //#region
 const model = defineModel<ShiftEventData>({
@@ -179,16 +180,47 @@ const isUnavailable = computed(() => {
     const endTime = model.value.shift.endTime;
 
     if (!employee) return false;
-    else
+
+    const unavailability = data.refEmployeeUnavailabilities.value.find((eu) => {
         return (
-            data.refEmployeeUnavailabilities.value.find((eu) => {
-                return (
-                    eu.employee.id === employee.id &&
-                    ((startTime >= eu.startTime && startTime < eu.endTime) ||
-                        (eu.startTime >= startTime && eu.startTime < endTime))
-                );
-            }) !== undefined
+            eu.employee.id === employee.id &&
+            ((startTime >= eu.startTime && startTime < eu.endTime) ||
+                (eu.startTime >= startTime && eu.startTime < endTime))
         );
+    });
+
+    if (unavailability) return true;
+
+    const userClass = data.refUserClasses.value.find((c) => {
+        for (const weekDay of c.weekDays) {
+            const startDay = startTime.getDay();
+            const weekIndex = toWeekIndex(weekDay);
+
+            if (weekIndex !== startDay) continue;
+
+            const classStart = new Date(startTime);
+            const classEnd = new Date(startTime);
+
+            classStart.setHours(c.startTime.hour);
+            classStart.setMinutes(c.startTime.minute);
+            classEnd.setHours(c.endTime.hour);
+            classEnd.setMinutes(c.endTime.minute);
+
+            if (
+                c.employee.id === employee.id &&
+                ((startTime >= classStart && startTime < classEnd) ||
+                    (classStart >= startTime && classStart < endTime))
+            )
+                return c;
+        }
+
+        return undefined;
+    });
+
+    console.log("class found: " + userClass);
+
+    if (userClass) return true;
+    else return false;
 });
 
 const employeeItems = computed(() => {

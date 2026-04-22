@@ -77,9 +77,6 @@ export class ScheduleShiftTemplate extends DatabaseModel {
 
         const calendarEndTime = date.toDate(CalendarData.timeZone);
 
-        console.log("start: " + JSON.stringify(calendarStartTime));
-        console.log("end: " + JSON.stringify(calendarEndTime));
-
         calendarStartTime.setHours(this.startTime.getHours());
         calendarStartTime.setMinutes(this.startTime.getMinutes());
 
@@ -114,9 +111,6 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         const calendarEndTime = toCalendarDate(endDay, sunday).toDate(
             CalendarData.timeZone,
         );
-
-        console.log("start relative: " + JSON.stringify(calendarStartTime));
-        console.log("end: " + JSON.stringify(calendarEndTime));
 
         calendarStartTime.setHours(this.startTime.getHours());
         calendarStartTime.setMinutes(this.startTime.getMinutes());
