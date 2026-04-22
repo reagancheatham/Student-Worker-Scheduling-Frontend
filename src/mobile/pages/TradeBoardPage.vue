@@ -10,6 +10,7 @@ import ShiftDetailsModal from "../modals/ShiftDetailsModal.vue";
 import { User } from "@classes/database/user";
 import { Employee } from "@classes/database/employee";
 import { EmployeeServices } from "../../services/employeeServices";
+import CreateRequestModal from "../modals/createRequestModal.vue";
 
 const business = ref<Business>();
 const user = ref<User>();
@@ -20,22 +21,23 @@ const pendingTradeRequests = ref<ShiftTradeRequest[]>([]);
 const pendingOfferRequests = ref<ShiftOfferRequest[]>([]);
 
 type PendingRequestItem =
-    | (ShiftTradeRequest & { type: 'trade' })
-    | (ShiftOfferRequest & { type: 'offer' })
+    | (ShiftTradeRequest & { type: "trade" })
+    | (ShiftOfferRequest & { type: "offer" });
 
 const pendingRequests = computed<PendingRequestItem[]>(() => [
-    ...pendingTradeRequests.value.map(r => ({
+    ...pendingTradeRequests.value.map((r) => ({
         ...r,
-        type: 'trade' as const,
+        type: "trade" as const,
     })),
-    ...pendingOfferRequests.value.map(r => ({
+    ...pendingOfferRequests.value.map((r) => ({
         ...r,
-        type: 'offer' as const,
+        type: "offer" as const,
     })),
-])
+]);
 
 const overlay = useOverlay();
 const shiftModal = overlay.create(ShiftDetailsModal);
+const AddRequestModal = overlay.create(CreateRequestModal);
 
 console.log("trades", tradeRequests);
 console.log("offers", offerRequests);
@@ -45,17 +47,24 @@ console.log(pendingRequests);
 onMounted(async () => {
     business.value = await Store.businessStore.get();
     user.value = await Store.userStore.get();
-    userEmployee.value = await EmployeeServices.getEmployeeByUser(user.value.id);
+    userEmployee.value = await EmployeeServices.getEmployeeByUser(
+        user.value.id,
+    );
 
     await loadData();
 });
-
 
 async function openShiftModal(shiftData, isTrade) {
     shiftModal.open({
         shift: shiftData,
         name: business.value.name,
-        isTrade: isTrade
+        isTrade: isTrade,
+    });
+}
+
+async function addRequestModal() {
+    AddRequestModal.open({
+        business: business.value;
     });
 }
 
@@ -72,26 +81,32 @@ const tabs = [
 
 async function loadData() {
     try {
-
         //I need to filter this by target
         tradeRequests.value = (
             await TradeServices.getAllAvailableTradeRequests(business.value.id)
-        ).filter(r => r.targetEmployeeID === userEmployee.value.id);
+        ).filter((r) => r.targetEmployeeID === userEmployee.value.id);
 
         //removes your own shift offers...
         offerRequests.value = (
             await TradeServices.getAllAvailableOfferedShifts(business.value.id)
-        ).filter(r => r.userID !== user.value.id);
+        ).filter((r) => r.userID !== user.value.id);
 
         //filter to only see your own pending items
         pendingTradeRequests.value = (
             await TradeServices.getAllPendingTradeRequests(business.value.id)
-        ).filter(r => r.userID === user.value.id || r.targetEmployeeID === userEmployee.value.id);
+        ).filter(
+            (r) =>
+                r.userID === user.value.id ||
+                r.targetEmployeeID === userEmployee.value.id,
+        );
 
         pendingOfferRequests.value = (
             await TradeServices.getAllPendingOfferedShifts(business.value.id)
-        ).filter(r => r.userID === user.value.id || r.claimingEmployeeID === userEmployee.value.id);
-
+        ).filter(
+            (r) =>
+                r.userID === user.value.id ||
+                r.claimingEmployeeID === userEmployee.value.id,
+        );
     } catch (err) {
         console.error(err);
     }
@@ -101,10 +116,10 @@ async function loadData() {
 <template>
     <UTabs :items="tabs">
         <template #trade>
-            <div
-                class="text-center pt-5 pb-3 font-bold text-xl border-b-1 border-gray-300"
-            >
-                Trade Board
+            <div class="border-b-1 border-gray-300 pb-3">
+                <div class="text-center pt-5 font-bold text-xl">
+                    Trade Board
+                </div>
             </div>
 
             <div class="flex h-screen">
@@ -186,6 +201,11 @@ async function loadData() {
                     </div>
                 </div>
             </div>
+            <UButton
+                icon="i-heroicons-plus"
+                size="lg"
+                class="fixed bottom-20 right-6 flex items-center justify-center w-14 h-14 rounded-full"
+            />
         </template>
         <template #pending>
             <div
@@ -207,7 +227,8 @@ async function loadData() {
                                         }}
                                     </div>
                                     <div>
-                                        Swaping with {{ shift.firstName }}  {{ shift.lastName }}
+                                        Swaping with {{ shift.firstName }}
+                                        {{ shift.lastName }}
                                     </div>
                                     <div>
                                         {{
@@ -218,14 +239,18 @@ async function loadData() {
                                         }}
                                     </div>
                                     <div
-                                        v-if="shift.approvalStatus === 'Pending'"
+                                        v-if="
+                                            shift.approvalStatus === 'Pending'
+                                        "
                                         class="flex items-center gap-2 text-warning"
                                     >
                                         <UIcon name="i-lucide-clock" />
                                         <span> Pending Approval... </span>
                                     </div>
                                     <div
-                                        v-if="shift.approvalStatus === 'Approved'"
+                                        v-if="
+                                            shift.approvalStatus === 'Approved'
+                                        "
                                         class="flex items-center gap-2 text-success"
                                     >
                                         <UIcon name="i-lucide-circle-check" />

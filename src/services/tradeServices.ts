@@ -102,4 +102,14 @@ export class TradeServices {
             `${OFFER_API_ROOT}/pending/${businessID}`,
         );
     }
+
+    static async approveTradeRequest() {
+        
+    }
+
+    static async approveOfferRequet() {
+
+    }
+
+
 }
