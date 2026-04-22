@@ -90,6 +90,9 @@ onMounted(() => {
     });
 
     observer.observe(elementValue);
+
+    console.log("START TIME: " + JSON.stringify(model.value.startTime));
+    console.log("END TIME: " + JSON.stringify(model.value.endTime));
 });
 
 onBeforeUnmount(() => {

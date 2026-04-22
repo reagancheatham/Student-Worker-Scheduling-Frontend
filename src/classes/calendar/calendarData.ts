@@ -256,7 +256,7 @@ export class CalendarData {
         const beginningOfDay = date.toDate(CalendarData.timeZone);
         const endOfDay = date.toDate(CalendarData.timeZone);
         beginningOfDay.setHours(0, 0, 0, 0);
-        endOfDay.setHours(23, 59, 59, 99);
+        endOfDay.setHours(24, 0, 0, 0);
 
         let events: EventData[] = [];
         const business = await Store.businessStore.get();
@@ -287,7 +287,7 @@ export class CalendarData {
         const startDate = start.toDate(CalendarData.timeZone);
         const endDate = end.toDate(CalendarData.timeZone);
 
-        endDate.setHours(23, 59, 59, 99);
+        endDate.setHours(24, 0, 0, 0);
 
         let events: EventData[] = [];
         const business = await Store.businessStore.get();
