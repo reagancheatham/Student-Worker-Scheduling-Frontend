@@ -3,7 +3,7 @@ import { Employee } from "./employee.ts";
 
 export class TaskCheckOff extends DatabaseModel {
     public constructor(
-        readonly id: number,
+        public id: number,
         readonly taskID: number,
         readonly employee: Employee,
     ) {
@@ -18,7 +18,7 @@ export class TaskCheckOff extends DatabaseModel {
             data["taskID"] ?? 0,
             employeeData
                 ? Employee.createFromData(employeeData)
-                : new Employee(0, "", "", "", "", ""),
+                : new Employee(0, 0, 0, "", "", "", "", ""),
         );
     }
 

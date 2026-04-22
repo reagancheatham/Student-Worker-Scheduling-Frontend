@@ -1,16 +1,15 @@
 import { Business } from "@classes/database/business";
 import { TimeOffRequest } from "@classes/database/timeOffRequest";
-import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseServices } from "@classes/util/databaseServices";
 import { apiClient } from "./services";
+import { Employee } from "@classes/database/employee";
 
 const API_ROOT: string = "timeOffRequests";
 
 export class TimeOffRequestServices {
     static async create(timeOffRequest: TimeOffRequest) {
-        await DatabaseServices.create(TimeOffRequest, API_ROOT, timeOffRequest);
+        await apiClient.post(API_ROOT, timeOffRequest);
     }
-
     static async update(timeOffRequest: TimeOffRequest) {
         await DatabaseServices.update(TimeOffRequest, API_ROOT, timeOffRequest);
     }
@@ -30,6 +29,13 @@ export class TimeOffRequestServices {
         return await DatabaseServices.getAll<TimeOffRequest>(
             TimeOffRequest,
             `${API_ROOT}/business/${business.id}`,
+        );
+    }
+
+    static async getAllForEmployee(employee: Employee) {
+        return await DatabaseServices.getAll<TimeOffRequest>(
+            TimeOffRequest,
+            `${API_ROOT}/employee/${employee.id}`,
         );
     }
 

@@ -20,6 +20,13 @@ export class ShiftServices {
         return await DatabaseServices.get<Shift>(Shift, `${API_ROOT}/${id}`);
     }
 
+    static async getAllWithoutEmployee() {
+        return await DatabaseServices.getAll<Shift>(
+            Shift,
+            `${API_ROOT}/unassigned`,
+        );
+    }
+
     static async getAllForBusiness(businessID: number) {
         return await DatabaseServices.getAll<Shift>(
             Shift,
@@ -32,8 +39,8 @@ export class ShiftServices {
         startTime: Date,
         endTime: Date,
     ) {
-        const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
-        const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
+        const startString = encodeURIComponent(startTime.toISOString());
+        const endString = encodeURIComponent(endTime.toISOString());
 
         return await DatabaseServices.getAll<Shift>(
             Shift,
@@ -46,12 +53,13 @@ export class ShiftServices {
         startTime: Date,
         endTime: Date,
     ) {
-        const startString = `${startTime.getMonth() + 1}-${startTime.getDate()}-${startTime.getFullYear()}-${startTime.getHours()}:${startTime.getMinutes()}`;
-        const endString = `${endTime.getMonth() + 1}-${endTime.getDate()}-${endTime.getFullYear()}-${endTime.getHours()}:${endTime.getMinutes()}`;
-
+        const startString = encodeURIComponent(startTime.toISOString());
+        const endString = encodeURIComponent(endTime.toISOString());
         return await DatabaseServices.getAll<Shift>(
             Shift,
             `${API_ROOT}/employee/${employeeID}/startTime=${startString}/endTime=${endString}`,
         );
     }
+
+
 }

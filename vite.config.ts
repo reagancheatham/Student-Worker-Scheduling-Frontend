@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
         plugins: [
             vue(),
             ui({
+                icons: {
+                    collections: ["simple-icons"],
+                },
                 theme: {
                     colors: [
                         "primary",
@@ -30,6 +33,7 @@ export default defineConfig(({ mode }) => {
                         "event-red",
                         "event-yellow",
                         "event-purple",
+                        "event-mist",
                     ],
                 },
                 ui: {
@@ -42,6 +46,7 @@ export default defineConfig(({ mode }) => {
                         "event-red": "red",
                         "event-yellow": "yellow",
                         "event-purple": "purple",
+                        "event-mist": "mist",
                     },
                 },
                 autoImport: {},
@@ -49,6 +54,7 @@ export default defineConfig(({ mode }) => {
             VitePWA({
                 registerType: "autoUpdate",
                 includeAssets: ["avatar.png", "OC.png", "mobileOC.png"],
+                manifest: false,
                 workbox: {
                     globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
                 },

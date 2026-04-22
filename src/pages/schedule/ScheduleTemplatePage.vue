@@ -15,7 +15,8 @@ onMounted(async () => {
 
     const lastEditedTemplate = await Store.lastEditedTemplateStore.get();
 
-    if (lastEditedTemplate) selectedTemplate.value = lastEditedTemplate;
+    if (lastEditedTemplate)
+        selectedTemplate.value = lastEditedTemplate;
 
     watch(
         selectedTemplate,
@@ -78,7 +79,7 @@ async function updateTemplatesList(): Promise<void> {
     height: 100vh;
 }
 
-.scheduleContainer {
+.templateScheduleContainer {
     height: 82vh;
     padding-bottom: 20px;
 }
@@ -89,7 +90,7 @@ body {
 </style>
 
 <template>
-    <div v-if="selectedTemplate" class="scheduleContainer">
+    <div v-if="selectedTemplate" class="templateScheduleContainer">
         <ScheduleCalendar
             header
             editable

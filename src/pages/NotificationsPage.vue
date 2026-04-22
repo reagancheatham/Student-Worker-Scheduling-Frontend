@@ -6,10 +6,6 @@ import { MessageNotificationServices } from "../services/notifications/messageNo
 import { ShiftTradeRequestNotificationServices } from "../services/notifications/shfitTradeRequestNotificationServices";
 import { ShiftOfferRequestNotificationServices } from "../services/notifications/shiftOfferRequestNotificationServices";
 import { TimeOffRequestNotificationServices } from "../services/notifications/timeOffRequestNotificationServices";
-import { ShiftOfferRequestNotification } from "@classes/database/notifications/shiftOfferRequestNotification";
-import { ShiftTradeRequestNotification } from "@classes/database/notifications/shiftTradeRequestNotification";
-import { TimeOffRequestNotification } from "@classes/database/notifications/timeOffRequestNotification";
-import { MessageNotification } from "@classes/database/notifications/messageNotification";
 
 const toast = useToast();
 
@@ -127,11 +123,11 @@ function buildShiftTradeRequestRow(
     return {
         notification,
         requestingEmployeeName:
-            tradeRequest.employee?.fullName ?? "Unknown Employee",
+            tradeRequest.shift!.employee!.fullName ?? "Unknown Employee",
         targetEmployeeName:
             tradeRequest.targetEmployee?.fullName ?? "Unknown Employee",
-        shiftStartTime: formatDateWithTime(tradeRequest.shift.startTime),
-        shiftEndTime: formatDateWithTime(tradeRequest.shift.endTime),
+        shiftStartTime: formatDateWithTime(tradeRequest.shift!.startTime),
+        shiftEndTime: formatDateWithTime(tradeRequest.shift!.endTime),
         tradeMessage: tradeRequest.employeeMessage,
     };
 }
@@ -187,8 +183,6 @@ const shiftOfferRequestColumns: TableColumn<ShiftOfferRequestRow>[] = [
 const shiftTradeRequestColumns: TableColumn<ShiftTradeRequestRow>[] = [
     { accessorKey: "requestingEmployeeName", header: "Employee" },
     { accessorKey: "targetEmployeeName", header: "Target Employee" },
-    { accessorKey: "shiftStartTime", header: "Shift Start" },
-    { accessorKey: "shiftEndTime", header: "Shift End" },
     { accessorKey: "tradeMessage", header: "Trade Message" },
     { id: "actions", meta: { class: { td: "text-right" } } },
 ];
@@ -362,9 +356,10 @@ onMounted(async () => {
             </UTable>
         </UCard>
 
-        <UCard :ui="{ header: 'font-semibold text-black' }">
+        <UCard class="min-w-0" :ui="{ header: 'font-semibold text-black' }">
             <template #header>Shift Trade Requests</template>
             <UTable
+                class="w-full table-fixed"
                 :columns="shiftTradeRequestColumns"
                 :data="shiftTradeRequestRows"
             >

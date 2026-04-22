@@ -30,6 +30,7 @@ const emit = defineEmits({
         v-if="model instanceof ShiftEventData"
         v-model="model"
         :is-open="isOpen"
+        :data="data"
         :creator="creator"
         @close-requested="emit('closeRequested')"
         @event-deleted="emit('eventDeleted')"

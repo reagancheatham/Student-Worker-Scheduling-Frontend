@@ -14,6 +14,12 @@ import NoBusinessPage from "../pages/NoBusinessPage.vue";
 import ScheduleTemplatePage from "../pages/schedule/ScheduleTemplatePage.vue";
 import RolesPage from "../pages/employees/RolesPage.vue";
 import TaskListsPage from "../pages/schedule/TaskListsPage.vue";
+import UserDesktopLayout from "@components/templates/UserDesktopLayout.vue";
+import TimeSheetsPage from "../pages/userDesktop/TimeSheetsPage.vue";
+import TimeOffPage from "../pages/userDesktop/TimeOffPage.vue";
+import UserCalendarPage from "../pages/userDesktop/UserCalendarPage.vue";
+import UserShiftBoardPage from "../pages/userDesktop/UserShiftBoardPage.vue";
+import UserClockInPage from "../pages/userDesktop/UserClockInPage.vue";
 
 class Route {
     constructor(
@@ -66,16 +72,26 @@ const navbarLayout = Route.create(
             "Schedule Template Editor",
         ),
         Route.create("taskLists", TaskListsPage, "Task Lists"),
-        Route.create(
-            "notifications",
-            NotificationsPage,
-            "Notifications",
-        ),
+        Route.create("notifications", NotificationsPage, "Notifications"),
         Route.create("employeeList", EmployeesPage, "Employee List"),
         Route.create("roles", RolesPage, "Roles"),
         Route.create("settings", SettingsPage, "Settings"),
     ],
     "/nav/dashboard",
+);
+
+const userDesktopLayout = Route.create(
+    "/user",
+    UserDesktopLayout,
+    "UserLayout",
+    [
+        Route.create("timeSheet", TimeSheetsPage, "Time Sheets").noAuth(),
+        Route.create("timeOff", TimeOffPage, "Time Off").noAuth(),
+        Route.create("calendar", UserCalendarPage, "Calendar").noAuth(),
+        Route.create("shiftBoard", UserShiftBoardPage, "Shift Board").noAuth(),
+        Route.create("clockIn", UserClockInPage, "Clock In").noAuth(),
+    ],
+    "/user/timeSheet",
 );
 
 export const routes = {
@@ -109,6 +125,7 @@ export const routes = {
         ],
         "/mobile/homePage",
     ),
+    UserDesktopLayout: userDesktopLayout,
     Admin: Route.create("/admin", AdminPage, "Admin"),
 };
 
@@ -121,4 +138,12 @@ export const subRoutes = {
     EmployeeList: navbarLayout.children[5],
     Roles: navbarLayout.children[6],
     Settings: navbarLayout.children[7],
+};
+
+export const userSubRoutes = {
+    TimeSheets: userDesktopLayout.children[0],
+    TimeOff: userDesktopLayout.children[1],
+    Calendar: userDesktopLayout.children[2],
+    ShiftBoard: userDesktopLayout.children[3],
+    ClockIn: userDesktopLayout.children[4],
 };

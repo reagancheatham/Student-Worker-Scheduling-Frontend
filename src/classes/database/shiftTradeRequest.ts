@@ -5,9 +5,8 @@ import { Shift } from "./shift.ts";
 export class ShiftTradeRequest extends DatabaseModel {
     constructor(
         public id: number,
-        public employee: Employee | null,
-        public targetEmployee: Employee | null,
-        public shift: Shift,
+        public targetEmployee: Employee | undefined,
+        public shift: Shift | undefined,
         public employeeMessage: string,
         public timeSent: Date,
     ) {
@@ -15,14 +14,29 @@ export class ShiftTradeRequest extends DatabaseModel {
     }
 
     public static createFromData(data: any): ShiftTradeRequest {
-        const shift = Shift.createFromData(data["Shift"]) ?? null;
+        const shift = data["Shift"]
+            ? Shift.createFromData(data["Shift"])
+            : undefined;
+        const employee = data["TargetEmployee"]
+            ? Employee.createFromData(data["TargetEmployee"])
+            : undefined;
+
         return new ShiftTradeRequest(
             data["id"] ?? 0,
-            shift?.employee ?? null,
-            Employee.createFromData(data["TargetEmployee"]) ?? null,
+            employee,
             shift,
             data["employeeMessage"] ?? "",
             data["timeSent"] ?? Date.now(),
         );
+    }
+
+    public toJSON() {
+        return {
+            id: this.id,
+            shiftID: this.shift?.id,
+            targetEmployeeID: this.targetEmployee?.id,
+            employeeMessage: this.employeeMessage,
+            timeSent: this.timeSent,
+        };
     }
 }

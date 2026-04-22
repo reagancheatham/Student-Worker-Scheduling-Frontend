@@ -16,6 +16,11 @@ import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { ShiftTemplateEventData } from "./shiftTemplateEventData.ts";
 import { TemplateCalendarData } from "./templateCalendarData.ts";
 import { WeekDay } from "@classes/util/weekDay.ts";
+import { UserClassServices } from "../../services/userClassServices.ts";
+import { UserClass } from "@classes/database/userClass.ts";
+import { EmployeeUnavailability } from "@classes/database/employeeUnavailability.ts";
+import { EmployeeUnavailabilityServices } from "../../services/employeeUnavailabilityServices.ts";
+import { EmployeeServices } from "../../services/employeeServices.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -37,6 +42,12 @@ export class CalendarData {
     public readonly refEmployees = ref<Employee[]>([]);
     public readonly refRelevantEmployees = ref<Employee[]>([]);
     public readonly refRelevantEvents = ref<EventData[]>([]);
+    public readonly refUserClasses = ref<UserClass[]>([]);
+    public readonly refEmployeeUnavailabilities = ref<EmployeeUnavailability[]>(
+        [],
+    );
+    public readonly refEmployeeClassFilter = ref<number[]>([]);
+    public readonly isEmployeeView: boolean = false;
     private readonly refTemplateData = ref<TemplateCalendarData>();
     private readonly refHasUnassignedShift = ref(false);
     private readonly refHasValidUnpublishedShift = ref(false);
@@ -45,6 +56,7 @@ export class CalendarData {
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
         selectedTemplate?: ScheduleTemplate,
+        isEmployeeView: boolean = false,
     ) {
         if (selectedTemplate)
             this.refTemplateData.value = new TemplateCalendarData(
@@ -53,13 +65,22 @@ export class CalendarData {
 
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
+        this.isEmployeeView = isEmployeeView;
+
+        if (isEmployeeView) this.initializeEmployeeView();
     }
 
     public static create(
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
+        employeeView: boolean,
     ): CalendarData {
-        return new CalendarData(selectedView, selectedDay);
+        return new CalendarData(
+            selectedView,
+            selectedDay,
+            undefined,
+            employeeView,
+        );
     }
 
     public static createTemplate(
@@ -145,6 +166,15 @@ export class CalendarData {
     private async updateRelevantEvents(): Promise<EventData[]> {
         let relevantEvents: EventData[];
 
+        const business = await Store.businessStore.get();
+
+        if (business)
+            this.refUserClasses.value =
+                await UserClassServices.getAllClassesForBusiness(business);
+        else this.refUserClasses.value = [];
+
+        await this.updateUnavailabilities();
+
         if (this.isTemplate)
             relevantEvents =
                 await this.refTemplateData.value!.getEventsForTemplate(
@@ -190,11 +220,43 @@ export class CalendarData {
         return relevantEvents;
     }
 
+    private async updateUnavailabilities() {
+        const business = await Store.businessStore.get();
+
+        if (!business) {
+            this.refEmployeeUnavailabilities.value = [];
+            return;
+        }
+
+        const allValues =
+            await EmployeeUnavailabilityServices.getAllForBusiness(business);
+
+        if (this.selectedView === CalendarMode.Day) {
+            const startDate = this.selectedDay.toDate(CalendarData.timeZone);
+            const endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59, 99);
+
+            this.refEmployeeUnavailabilities.value = allValues.filter(
+                (eu) => eu.startTime > startDate && eu.endTime < endDate,
+            );
+        } else {
+            const startDate = this.selectedWeek.start.toDate(
+                CalendarData.timeZone,
+            );
+            const endDate = this.selectedWeek.end.toDate(CalendarData.timeZone);
+            endDate.setHours(23, 59, 59, 99);
+
+            this.refEmployeeUnavailabilities.value = allValues.filter(
+                (eu) => eu.startTime > startDate && eu.endTime < endDate,
+            );
+        }
+    }
+
     private async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
         const beginningOfDay = date.toDate(CalendarData.timeZone);
         const endOfDay = date.toDate(CalendarData.timeZone);
         beginningOfDay.setHours(0, 0, 0, 0);
-        endOfDay.setHours(23, 59, 59, 99);
+        endOfDay.setHours(24, 0, 0, 0);
 
         let events: EventData[] = [];
         const business = await Store.businessStore.get();
@@ -209,6 +271,9 @@ export class CalendarData {
             beginningOfDay,
             endOfDay,
         ).then((shifts) => {
+            if (this.isEmployeeView)
+                shifts = shifts.filter((shift) => shift.published);
+
             events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
@@ -222,7 +287,7 @@ export class CalendarData {
         const startDate = start.toDate(CalendarData.timeZone);
         const endDate = end.toDate(CalendarData.timeZone);
 
-        endDate.setHours(23, 59, 59, 99);
+        endDate.setHours(24, 0, 0, 0);
 
         let events: EventData[] = [];
         const business = await Store.businessStore.get();
@@ -237,6 +302,9 @@ export class CalendarData {
             startDate,
             endDate,
         ).then((shifts) => {
+            if (this.isEmployeeView)
+                shifts = shifts.filter((shift) => shift.published);
+
             events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
@@ -261,8 +329,34 @@ export class CalendarData {
             relevantEmployees.push(employee);
         }
 
-        relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+        for (const userClass of this.refUserClasses.value) {
+            const employee = userClass.employee;
+
+            if (!relevantEmployees.find((e) => e.id === employee.id))
+                relevantEmployees.push(employee);
+        }
+
+        for (const unavailability of this.refEmployeeUnavailabilities.value) {
+            const employee = unavailability.employee;
+
+            if (!relevantEmployees.find((e) => e.id === employee.id))
+                relevantEmployees.push(employee);
+        }
+
+        const currentEmployee = await Store.employeeStore.get();
+
+        relevantEmployees = relevantEmployees.sort((e1, e2) => {
+            if (e1.id === currentEmployee?.id) return -1;
+            else if (e2.id === currentEmployee?.id) return 1;
+            else return e1.id - e2.id;
+        });
 
         return relevantEmployees;
+    }
+
+    private async initializeEmployeeView() {
+        const employee = await Store.employeeStore.get();
+
+        if (employee) this.refEmployeeClassFilter.value = [employee.id];
     }
 }

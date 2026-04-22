@@ -1,4 +1,6 @@
+import { CalendarData } from "./calendarData.ts";
 import { EventColor } from "./eventColor.ts";
+import { EventStyleData } from "./eventStyleData.ts";
 import { EventTime } from "./eventTime.ts";
 
 export abstract class EventData {
@@ -22,6 +24,9 @@ export abstract class EventData {
     }
 
     bisects(data: EventData): boolean {
+        if (this.startTime.day !== this.endTime.day) return false;
+        else if (data.startTime.day !== data.endTime.day) return false;
+
         return (
             (this.startTime.isAfterOrEqual(data.startTime) &&
                 this.startTime.isBefore(data.endTime) &&
@@ -37,4 +42,12 @@ export abstract class EventData {
     abstract destroy(): Promise<void>;
 
     abstract isValid(): boolean;
+
+    abstract getClass(styleData: EventStyleData): string;
+
+    abstract getStyle(styleData: EventStyleData): any;
+
+    abstract getLabel(styleData: EventStyleData): string;
+
+    abstract getGridArea(calendarData: CalendarData): string;
 }

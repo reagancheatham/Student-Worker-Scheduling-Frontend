@@ -20,8 +20,6 @@ import {
 } from "vue";
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { Employee } from "@classes/database/employee.ts";
-import { TaskList } from "@classes/database/taskList.ts";
-import { TaskListServices } from "../../../services/taskListServices.ts";
 import { Task } from "@classes/database/task.ts";
 import { TaskServices } from "../../../services/taskServices.ts";
 import { EmployeeServices } from "../../../services/employeeServices.ts";
@@ -39,8 +37,13 @@ const model = defineModel<ShiftEventData>({
     required: true,
 });
 
-const { isOpen, creator = false } = defineProps<{
+const {
+    isOpen,
+    data,
+    creator = false,
+} = defineProps<{
     isOpen: boolean;
+    data: CalendarData;
     creator?: boolean;
 }>();
 
@@ -170,16 +173,62 @@ const isValidRole = computed(() => {
         );
 });
 
-const employeeItems = computed(() => {
-    if (!state.role) {
-        return employees.value;
-    } else {
-        return employees.value.map((employee) => {
-            let chip;
+const isUnavailable = computed(() => {
+    const employee = state.employee;
+    const startTime = model.value.shift.startTime;
+    const endTime = model.value.shift.endTime;
 
-            if (
+    if (!employee) return false;
+    else
+        return (
+            data.refEmployeeUnavailabilities.value.find((eu) => {
+                return (
+                    eu.employee.id === employee.id &&
+                    ((startTime >= eu.startTime && startTime < eu.endTime) ||
+                        (eu.startTime >= startTime && eu.startTime < endTime))
+                );
+            }) !== undefined
+        );
+});
+
+const employeeItems = computed(() => {
+    return employees.value
+        .toSorted((e1, e2) => {
+            if (!state.role) return 0;
+
+            const firstValid =
+                e1.roles.find((r) => r.id === state.role!.id) !== undefined;
+            const secondValid =
+                e2.roles.find((r) => r.id === state.role!.id) !== undefined;
+
+            if (firstValid && !secondValid) return -1;
+            else if (secondValid && !firstValid) return 1;
+            else return 0;
+        })
+        .map((employee) => {
+            let chip;
+            const startTime = model.value.shift.startTime;
+            const endTime = model.value.shift.endTime;
+
+            const unavailability = data.refEmployeeUnavailabilities.value.find(
+                (eu) => {
+                    return (
+                        eu.employee.id === employee.id &&
+                        ((eu.startTime <= startTime && eu.endTime >= endTime) ||
+                            (eu.startTime >= startTime &&
+                                eu.endTime <= endTime))
+                    );
+                },
+            );
+
+            if (unavailability)
+                chip = {
+                    color: "error",
+                };
+            else if (
+                state.role &&
                 employee.roles.find((r) => r.id === state.role!.id) ===
-                undefined
+                    undefined
             )
                 chip = {
                     color: "warning",
@@ -189,7 +238,6 @@ const employeeItems = computed(() => {
 
             return employee;
         });
-    }
 });
 
 let deletedTasks: Task[] = [];
@@ -553,6 +601,19 @@ function pasteTemplate(template: TaskListTemplate): void {
                             decorative
                         />
                         <UFormField label="Assigned Employee" name="employee">
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.employee"
+                                    label-key="fullName"
+                                    :items="employeeItems"
+                                    clear
+                                    placeholder="Select Employee"
+                                    :autofocus="false"
+                                />
+                            </div>
+                        </UFormField>
+                        <div class="flex flex-col justify-end gap-1">
                             <UChip
                                 :show="!isValidRole"
                                 size="3xl"
@@ -561,20 +622,21 @@ function pasteTemplate(template: TaskListTemplate): void {
                                 :ui="{
                                     base: 'p-2',
                                 }"
-                            >
-                                <div @pointerdown.stop.prevent>
-                                    <USelectMenu
-                                        class="min-w-36"
-                                        v-model="state.employee"
-                                        label-key="fullName"
-                                        :items="employeeItems"
-                                        clear
-                                        placeholder="Select Employee"
-                                        :autofocus="false"
-                                    />
-                                </div>
-                            </UChip>
-                        </UFormField>
+                                standalone
+                                inset
+                            />
+                            <UChip
+                                :show="isUnavailable"
+                                size="3xl"
+                                text="Unavailable"
+                                color="error"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                                standalone
+                                inset
+                            />
+                        </div>
                     </div>
                     <UFormField name="taskList">
                         <div

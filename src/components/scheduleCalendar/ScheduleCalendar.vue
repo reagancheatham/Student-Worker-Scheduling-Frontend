@@ -4,17 +4,19 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
-import { onMounted, ref, shallowRef } from "vue";
+import { onMounted, ref, shallowRef, watch } from "vue";
 
 const {
     header,
     editable = false,
     template = undefined,
+    employeeView = false,
     defaultView = CalendarMode.Week,
 } = defineProps<{
     header?: boolean;
     editable?: boolean;
     template?: ScheduleTemplate;
+    employeeView?: boolean;
     defaultView?: CalendarMode;
 }>();
 
@@ -31,14 +33,23 @@ const gridClasses = new Map<CalendarMode, string>([
     [CalendarMode.Month, "calendarGrid monthGrid"],
 ]);
 
-onMounted(() => {
-    data.value.updateRelevantData();
-});
+watch(
+    () => template,
+    (_) => {
+        data.value = getInitialCalendarData();
+        data.value.updateRelevantData();
+    },
+    { immediate: true },
+);
 
 function getInitialCalendarData(): CalendarData {
     return template
         ? CalendarData.createTemplate(defaultView, template)
-        : CalendarData.create(defaultView, today(CalendarData.timeZone));
+        : CalendarData.create(
+              defaultView,
+              today(CalendarData.timeZone),
+              employeeView,
+          );
 }
 
 function updateCellSize(size: Vector2): void {
@@ -139,7 +150,12 @@ function cancelEdit(): void {
         class="calendarContainer"
         :style="getContainerStyle()"
     >
-        <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
+        <CalendarHeader
+            v-if="header"
+            :data="data"
+            :cell-size="cellSize"
+            :employee-view="employeeView"
+        />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
