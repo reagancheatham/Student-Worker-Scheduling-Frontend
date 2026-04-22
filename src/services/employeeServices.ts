@@ -78,11 +78,4 @@ export class EmployeeServices {
             console.error(`Error fetching employee: ${error}`);
         }
     }
-
-    public static async getEmployeeByUser(id: number){
-        return await DatabaseServices.get<Employee>(
-            Employee,
-            `${API_ROOT}/user/${id}`,
-        );
-    }
 }

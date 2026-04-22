@@ -37,16 +37,12 @@ const pendingRequests = computed<PendingRequestItem[]>(() => [
 const overlay = useOverlay();
 const shiftModal = overlay.create(ShiftDetailsModal);
 
-console.log("trades", tradeRequests);
-console.log("offers", offerRequests);
-
-console.log(pendingRequests);
-
 onMounted(async () => {
     business.value = await Store.businessStore.get();
     user.value = await Store.userStore.get();
-    userEmployee.value = await EmployeeServices.getEmployeeByUser(
-        user.value.id,
+    userEmployee.value = await EmployeeServices.getEmployeeForUserAndBusiness(
+        user.value,
+        business.value,
     );
 
     await loadData();
@@ -115,7 +111,6 @@ async function loadData() {
             await TradeServices.getAllPendingTradeRequests(business.value.id)
         ).filter(
             (r) =>
-                r.userID === user.value.id ||
                 r.targetEmployeeID === userEmployee.value.id,
         );
 
@@ -241,7 +236,7 @@ async function loadData() {
                                         }}
                                     </div>
                                     <div>
-                                        Swaping with {{ shift.firstName }}
+                                        Swapping with {{ shift.firstName }}
                                         {{ shift.lastName }}
                                     </div>
                                     <div>
