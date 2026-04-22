@@ -40,6 +40,7 @@ export class BusinessStoreField extends StoreField<Business> {
 
     public set(value: Business): void {
         localStorage.setItem(STORE_KEY, JSON.stringify(value));
+        Store.employeeStore.clear();
     }
 
     public clear(): void {

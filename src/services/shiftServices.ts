@@ -20,6 +20,10 @@ export class ShiftServices {
         return await DatabaseServices.get<Shift>(Shift, `${API_ROOT}/${id}`);
     }
 
+    static async getAllWithoutEmployee() {
+        return await DatabaseServices.getAll<Shift>(Shift, `${API_ROOT}/unassigned`)
+    }
+
     static async getAllForBusiness(businessID: number) {
         return await DatabaseServices.getAll<Shift>(
             Shift,

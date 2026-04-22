@@ -24,4 +24,14 @@ export class TimeOffRequest extends DatabaseModel {
             data["status"] ?? ApprovalStatus.Pending,
         );
     }
+
+    public toJSON() {
+        return {
+            employeeID: this.employee.id,
+            startDate: this.startDate,
+            endDate: this.endDate,
+            reason: this.reason,
+            approvalStatus: this.status,
+        };
+    }
 }
