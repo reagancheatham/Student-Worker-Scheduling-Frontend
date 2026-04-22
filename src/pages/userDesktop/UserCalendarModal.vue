@@ -7,7 +7,6 @@ import { Store } from "@classes/util/store/store.ts";
 import ShiftOfferModal from "./ShiftOfferModal.vue";
 import ShiftTradeModal from "./ShiftTradeModal.vue";
 import { User } from "@classes/database/user";
-import { EmployeeServices } from "../../services/employeeServices";
 import { TaskCheckOff } from "@classes/database/taskCheckOff";
 
 const model = defineModel<ShiftEventData>({ required: true });

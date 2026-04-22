@@ -18,6 +18,7 @@ import UserDesktopLayout from "@components/templates/UserDesktopLayout.vue";
 import TimeSheetsPage from "../pages/userDesktop/TimeSheetsPage.vue";
 import TimeOffPage from "../pages/userDesktop/TimeOffPage.vue";
 import UserCalendarPage from "../pages/userDesktop/UserCalendarPage.vue";
+import UserShiftBoardPage from "../pages/userDesktop/UserShiftBoardPage.vue";
 
 class Route {
     constructor(
@@ -90,6 +91,7 @@ const userDesktopLayout = Route.create(
         Route.create("timeSheet", TimeSheetsPage, "Time Sheets").noAuth(),
         Route.create("timeOff", TimeOffPage, "Time Off").noAuth(),
         Route.create("calendar", UserCalendarPage, "Calendar").noAuth(),
+        Route.create("shiftBoard", UserShiftBoardPage, "Shift Board").noAuth()
     ],
     "/user/timeSheet"
 )
@@ -144,4 +146,5 @@ export const userSubRoutes = {
     TimeSheets: userDesktopLayout.children[0],
     TimeOff: userDesktopLayout.children[1],
     Calendar: userDesktopLayout.children[2],
+    ShiftBoard: userDesktopLayout.children[3],
 }

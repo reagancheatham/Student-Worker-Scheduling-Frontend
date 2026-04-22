@@ -20,6 +20,11 @@ const links = computed(() => [
         icon: "i-lucide-calendar-off",
         to: userSubRoutes.Calendar,
     },
+    {
+        label: "Shift Board",
+        icon: "i-lucide-calendar-off",
+        to: userSubRoutes.ShiftBoard,
+    },
 ]);
 
 const actions = computed(() => [
