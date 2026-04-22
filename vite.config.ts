@@ -13,9 +13,6 @@ export default defineConfig(({ mode }) => {
         plugins: [
             vue(),
             ui({
-                icons: {
-                    collections: ['simple-icons']
-                }
                 theme: {
                     colors: [
                         "primary",
@@ -32,6 +29,9 @@ export default defineConfig(({ mode }) => {
                     ],
                 },
                 ui: {
+                    icons: {
+                        collections: ["simple-icons"],
+                    },
                     colors: {
                         "event-blue": "sky",
                         "event-orange": "orange",
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
                         "event-purple": "purple",
                     },
                 },
-                autoImport: true,
+                autoImport: {},
             }),
         ],
         server: {
