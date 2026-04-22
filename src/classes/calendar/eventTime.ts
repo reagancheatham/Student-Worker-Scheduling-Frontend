@@ -9,12 +9,20 @@ export class EventTime {
         public minute: number,
     ) {}
 
-    static fromDate(date: Date): EventTime {
+    static fromDate(date: Date, endTime: boolean = false): EventTime {
+        let day = date.getDate();
+        let hours = date.getHours();
+
+        if (endTime && hours === 0) {
+            day--;
+            hours = 24;
+        }
+
         return new EventTime(
             date.getFullYear(),
             date.getMonth() + 1,
-            date.getDate(),
-            date.getHours(),
+            day,
+            hours,
             date.getMinutes(),
         );
     }

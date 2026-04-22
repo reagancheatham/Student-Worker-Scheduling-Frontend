@@ -13,7 +13,7 @@ export class ShiftEventData extends EventData {
         super(
             shift.name,
             EventTime.fromDate(shift.startTime),
-            EventTime.fromDate(shift.endTime),
+            EventTime.fromDate(shift.endTime, true),
             shift.color,
         );
     }
@@ -102,6 +102,9 @@ export class ShiftEventData extends EventData {
     public override getGridArea(calendarData: CalendarData): string {
         const startTime = this.startTime;
         const endTime = this.endTime;
+
+        console.log("startTime: " + JSON.stringify(startTime));
+        console.log("endtime: " + JSON.stringify(endTime));
 
         if (calendarData.selectedView === CalendarMode.Day) {
             let row = 1;
