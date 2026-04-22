@@ -51,8 +51,9 @@ onMounted(async () => {
 async function openShiftModal(shiftData, isTrade) {
     shiftModal.open({
         shift: shiftData,
-        name: business.value.name,
+        business: business.value,
         isTrade: isTrade,
+        swapable: false,
 
         onAccept: async (accepted: boolean) => {
             if (!accepted) return; //not sure when ill hit this

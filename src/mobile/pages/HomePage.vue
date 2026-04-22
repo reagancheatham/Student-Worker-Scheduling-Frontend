@@ -12,6 +12,7 @@ import { User } from "@classes/database/user.ts";
 import MobileTaskListModal from "../modals/MobileTaskListModal.vue";
 import { TaskListServices } from "../../services/taskListServices";
 import { TaskServices } from "../../services/taskServices";
+import ShiftDetailsModal from "../modals/ShiftDetailsModal.vue";
 
 //TODO: What happens when there is not shifts this week? Need UI for empty
 
@@ -33,14 +34,23 @@ upcoming.setHours(23, 59, 59, 99);
 
 const overlay = useOverlay();
 const taskModal = overlay.create(MobileTaskListModal);
+const shiftModal = overlay.create(ShiftDetailsModal);
 
 async function openTaskListModal() {
     const taskList = await TaskListServices.getOrCreateForShift(currentShift.value.id);
-    console.log(JSON.stringify(taskList));
 
     taskModal.open({
         taskList: taskList,
     });
+}
+
+async function openShiftDetailsModal() {
+    shiftModal.open({
+        shift: currentShift.value,
+        business: business.value,
+        isTrade: false,
+        swapable: true,
+    })
 }
 
 onMounted(async () => {
@@ -197,6 +207,7 @@ async function clockOut() {
                 <UPageCard
                     v-for="shift in shifts.slice(1)"
                     orientation="horizontal"
+                    @click="openShiftDetailsModal()"
                 >
                     <div class="grid grid-cols-6 place-items-center">
                         <div class="col-span-1">
