@@ -3,6 +3,7 @@ import { apiClient } from "./services.ts";
 import { User } from "@classes/database/user.ts";
 import { DatabaseServices } from "@classes/util/databaseServices.ts";
 import { UserClass } from "@classes/database/userClass.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 const API_ROOT: string = "userClasses";
 
@@ -38,24 +39,23 @@ export class UserClassServices {
     }
 
     public static async getAllClassesForUser(user: User) {
-        try {
-            return DatabaseServices.getAll(
-                UserClass,
-                `${API_ROOT}/user/${user.id}`,
-            );
-        } catch (error: any) {
-            console.error(`Error fetching user classes: ${error}`);
-        }
+        return DatabaseServices.getAll<UserClass>(
+            UserClass,
+            `${API_ROOT}/user/${user.id}`,
+        );
     }
 
     public static async getAllClassesForBusiness(business: Business) {
-        try {
-            return DatabaseServices.getAll(
-                UserClass,
-                `${API_ROOT}/business/${business.id}`,
-            );
-        } catch (error: any) {
-            console.error(`Error fetching business classes: ${error}`);
-        }
+        return DatabaseServices.getAll<UserClass>(
+            UserClass,
+            `${API_ROOT}/business/${business.id}`,
+        );
+    }
+
+    public static async getAllClassesForEmployee(employee: Employee) {
+        return DatabaseServices.getAll<UserClass>(
+            UserClass,
+            `${API_ROOT}/employee/${employee.id}`,
+        );
     }
 }

@@ -14,7 +14,7 @@ import { CalendarData } from "@classes/calendar/calendarData.ts";
 
 export class ScheduleShiftTemplate extends DatabaseModel {
     constructor(
-        public readonly id: number,
+        public id: number,
         public readonly scheduleTemplateID: number,
         public name: string,
         public startTime: Date,

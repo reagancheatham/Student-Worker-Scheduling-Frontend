@@ -10,11 +10,13 @@ const {
     header,
     editable = false,
     template = undefined,
+    employeeView = false,
     defaultView = CalendarMode.Week,
 } = defineProps<{
     header?: boolean;
     editable?: boolean;
     template?: ScheduleTemplate;
+    employeeView?: boolean;
     defaultView?: CalendarMode;
 }>();
 
@@ -139,7 +141,12 @@ function cancelEdit(): void {
         class="calendarContainer"
         :style="getContainerStyle()"
     >
-        <CalendarHeader v-if="header" :data="data" :cell-size="cellSize" />
+        <CalendarHeader
+            v-if="header"
+            :data="data"
+            :cell-size="cellSize"
+            :employee-view="employeeView"
+        />
         <div class="calendarBody" :style="getBodyStyle()">
             <div :class="gridClasses.get(data.selectedView)!">
                 <CalendarWeekDayDisplay
