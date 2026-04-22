@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
             VitePWA({
                 registerType: "autoUpdate",
                 includeAssets: ["avatar.png", "OC.png", "mobileOC.png"],
+                manifest: false,
                 workbox: {
                     globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
                 },
