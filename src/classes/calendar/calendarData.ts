@@ -285,23 +285,22 @@ export class CalendarData {
         }
 
         relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+        const unavailabilities: EmployeeUnavailability[] = [];
 
-        this.refEmployeeUnavailabilities.value = [];
         const promises: Promise<void>[] = relevantEmployees.map(
             async (employee) => {
-                const unavailabilities =
+                const found =
                     await EmployeeUnavailabilityServices.getAllForEmployee(
                         employee,
                     );
-
-                this.refEmployeeUnavailabilities.value.push(
-                    ...unavailabilities,
-                );
+                    
+                unavailabilities.push(...found);
             },
         );
 
         await Promise.all(promises);
 
+        this.refEmployeeUnavailabilities.value = unavailabilities;
         return relevantEmployees;
     }
 }

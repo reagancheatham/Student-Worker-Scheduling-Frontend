@@ -152,7 +152,7 @@ function getEmployeeUnavailabilities(): EmployeeUnavailabilityEventData[] {
         if (!calendarData.refEmployeeClassFilter.value.includes(eu.employee.id))
             return;
 
-        const event = new EmployeeUnavailabilityEventData(eu);
+        const event = reactive(new EmployeeUnavailabilityEventData(eu));
         events.push(event);
     });
 
@@ -308,6 +308,8 @@ function getEmployeeForEvent(event: EventData): Employee | undefined {
         return event.template.employee;
     else if (event instanceof UserClassEventData)
         return event.userClass.employee;
+    else if (event instanceof EmployeeUnavailabilityEventData)
+        return event.employeeUnavailability.employee;
     else return undefined;
 }
 </script>

@@ -13,6 +13,8 @@ import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 import { fromWeekIndex } from "@classes/util/weekDay.ts";
 import { UserClassEventData } from "@classes/calendar/userClassEventData.ts";
+import { EmployeeUnavailabilityEventData } from "@classes/calendar/employeeUnavailabilityEventData.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 //#region Variables
 enum EventState {
@@ -53,7 +55,12 @@ const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
 
 const isEditable = computed(
-    () => props.editable && !(model.value instanceof UserClassEventData),
+    () =>
+        props.editable &&
+        !(
+            model.value instanceof UserClassEventData ||
+            model.value instanceof EmployeeUnavailabilityEventData
+        ),
 );
 
 let state: EventState = EventState.None;
@@ -68,6 +75,9 @@ let resizePointerStart: number;
 //#endregion
 
 onMounted(() => {
+    if (model.value instanceof EmployeeUnavailabilityEventData)
+        console.log("HERE");
+
     const elementValue = element.value.$el;
 
     if (!elementValue) return;
@@ -394,6 +404,18 @@ function closeModal(): void {
 function onEventDeleted(): void {
     props.calendarData.updateRelevantData();
 }
+
+function getEmployee(): Employee | undefined {
+    if (model.value instanceof ShiftEventData)
+        return model.value.shift.employee;
+    else if (model.value instanceof ShiftTemplateEventData)
+        return model.value.template.employee;
+    else if (model.value instanceof UserClassEventData)
+        return model.value.userClass.employee;
+    else if (model.value instanceof EmployeeUnavailabilityEventData)
+        return model.value.employeeUnavailability.employee;
+    else return undefined;
+}
 </script>
 
 <style>
@@ -428,13 +450,8 @@ function onEventDeleted(): void {
                         {{ model.startTime.toTimeString() }} -
                         {{ model.endTime.toTimeString() }}
                     </div>
-                    <div
-                        v-if="
-                            model instanceof ShiftEventData &&
-                            model.shift.employee
-                        "
-                    >
-                        {{ model.shift.employee.fullName }}
+                    <div v-if="getEmployee()">
+                        {{ getEmployee()?.fullName }}
                     </div>
                 </template>
             </UCard>
@@ -482,24 +499,10 @@ function onEventDeleted(): void {
                         }"
                     />
                     <UBadge
-                        v-if="model instanceof ShiftEventData"
+                        v-if="getEmployee()"
                         class="font-normal text-gray-700 flex flex-col items-start"
                         variant="ghost"
-                        :label="
-                            model.shift.employee
-                                ? `${model.shift.employee.firstName} ${model.shift.employee.lastName}`
-                                : ''
-                        "
-                    />
-                    <UBadge
-                        v-else-if="model instanceof ShiftTemplateEventData"
-                        class="font-normal text-gray-700 flex flex-col items-start"
-                        variant="ghost"
-                        :label="
-                            model.template.employee
-                                ? `${model.template.employee.firstName} ${model.template.employee.lastName}`
-                                : ''
-                        "
+                        :label="getEmployee() ? getEmployee()?.fullName : ''"
                     />
                 </div>
                 <div
