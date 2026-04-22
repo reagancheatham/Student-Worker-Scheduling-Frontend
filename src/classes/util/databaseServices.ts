@@ -10,6 +10,7 @@ export class DatabaseServices {
         try {
             const result = await apiClient.post(path, object);
 
+            console.log("creating model...");
             const modelValue = model.create(result.data);
             console.log(`${path} created successfully`);
 

@@ -40,7 +40,11 @@ onMounted(() => {
 function getInitialCalendarData(): CalendarData {
     return template
         ? CalendarData.createTemplate(defaultView, template)
-        : CalendarData.create(defaultView, today(CalendarData.timeZone));
+        : CalendarData.create(
+              defaultView,
+              today(CalendarData.timeZone),
+              employeeView,
+          );
 }
 
 function updateCellSize(size: Vector2): void {

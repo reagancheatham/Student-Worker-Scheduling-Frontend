@@ -46,6 +46,7 @@ export class CalendarData {
         [],
     );
     public readonly refEmployeeClassFilter = ref<number[]>([]);
+    public readonly isEmployeeView: boolean = false;
     private readonly refTemplateData = ref<TemplateCalendarData>();
     private readonly refHasUnassignedShift = ref(false);
     private readonly refHasValidUnpublishedShift = ref(false);
@@ -54,6 +55,7 @@ export class CalendarData {
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
         selectedTemplate?: ScheduleTemplate,
+        isEmployeeView: boolean = false,
     ) {
         if (selectedTemplate)
             this.refTemplateData.value = new TemplateCalendarData(
@@ -62,13 +64,20 @@ export class CalendarData {
 
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
+        this.isEmployeeView = isEmployeeView;
     }
 
     public static create(
         selectedView: CalendarMode,
         selectedDay: CalendarDate,
+        employeeView: boolean,
     ): CalendarData {
-        return new CalendarData(selectedView, selectedDay);
+        return new CalendarData(
+            selectedView,
+            selectedDay,
+            undefined,
+            employeeView,
+        );
     }
 
     public static createTemplate(
@@ -225,6 +234,9 @@ export class CalendarData {
             beginningOfDay,
             endOfDay,
         ).then((shifts) => {
+            if (this.isEmployeeView)
+                shifts = shifts.filter((shift) => shift.published);
+
             events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
@@ -253,6 +265,9 @@ export class CalendarData {
             startDate,
             endDate,
         ).then((shifts) => {
+            if (this.isEmployeeView)
+                shifts = shifts.filter((shift) => shift.published);
+
             events = shifts.map((shift) => new ShiftEventData(shift));
         });
 
@@ -293,7 +308,7 @@ export class CalendarData {
                     await EmployeeUnavailabilityServices.getAllForEmployee(
                         employee,
                     );
-                    
+
                 unavailabilities.push(...found);
             },
         );

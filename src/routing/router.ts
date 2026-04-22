@@ -33,8 +33,10 @@ router.beforeEach(async (to, from, next) => {
 
         const valid = await AuthServices.validateSession();
 
-        if (valid) next(routes.NavbarLayout.path);
-        else {
+        if (valid) {
+            if (user.permissionRoleID > 1) next(routes.NavbarLayout.path);
+            else next(routes.UserDesktopLayout.path);
+        } else {
             Store.clear();
             next();
         }

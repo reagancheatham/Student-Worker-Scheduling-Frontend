@@ -11,7 +11,18 @@ export class EmployeeStoreField extends StoreField<Employee> {
 
         if (storedEmployee) {
             try {
-                return Employee.createFromData(JSON.parse(storedEmployee));
+                const employeeData = JSON.parse(storedEmployee);
+
+                return new Employee(
+                    employeeData.id,
+                    employeeData.businessID,
+                    employeeData.studentID,
+                    employeeData.firstName,
+                    employeeData.lastName,
+                    employeeData.email,
+                    employeeData.phoneNumber,
+                    employeeData.roles,
+                );
             } catch (error: any) {
                 console.error(`Error retrieving employee: ${error}`);
                 return undefined;
@@ -24,7 +35,11 @@ export class EmployeeStoreField extends StoreField<Employee> {
                 if (!user) return undefined;
                 if (!business) return undefined;
 
-                const employee = await EmployeeServices.getEmployeeForUserAndBusiness(user, business)
+                const employee =
+                    await EmployeeServices.getEmployeeForUserAndBusiness(
+                        user,
+                        business,
+                    );
 
                 if (!employee) return undefined;
 

@@ -1,78 +1,68 @@
 <script setup lang="ts">
-import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { Task } from "@classes/database/task.ts";
 import { Store } from "@classes/util/store/store.ts";
 import ShiftOfferModal from "./ShiftOfferModal.vue";
 import ShiftTradeModal from "./ShiftTradeModal.vue";
-import { User } from "@classes/database/user";
 import { TaskCheckOff } from "@classes/database/taskCheckOff";
+import { Month } from "@classes/util/month.ts";
+import { TaskServices } from "../../services/taskServices.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 const model = defineModel<ShiftEventData>({ required: true });
 const { isOpen } = defineProps<{ isOpen: boolean }>();
 const emit = defineEmits({ closeRequested: () => true });
 
-const user = ref<User | undefined>(undefined);
-const tasks = ref<Task[]>([]);
+const currentEmployee = ref<Employee>();
 const isOfferOpen = ref(false);
 const isTradeOpen = ref(false);
-const isCurrentEmployee = ref(false);
-
 const taskColumns = [
     { accessorKey: "name", header: "Name" },
     { accessorFn: (task: Task) => task.checkOffs.length, header: "Check Offs" },
     { id: "action", header: "" },
 ];
 
-//test
-const shiftDate = "March 17, 2026";
-const shiftStart = "9:00 AM";
-const shiftEnd = "5:00 PM";
-const role = "Im Stuff";
-const name = "Max";
-
-onMounted(() => {
-    watch(() => isOpen, initializeState);
-    if (isOpen) initializeState();
+onMounted(async () => {
+    currentEmployee.value = await Store.employeeStore.get();
 });
 
-async function initializeState() {
-    if (!isOpen) return;
-    tasks.value = [
-        { name: "Open the store", checkOffs: [] } as any,
-        { name: "Restock shelves", checkOffs: [] } as any,
-        { name: "Clean break room", checkOffs: [] } as any,
-    ];
-    user.value = await Store.userStore.get();
-    const employee = await Store.employeeStore.get();
-    isCurrentEmployee.value =
-        !!employee && model.value.shift.employee?.id === employee.id;
-}
-
 function hasCheckedOff(task: Task): boolean {
-    if (!user.value) return false;
+    const user = Store.userStore.getImmediate();
 
-    return !!task.checkOffs.find(
-        (checkOff) => checkOff.employee.email === user.value!.email,
-    );
+    if (!user) return false;
+
+    const checkOff = task.checkOffs.find((c) => {
+        return c.employee.email === user.email;
+    });
+
+    if (checkOff) return true;
+    else return false;
 }
 
 async function checkOff(task: Task): Promise<void> {
-    const employee = await Store.employeeStore.get()
+    if (currentEmployee.value) {
+        let checkOff = new TaskCheckOff(0, task.id, currentEmployee.value);
 
-    if (employee) task.checkOffs.push(new TaskCheckOff(0, task.id, employee));
+        const result = await TaskServices.createCheckOff(checkOff);
+        checkOff.id = result.id;
+
+        task.checkOffs = [...task.checkOffs, checkOff];
+    }
 }
 
 async function removeCheckOff(task: Task): Promise<void> {
-    const employee = await Store.employeeStore.get()
-
-    if (employee) {
+    if (currentEmployee.value) {
         const index = task.checkOffs.findIndex(
-            (checkOff) => checkOff.employee.id === employee.id,
+            (checkOff) => checkOff.employee.id === currentEmployee.value!.id,
         );
 
-        if (index !== -1) task.checkOffs.splice(index, 1);
+        if (index !== -1) {
+            const checkOff = task.checkOffs[index];
+            task.checkOffs.splice(index, 1);
+
+            await TaskServices.deleteCheckOff(checkOff);
+        }
     }
 }
 
@@ -97,12 +87,17 @@ function close() {
                 <div class="flex gap-6">
                     <div>
                         <p class="text-xs text-muted mb-1">Date</p>
-                        <p class="font-medium">{{ shiftDate }}</p>
+                        <p class="font-medium">
+                            {{
+                                `${Month.getMonth(model.startTime.toDate().getMonth()).fullName} ${model.startTime.day}`
+                            }}
+                        </p>
                     </div>
                     <div>
                         <p class="text-xs text-muted mb-1">Time</p>
                         <p class="font-medium">
-                            {{ shiftStart }} — {{ shiftEnd }}
+                            {{ model.startTime.toTimeString() }} —
+                            {{ model.endTime.toTimeString() }}
                         </p>
                     </div>
                 </div>
@@ -110,19 +105,21 @@ function close() {
                 <div class="flex gap-6">
                     <div>
                         <p class="text-xs text-muted mb-1">Role</p>
-                        <p class="font-medium">{{ role }}</p>
+                        <p class="font-medium">{{ model.shift.role?.name }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-muted mb-1">Assigned Employee</p>
-                        <p class="font-medium">{{ name }}</p>
+                        <p class="font-medium">
+                            {{ model.shift.employee?.fullName }}
+                        </p>
                     </div>
                 </div>
                 <USeparator />
                 <div>
                     <p class="text-xs text-muted mb-2">Task List</p>
                     <UTable
-                        v-if="tasks.length"
-                        :data="tasks"
+                        v-if="model.shift?.taskList?.tasks"
+                        :data="model.shift.taskList.tasks"
                         :columns="taskColumns"
                         class="max-h-48 overflow-y-auto"
                         sticky="header"
@@ -150,7 +147,12 @@ function close() {
                 </div>
                 <USeparator />
                 <div class="flex justify-end gap-2">
-                    <template v-if="isCurrentEmployee">
+                    <template
+                        v-if="
+                            model.shift.employee &&
+                            model.shift.employee.id === currentEmployee?.id
+                        "
+                    >
                         <UButton
                             color="neutral"
                             variant="outline"

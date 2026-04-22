@@ -172,21 +172,32 @@ const employeeItems = computed(() => {
     if (!state.role) {
         return employees.value;
     } else {
-        return employees.value.map((employee) => {
-            let chip;
+        return employees.value
+            .toSorted((e1, e2) => {
+                const firstValid =
+                    e1.roles.find((r) => r.id === state.role!.id) !== undefined;
+                const secondValid =
+                    e2.roles.find((r) => r.id === state.role!.id) !== undefined;
 
-            if (
-                employee.roles.find((r) => r.id === state.role!.id) ===
-                undefined
-            )
-                chip = {
-                    color: "warning",
-                };
+                if (firstValid && !secondValid) return -1;
+                else if (secondValid && !firstValid) return 1;
+                else return 0;
+            })
+            .map((employee) => {
+                let chip;
 
-            (employee as any).chip = chip;
+                if (
+                    employee.roles.find((r) => r.id === state.role!.id) ===
+                    undefined
+                )
+                    chip = {
+                        color: "warning",
+                    };
 
-            return employee;
-        });
+                (employee as any).chip = chip;
+
+                return employee;
+            });
     }
 });
 
