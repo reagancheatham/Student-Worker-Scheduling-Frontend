@@ -35,7 +35,7 @@ export class AuthServices {
                         const firstBusiness = businesses[0];
                         Store.businessStore.set(firstBusiness);
 
-                        router.push(subRoutes.Dashboard.path);
+                        router.push(routes.NavbarLayout.path);
                     } else {
                         Store.businessStore.clear();
                         router.push(routes.NoBusiness.path);

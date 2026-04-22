@@ -16,19 +16,6 @@ export class Employee extends DatabaseModel {
         super();
     }
 
-    public static async createInviteEmployee(
-        email: string,
-        isManager: boolean,
-    ): Promise<Employee> {
-        const business = await Store.businessStore.get();
-        const businessID = business!.id;
-
-        const employee = new Employee(0, businessID, "", "", "", email, "");
-        (employee as any).isManager = isManager;
-
-        return employee;
-    }
-
     public static createFromData(data: any): Employee {
         const user = data["User"];
         const studentID = user ? user.studentID : ("" as string);

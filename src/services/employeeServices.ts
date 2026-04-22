@@ -10,11 +10,26 @@ const API_ROOT: string = "employees";
 
 export class EmployeeServices {
     public static async create(employee: Employee) {
+        return await DatabaseServices.create<Employee>(
+            Employee,
+            `${API_ROOT}`,
+            employee,
+        );
+    }
+
+    public static async invite(email: string, isManager: boolean) {
         try {
-            let business = await Store.businessStore.get();
-            if (business) await apiClient.post(`${API_ROOT}`, employee);
-        } catch (error) {
-            console.error(`Error adding employee: ${error}`);
+            const business = await Store.businessStore.get();
+
+            if (!business) throw Error("Could not get business!");
+
+            await apiClient.post(`${API_ROOT}/invite`, {
+                email,
+                isManager,
+                businessID: business.id,
+            });
+        } catch (error: any) {
+            console.error(`Error inviting employee: ${error}`);
             return;
         }
     }
@@ -77,5 +92,12 @@ export class EmployeeServices {
         } catch (error: any) {
             console.error(`Error fetching employee: ${error}`);
         }
+    }
+
+    public static async getEmployeeForEmail(email: string) {
+        return await DatabaseServices.get<Employee>(
+            Employee,
+            `${API_ROOT}/email/${email}`,
+        );
     }
 }
