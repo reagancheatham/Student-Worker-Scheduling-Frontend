@@ -38,7 +38,7 @@ export class EmployeeUnavailabilityEventData extends EventData {
         let style = {
             "grid-area": this.getGridArea(calendarData),
             "background-color": `color-mix(in srgb, var(${this.color.tailwind}), transparent 40%)`,
-            "z-index": `${this.zIndex}`,
+            "z-index": `0`,
             "border-color": `var(${this.color.border})`,
             "margin-top": `0`,
             "margin-bottom": `0`,

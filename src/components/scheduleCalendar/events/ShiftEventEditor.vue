@@ -37,8 +37,13 @@ const model = defineModel<ShiftEventData>({
     required: true,
 });
 
-const { isOpen, creator = false } = defineProps<{
+const {
+    isOpen,
+    data,
+    creator = false,
+} = defineProps<{
     isOpen: boolean;
+    data: CalendarData;
     creator?: boolean;
 }>();
 
@@ -168,37 +173,73 @@ const isValidRole = computed(() => {
         );
 });
 
+const isUnavailable = computed(() => {
+    const employee = state.employee;
+    const startTime = model.value.shift.startTime;
+    const endTime = model.value.shift.endTime;
+
+    console.log("test");
+
+    if (!employee) return false;
+    else
+        return (
+            data.refEmployeeUnavailabilities.value.find((eu) => {
+                return (
+                    eu.employee.id === employee.id &&
+                    ((startTime >= eu.startTime && startTime <= eu.endTime) ||
+                        (startTime >= eu.startTime && startTime <= eu.endTime))
+                );
+            }) !== undefined
+        );
+});
+
 const employeeItems = computed(() => {
-    if (!state.role) {
-        return employees.value;
-    } else {
-        return employees.value
-            .toSorted((e1, e2) => {
-                const firstValid =
-                    e1.roles.find((r) => r.id === state.role!.id) !== undefined;
-                const secondValid =
-                    e2.roles.find((r) => r.id === state.role!.id) !== undefined;
+    return employees.value
+        .toSorted((e1, e2) => {
+            if (!state.role) return 0;
 
-                if (firstValid && !secondValid) return -1;
-                else if (secondValid && !firstValid) return 1;
-                else return 0;
-            })
-            .map((employee) => {
-                let chip;
+            const firstValid =
+                e1.roles.find((r) => r.id === state.role!.id) !== undefined;
+            const secondValid =
+                e2.roles.find((r) => r.id === state.role!.id) !== undefined;
 
-                if (
-                    employee.roles.find((r) => r.id === state.role!.id) ===
+            if (firstValid && !secondValid) return -1;
+            else if (secondValid && !firstValid) return 1;
+            else return 0;
+        })
+        .map((employee) => {
+            let chip;
+            const startTime = model.value.shift.startTime;
+            const endTime = model.value.shift.endTime;
+
+            const unavailability = data.refEmployeeUnavailabilities.value.find(
+                (eu) => {
+                    return (
+                        eu.employee.id === employee.id &&
+                        ((eu.startTime <= startTime && eu.endTime >= endTime) ||
+                            (eu.startTime >= startTime &&
+                                eu.endTime <= endTime))
+                    );
+                },
+            );
+
+            if (unavailability)
+                chip = {
+                    color: "error",
+                };
+            else if (
+                state.role &&
+                employee.roles.find((r) => r.id === state.role!.id) ===
                     undefined
-                )
-                    chip = {
-                        color: "warning",
-                    };
+            )
+                chip = {
+                    color: "warning",
+                };
 
-                (employee as any).chip = chip;
+            (employee as any).chip = chip;
 
-                return employee;
-            });
-    }
+            return employee;
+        });
 });
 
 let deletedTasks: Task[] = [];
@@ -562,6 +603,19 @@ function pasteTemplate(template: TaskListTemplate): void {
                             decorative
                         />
                         <UFormField label="Assigned Employee" name="employee">
+                            <div @pointerdown.stop.prevent>
+                                <USelectMenu
+                                    class="min-w-36"
+                                    v-model="state.employee"
+                                    label-key="fullName"
+                                    :items="employeeItems"
+                                    clear
+                                    placeholder="Select Employee"
+                                    :autofocus="false"
+                                />
+                            </div>
+                        </UFormField>
+                        <div class="flex flex-col justify-end gap-1">
                             <UChip
                                 :show="!isValidRole"
                                 size="3xl"
@@ -570,20 +624,21 @@ function pasteTemplate(template: TaskListTemplate): void {
                                 :ui="{
                                     base: 'p-2',
                                 }"
-                            >
-                                <div @pointerdown.stop.prevent>
-                                    <USelectMenu
-                                        class="min-w-36"
-                                        v-model="state.employee"
-                                        label-key="fullName"
-                                        :items="employeeItems"
-                                        clear
-                                        placeholder="Select Employee"
-                                        :autofocus="false"
-                                    />
-                                </div>
-                            </UChip>
-                        </UFormField>
+                                standalone
+                                inset
+                            />
+                            <UChip
+                                :show="isUnavailable"
+                                size="3xl"
+                                text="Unavailable"
+                                color="error"
+                                :ui="{
+                                    base: 'p-2',
+                                }"
+                                standalone
+                                inset
+                            />
+                        </div>
                     </div>
                     <UFormField name="taskList">
                         <div

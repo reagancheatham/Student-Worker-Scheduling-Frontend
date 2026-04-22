@@ -74,7 +74,7 @@ async function getData() {
         if (!employee) return;
         const requests =
             await TimeOffRequestServices.getAllForEmployee(employee);
-        data.value = requests.map((r: any) => ({
+        data.value = requests.map((r) => ({
             id: r.id,
             date: new Date(r.startDate).toLocaleDateString(),
             startTime: new Date(r.startDate).toLocaleTimeString([], {

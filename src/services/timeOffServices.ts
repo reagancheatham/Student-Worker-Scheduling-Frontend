@@ -1,6 +1,5 @@
 import { Business } from "@classes/database/business";
 import { TimeOffRequest } from "@classes/database/timeOffRequest";
-import { ApprovalStatus } from "@classes/util/approvalStatus";
 import { DatabaseServices } from "@classes/util/databaseServices";
 import { apiClient } from "./services";
 import { Employee } from "@classes/database/employee";

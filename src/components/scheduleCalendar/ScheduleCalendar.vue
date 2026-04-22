@@ -4,7 +4,7 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { ScheduleTemplate } from "@classes/database/scheduleTemplate.ts";
 import { Vector2 } from "@classes/util/vector.ts";
 import { today } from "@internationalized/date";
-import { onMounted, ref, shallowRef } from "vue";
+import { onMounted, ref, shallowRef, watch } from "vue";
 
 const {
     header,
@@ -33,9 +33,14 @@ const gridClasses = new Map<CalendarMode, string>([
     [CalendarMode.Month, "calendarGrid monthGrid"],
 ]);
 
-onMounted(() => {
-    data.value.updateRelevantData();
-});
+watch(
+    () => template,
+    (_) => {
+        data.value = getInitialCalendarData();
+        data.value.updateRelevantData();
+    },
+    { immediate: true },
+);
 
 function getInitialCalendarData(): CalendarData {
     return template

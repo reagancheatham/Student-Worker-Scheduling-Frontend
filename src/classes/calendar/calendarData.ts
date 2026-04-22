@@ -20,6 +20,7 @@ import { UserClassServices } from "../../services/userClassServices.ts";
 import { UserClass } from "@classes/database/userClass.ts";
 import { EmployeeUnavailability } from "@classes/database/employeeUnavailability.ts";
 import { EmployeeUnavailabilityServices } from "../../services/employeeUnavailabilityServices.ts";
+import { EmployeeServices } from "../../services/employeeServices.ts";
 
 type CalendarRange = {
     start: CalendarDate;
@@ -65,6 +66,8 @@ export class CalendarData {
         this.refSelectedView.value = selectedView;
         this.selectedDay = selectedDay;
         this.isEmployeeView = isEmployeeView;
+
+        if (isEmployeeView) this.initializeEmployeeView();
     }
 
     public static create(
@@ -165,10 +168,12 @@ export class CalendarData {
 
         const business = await Store.businessStore.get();
 
-        if (business) {
+        if (business)
             this.refUserClasses.value =
                 await UserClassServices.getAllClassesForBusiness(business);
-        } else this.refUserClasses.value = [];
+        else this.refUserClasses.value = [];
+
+        await this.updateUnavailabilities();
 
         if (this.isTemplate)
             relevantEvents =
@@ -213,6 +218,38 @@ export class CalendarData {
         this.refHasValidUnpublishedShift.value = unpublishedShift;
 
         return relevantEvents;
+    }
+
+    private async updateUnavailabilities() {
+        const business = await Store.businessStore.get();
+
+        if (!business) {
+            this.refEmployeeUnavailabilities.value = [];
+            return;
+        }
+
+        const allValues =
+            await EmployeeUnavailabilityServices.getAllForBusiness(business);
+
+        if (this.selectedView === CalendarMode.Day) {
+            const startDate = this.selectedDay.toDate(CalendarData.timeZone);
+            const endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59, 99);
+
+            this.refEmployeeUnavailabilities.value = allValues.filter(
+                (eu) => eu.startTime > startDate && eu.endTime < endDate,
+            );
+        } else {
+            const startDate = this.selectedWeek.start.toDate(
+                CalendarData.timeZone,
+            );
+            const endDate = this.selectedWeek.end.toDate(CalendarData.timeZone);
+            endDate.setHours(23, 59, 59, 99);
+
+            this.refEmployeeUnavailabilities.value = allValues.filter(
+                (eu) => eu.startTime > startDate && eu.endTime < endDate,
+            );
+        }
     }
 
     private async getEventsForDate(date: CalendarDate): Promise<EventData[]> {
@@ -299,6 +336,13 @@ export class CalendarData {
                 relevantEmployees.push(employee);
         }
 
+        for (const unavailability of this.refEmployeeUnavailabilities.value) {
+            const employee = unavailability.employee;
+
+            if (!relevantEmployees.find((e) => e.id === employee.id))
+                relevantEmployees.push(employee);
+        }
+
         const currentEmployee = await Store.employeeStore.get();
 
         relevantEmployees = relevantEmployees.sort((e1, e2) => {
@@ -306,22 +350,13 @@ export class CalendarData {
             else if (e2.id === currentEmployee?.id) return 1;
             else return e1.id - e2.id;
         });
-        const unavailabilities: EmployeeUnavailability[] = [];
 
-        const promises: Promise<void>[] = relevantEmployees.map(
-            async (employee) => {
-                const found =
-                    await EmployeeUnavailabilityServices.getAllForEmployee(
-                        employee,
-                    );
-
-                unavailabilities.push(...found);
-            },
-        );
-
-        await Promise.all(promises);
-
-        this.refEmployeeUnavailabilities.value = unavailabilities;
         return relevantEmployees;
+    }
+
+    private async initializeEmployeeView() {
+        const employee = await Store.employeeStore.get();
+
+        if (employee) this.refEmployeeClassFilter.value = [employee.id];
     }
 }

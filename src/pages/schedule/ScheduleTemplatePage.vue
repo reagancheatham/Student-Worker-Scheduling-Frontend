@@ -15,7 +15,8 @@ onMounted(async () => {
 
     const lastEditedTemplate = await Store.lastEditedTemplateStore.get();
 
-    if (lastEditedTemplate) selectedTemplate.value = lastEditedTemplate;
+    if (lastEditedTemplate)
+        selectedTemplate.value = lastEditedTemplate;
 
     watch(
         selectedTemplate,

@@ -5,7 +5,7 @@ import { Employee } from "./employee.ts";
 export class TimeOffRequest extends DatabaseModel {
     constructor(
         public id: number,
-        public employee: Employee,
+        public employee: Employee | undefined,
         public startDate: Date,
         public endDate: Date,
         public reason: string,
@@ -15,19 +15,25 @@ export class TimeOffRequest extends DatabaseModel {
     }
 
     public static createFromData(data: any): TimeOffRequest {
+        const employee = data["Employee"]
+            ? Employee.createFromData(data["Employee"])
+            : undefined;
+
+        console.log("BODY: " + JSON.stringify(data));
+
         return new TimeOffRequest(
             data["id"] ?? 0,
-            Employee.createFromData(data["Employee"]) ?? null,
+            employee,
             data["startDate"] ?? Date.now(),
             data["endDate"] ?? Date.now(),
             data["reason"] ?? "",
-            data["status"] ?? ApprovalStatus.Pending,
+            data["approvalStatus"] ?? ApprovalStatus.Pending,
         );
     }
 
     public toJSON() {
         return {
-            employeeID: this.employee.id,
+            employeeID: this.employee ? this.employee.id : null,
             startDate: this.startDate,
             endDate: this.endDate,
             reason: this.reason,
