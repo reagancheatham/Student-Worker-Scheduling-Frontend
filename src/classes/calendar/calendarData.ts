@@ -299,7 +299,13 @@ export class CalendarData {
                 relevantEmployees.push(employee);
         }
 
-        relevantEmployees = relevantEmployees.sort((e1, e2) => e1.id - e2.id);
+        const currentEmployee = await Store.employeeStore.get();
+
+        relevantEmployees = relevantEmployees.sort((e1, e2) => {
+            if (e1.id === currentEmployee?.id) return -1;
+            else if (e2.id === currentEmployee?.id) return 1;
+            else return e1.id - e2.id;
+        });
         const unavailabilities: EmployeeUnavailability[] = [];
 
         const promises: Promise<void>[] = relevantEmployees.map(

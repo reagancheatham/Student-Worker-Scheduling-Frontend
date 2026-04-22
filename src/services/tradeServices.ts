@@ -1,8 +1,8 @@
 import { DatabaseServices } from "@classes/util/databaseServices";
-import { ShiftOfferRequest } from "@classes/database/shiftOfferRequests";
 import { ShiftTradeRequest } from "@classes/database/shiftTradeRequests";
 import { apiClient } from "./services";
 import { DatabaseModelStatic } from "@classes/database/databaseModel";
+import { ShiftOfferRequest } from "@classes/database/shiftOfferRequest.ts";
 
 const TRADE_API_ROOT: string = "shiftTradeRequests";
 const OFFER_API_ROOT: string = "shiftOfferRequests";

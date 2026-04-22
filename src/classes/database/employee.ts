@@ -6,6 +6,7 @@ export class Employee extends DatabaseModel {
     constructor(
         public readonly id: number,
         public readonly businessID: number,
+        public readonly userID: number,
         public readonly studentID: string,
         public readonly firstName: string,
         public readonly lastName: string,
@@ -18,6 +19,7 @@ export class Employee extends DatabaseModel {
 
     public static createFromData(data: any): Employee {
         const user = data["User"];
+        const userID = user ? user.id : "";
         const studentID = user ? user.studentID : ("" as string);
         const firstName = user ? user.firstName : ("" as string);
         const lastName = user ? user.lastName : ("" as string);
@@ -28,6 +30,7 @@ export class Employee extends DatabaseModel {
         return new Employee(
             data["id"] ?? 0,
             data["businessID"] ?? 0,
+            userID,
             studentID,
             firstName,
             lastName,

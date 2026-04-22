@@ -17,11 +17,9 @@ export class ShiftTradeRequest extends DatabaseModel {
         const shift = data["Shift"]
             ? Shift.createFromData(data["Shift"])
             : undefined;
-        const employee = data["Employee"]
-            ? Employee.createFromData(data["Employee"])
+        const employee = data["TargetEmployee"]
+            ? Employee.createFromData(data["TargetEmployee"])
             : undefined;
-
-        console.log("DATA: " + JSON.stringify(data));
 
         return new ShiftTradeRequest(
             data["id"] ?? 0,

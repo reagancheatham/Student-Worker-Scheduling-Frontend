@@ -15,6 +15,7 @@ export class EmployeeStoreField extends StoreField<Employee> {
 
                 return new Employee(
                     employeeData.id,
+                    employeeData.userID,
                     employeeData.businessID,
                     employeeData.studentID,
                     employeeData.firstName,

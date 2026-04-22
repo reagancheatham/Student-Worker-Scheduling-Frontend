@@ -20,7 +20,7 @@ export class TaskCheckOff extends DatabaseModel {
             data["taskID"] ?? 0,
             employeeData
                 ? Employee.createFromData(employeeData)
-                : new Employee(0, 0, "", "", "", "", ""),
+                : new Employee(0, 0, 0, "", "", "", "", ""),
         );
     }
 
