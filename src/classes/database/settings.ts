@@ -11,13 +11,14 @@ export class Settings extends DatabaseModel {
         public automaticShiftTrades: boolean,
         public enableOpenShift: boolean,
         public enableShiftTrades: boolean,
+        public defaultTermCode: string,
     ) {
         super();
     }
 
     public static createFromData(data: any): Settings {
         return new Settings(
-            data["businessID"] ?? 1,
+            data["businessID"] ?? 0,
             data["doubleTaskSignOff"] ?? false,
             data["employeeSignOff"] ?? false,
             data["allowClockInOut"] ?? true,
@@ -26,6 +27,7 @@ export class Settings extends DatabaseModel {
             data["automaticShiftTrades"] ?? false,
             data["enableOpenShift"] ?? false,
             data["enableShiftTrades"] ?? false,
+            data["defaultTermCode"] ?? "",
         );
     }
 
@@ -40,6 +42,7 @@ export class Settings extends DatabaseModel {
             false,
             false,
             false,
+            "",
         );
     }
 }

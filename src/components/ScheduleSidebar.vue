@@ -10,7 +10,7 @@ import { Store } from "@classes/util/store/store.ts";
 const isAdmin = ref(false);
 
 onMounted(async () => {
-    const permissionRoleID = Store.userStore.getImmediate()?.permissionRoleID
+    const permissionRoleID = Store.userStore.getImmediate()?.permissionRoleID;
     if (!permissionRoleID) return;
     const role = await PermissionRoleServices.get(permissionRoleID);
     isAdmin.value = role.name === "Admin";
@@ -26,10 +26,10 @@ const links = computed(() => [
     {
         label: "Schedule",
         icon: "i-lucide-calendar-fold",
-        to: subRoutes.Schedule,
         defaultOpen:
             route.path.includes(subRoutes.Schedule.path) ||
-            route.path.includes(subRoutes.ScheduleTemplate.path),
+            route.path.includes(subRoutes.ScheduleTemplate.path) ||
+            route.path.includes(subRoutes.TaskLists.path),
         children: [
             {
                 label: "Schedule Editor",
@@ -41,8 +41,12 @@ const links = computed(() => [
                 icon: "i-lucide-calendar-cog",
                 to: subRoutes.ScheduleTemplate,
             },
+            {
+                label: "Task Lists",
+                icon: "i-lucide-list-checks",
+                to: subRoutes.TaskLists,
+            },
         ],
-        active: false,
     },
     {
         label: "Notifications",
@@ -52,18 +56,36 @@ const links = computed(() => [
     {
         label: "Employees",
         icon: "i-lucide-users",
-        to: subRoutes.Employees,
+        defaultOpen:
+            route.path.includes(subRoutes.EmployeeList.path) ||
+            route.path.includes(subRoutes.Roles.path),
+        children: [
+            {
+                label: "Employee List",
+                icon: "i-lucide-list",
+                to: subRoutes.EmployeeList,
+            },
+            {
+                label: "Roles",
+                icon: "i-lucide-clipboard-list",
+                to: subRoutes.Roles,
+            },
+        ],
     },
     {
         label: "Settings",
         icon: "i-lucide-settings",
         to: subRoutes.Settings,
     },
-    ...(isAdmin.value ? [{
-        label: "Go To Admin",
-        icon: "i-lucide-shield",
-        to: routes.Admin,
-    }] : []),
+    ...(isAdmin.value
+        ? [
+              {
+                  label: "Go To Admin",
+                  icon: "i-lucide-shield",
+                  to: routes.Admin,
+              },
+          ]
+        : []),
 ]);
 
 const actions = computed(() => [
@@ -121,7 +143,6 @@ const searchGroups = computed(() => [
 
             <UNavigationMenu
                 orientation="vertical"
-                :key="route.path"
                 :items="links"
                 :ui="{
                     item: 'gap-3 w-full',

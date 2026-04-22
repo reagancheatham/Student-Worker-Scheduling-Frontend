@@ -46,6 +46,9 @@ export class EmployeeServices {
 
         try {
             const result = await apiClient.get(`${API_ROOT}/owners`);
+
+            if (!result.data || !Array.isArray(result.data)) return owners;
+
             owners = result.data.map((ownerData: any) => {
                 return new Owner(
                     Employee.createFromData(ownerData),

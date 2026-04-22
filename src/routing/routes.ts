@@ -1,18 +1,19 @@
 import DashboardPage from "../pages/DashboardPage.vue";
-import SchedulePage from "../pages/SchedulePage.vue";
-import EmployeesPage from "../pages/EmployeesPage.vue";
+import SchedulePage from "../pages/schedule/SchedulePage.vue";
+import EmployeesPage from "../pages/employees/EmployeesPage.vue";
 import SettingsPage from "../pages/SettingsPage.vue";
 import LoginPage from "../pages/LoginPage.vue";
 import { RouteRecordRaw } from "vue-router";
 import NavbarLayout from "@components/templates/NavbarLayout.vue";
 import NotificationsPage from "../pages/NotificationsPage.vue";
-import AdminPage from "../pages/AdminPage.vue";
+import AdminPage from "../pages/admin/AdminPage.vue";
 import HomePage from "../mobile/pages/HomePage.vue";
 import SchedulePageMobile from "../mobile/pages/SchedulePageMobile.vue";
 import TradeBoardPage from "../mobile/pages/TradeBoardPage.vue";
 import NoBusinessPage from "../pages/NoBusinessPage.vue";
-import ScheduleTemplatePage from "../pages/ScheduleTemplatePage.vue";
-import ScheduleContainerPage from "../pages/ScheduleContainerPage.vue";
+import ScheduleTemplatePage from "../pages/schedule/ScheduleTemplatePage.vue";
+import RolesPage from "../pages/employees/RolesPage.vue";
+import TaskListsPage from "../pages/schedule/TaskListsPage.vue";
 
 class Route {
     constructor(
@@ -57,28 +58,22 @@ const navbarLayout = Route.create(
     NavbarLayout,
     "NavbarLayout",
     [
-        Route.create("dashboard", DashboardPage, "Dashboard").noAuth(),
+        Route.create("dashboard", DashboardPage, "Dashboard"),
+        Route.create("schedule", SchedulePage, "Schedule Editor"),
         Route.create(
-            "scheduleContainer",
-            ScheduleContainerPage,
-            "Schedule Container",
-            [
-                Route.create("schedule", SchedulePage, "Schedule Editor"),
-                Route.create(
-                    "scheduleTemplate",
-                    ScheduleTemplatePage,
-                    "Schedule Template Editor",
-                ),
-            ],
-            "/nav/scheduleContainer/schedule",
-        ).noAuth(),
+            "scheduleTemplate",
+            ScheduleTemplatePage,
+            "Schedule Template Editor",
+        ),
+        Route.create("taskLists", TaskListsPage, "Task Lists"),
         Route.create(
             "notifications",
             NotificationsPage,
             "Notifications",
-        ).noAuth(),
-        Route.create("employees", EmployeesPage, "Employees").noAuth(),
-        Route.create("settings", SettingsPage, "Settings").noAuth(),
+        ),
+        Route.create("employeeList", EmployeesPage, "Employee List"),
+        Route.create("roles", RolesPage, "Roles"),
+        Route.create("settings", SettingsPage, "Settings"),
     ],
     "/nav/dashboard",
 );
@@ -119,10 +114,11 @@ export const routes = {
 
 export const subRoutes = {
     Dashboard: navbarLayout.children[0],
-    ScheduleContainer: navbarLayout.children[1],
-    Schedule: navbarLayout.children[1].children[0],
-    ScheduleTemplate: navbarLayout.children[1].children[1],
-    Notifications: navbarLayout.children[2],
-    Employees: navbarLayout.children[3],
-    Settings: navbarLayout.children[4],
+    Schedule: navbarLayout.children[1],
+    ScheduleTemplate: navbarLayout.children[2],
+    TaskLists: navbarLayout.children[3],
+    Notifications: navbarLayout.children[4],
+    EmployeeList: navbarLayout.children[5],
+    Roles: navbarLayout.children[6],
+    Settings: navbarLayout.children[7],
 };

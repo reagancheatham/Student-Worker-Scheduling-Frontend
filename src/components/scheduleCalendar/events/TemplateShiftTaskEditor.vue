@@ -2,9 +2,9 @@
 import { FormSubmitEvent } from "@nuxt/ui";
 import * as v from "valibot";
 import { onMounted, shallowReactive, watch } from "vue";
-import { TaskTemplate } from "@classes/database/taskTemplate.ts";
+import { ShiftTaskTemplate } from "@classes/database/shiftTaskTemplate.ts";
 
-const model = defineModel<TaskTemplate>({
+const model = defineModel<ShiftTaskTemplate>({
     required: true,
 });
 
@@ -71,7 +71,7 @@ function submitModalForm(_: FormSubmitEvent<Schema>): void {
     <UModal
         :open="isOpen"
         :title="creator ? 'Task Creator' : 'Task Editor'"
-        description="Edit the details of a template task."
+        description="Edit the details of a shift task."
         :ui="{ content: 'sm:max-w-xs' }"
         @update:open="toggleModal()"
     >

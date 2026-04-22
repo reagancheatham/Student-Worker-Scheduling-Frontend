@@ -43,4 +43,16 @@ export class ScheduleTemplateStoreField extends StoreField<ScheduleTemplate> {
     public clear(): void {
         localStorage.removeItem(STORE_KEY);
     }
+
+    public getUnsafe(): ScheduleTemplate | undefined {
+        const storedTemplate = localStorage.getItem(STORE_KEY);
+
+        if (!storedTemplate || storedTemplate === "undefined") return undefined;
+
+        const templateData = JSON.parse(storedTemplate);
+
+        if (!templateData.businessID) return undefined;
+
+        return ScheduleTemplate.create(templateData);
+    }
 }

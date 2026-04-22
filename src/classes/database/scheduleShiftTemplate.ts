@@ -1,12 +1,18 @@
 import { EventColor } from "@classes/calendar/eventColor.ts";
 import { DatabaseModel } from "./databaseModel.ts";
-import { stringToWeekDay, WeekDay } from "@classes/util/weekDay.ts";
+import {
+    stringToWeekDay,
+    toCalendarDate,
+    WeekDay,
+} from "@classes/util/weekDay.ts";
 import { ShiftTaskListTemplate } from "./shiftTaskListTemplate.ts";
 import { Employee } from "./employee.ts";
+import { Role } from "./role.ts";
+import { Shift } from "./shift.ts";
+import { CalendarDate } from "@internationalized/date";
+import { CalendarData } from "@classes/calendar/calendarData.ts";
 
 export class ScheduleShiftTemplate extends DatabaseModel {
-    private _employeeID: number;
-
     constructor(
         public readonly id: number,
         public readonly scheduleTemplateID: number,
@@ -16,11 +22,10 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         public color: EventColor,
         public weekDay: WeekDay,
         public taskList: ShiftTaskListTemplate,
-        private _employee: Employee | undefined = undefined,
+        public employee: Employee | undefined = undefined,
+        public role: Role | undefined = undefined,
     ) {
         super();
-
-        this._employeeID = _employee ? _employee.id : 0;
     }
 
     public static createFromData(data: any): ScheduleShiftTemplate {
@@ -41,6 +46,7 @@ export class ScheduleShiftTemplate extends DatabaseModel {
         const employee = data["Employee"]
             ? Employee.create(data["Employee"])
             : undefined;
+        const role = data["Role"] ? Role.create(data["Role"]) : undefined;
 
         return new ScheduleShiftTemplate(
             id,
@@ -54,29 +60,72 @@ export class ScheduleShiftTemplate extends DatabaseModel {
                 ? ShiftTaskListTemplate.createFromData(taskListData)
                 : new ShiftTaskListTemplate(0, id, "Task List", []),
             employee,
+            role,
         );
-    }
-
-    public get employee(): Employee | undefined {
-        return this._employee;
-    }
-
-    public set employee(value: Employee | undefined) {
-        this._employee = value;
-
-        if (value) this._employeeID = value.id;
-        else this._employeeID = 0;
     }
 
     public isValid(): boolean {
         return this.id > 0;
     }
 
+    public toShift(businessID: number, date: CalendarDate): Shift {
+        const calendarStartTime = date.toDate(CalendarData.timeZone);
+        const calendarEndTime = date.toDate(CalendarData.timeZone);
+
+        calendarStartTime.setHours(this.startTime.getHours());
+        calendarStartTime.setMinutes(this.startTime.getMinutes());
+
+        calendarEndTime.setHours(this.endTime.getHours());
+        calendarEndTime.setMinutes(this.endTime.getMinutes());
+
+        return new Shift(
+            0,
+            businessID,
+            this.name,
+            calendarStartTime,
+            calendarEndTime,
+            this.color,
+            false,
+            this.taskList.toTaskList(),
+            this.employee,
+            this.role,
+        );
+    }
+
+    public toShiftRelative(businessID: number, sunday: CalendarDate): Shift {
+        const calendarStartTime = toCalendarDate(this.weekDay, sunday).toDate(
+            CalendarData.timeZone,
+        );
+        const calendarEndTime = toCalendarDate(this.weekDay, sunday).toDate(
+            CalendarData.timeZone,
+        );
+
+        calendarStartTime.setHours(this.startTime.getHours());
+        calendarStartTime.setMinutes(this.startTime.getMinutes());
+
+        calendarEndTime.setHours(this.endTime.getHours());
+        calendarEndTime.setMinutes(this.endTime.getMinutes());
+
+        return new Shift(
+            0,
+            businessID,
+            this.name,
+            calendarStartTime,
+            calendarEndTime,
+            this.color,
+            false,
+            this.taskList.toTaskList(),
+            this.employee,
+            this.role,
+        );
+    }
+
     public toJSON() {
         return {
             id: this.id,
             scheduleTemplateID: this.scheduleTemplateID,
-            employeeID: this._employeeID === 0 ? null : this._employeeID,
+            employeeID: this.employee === undefined ? null : this.employee.id,
+            targetRoleID: this.role === undefined ? null : this.role.id,
             name: this.name,
             startTime: this.startTime,
             endTime: this.endTime,

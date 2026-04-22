@@ -2,12 +2,16 @@ import { defineConfig } from "vite";
 import { fileURLToPath, URL } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import ui from "@nuxt/ui/vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ mode }) => {
     let baseURL = "";
 
-    if (mode === "development") baseURL = "/";
-    else baseURL = "/sev2026/t6/";
+    if (mode === "development") {
+        baseURL = "/";
+    } else {
+        baseURL = "/sev2026/t6/";
+    }
 
     return {
         plugins: [
@@ -29,6 +33,9 @@ export default defineConfig(({ mode }) => {
                     ],
                 },
                 ui: {
+                    icons: {
+                        collections: ["simple-icons"],
+                    },
                     colors: {
                         "event-blue": "sky",
                         "event-orange": "orange",
@@ -37,7 +44,17 @@ export default defineConfig(({ mode }) => {
                         "event-purple": "purple",
                     },
                 },
-                autoImport: true,
+                autoImport: {},
+            }),
+            VitePWA({
+                registerType: "autoUpdate",
+                includeAssets: ["avatar.png", "OC.png", "mobileOC.png"],
+                workbox: {
+                    globPatterns: ["**/*.{js,css,html,ico,png,svg,webp}"],
+                },
+                devOptions: {
+                    enabled: false,
+                },
             }),
         ],
         server: {

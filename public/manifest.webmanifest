@@ -1,0 +1,17 @@
+{
+  "name": "Student Worker Scheduling",
+  "short_name": "SWS",
+  "description": "Manage student worker scheduling on desktop or mobile.",
+  "theme_color": "#811429",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "./mobile/homePage",
+  "icons": [
+    {
+      "src": "appImage.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
