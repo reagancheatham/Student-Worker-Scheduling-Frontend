@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { EventTime } from "../../../classes/calendar/eventTime.ts";
 import { MathUtil } from "../../../classes/util/mathUtil.ts";
 import { Range } from "../../../classes/util/range.ts";
@@ -9,17 +9,10 @@ import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData.ts";
 import { ShiftEventData } from "@classes/calendar/shiftEventData.ts";
 import { isSameDay, startOfWeek } from "@internationalized/date";
-import {
-    GetClassFunc,
-    GetLabelFunc,
-    GetStyleFunc,
-    UpdateBackendFunc,
-} from "@classes/calendar/eventFunctions.ts";
 import { EventStyleData } from "@classes/calendar/eventStyleData.ts";
-import { ShiftEvent } from "@classes/calendar/shiftEvent.ts";
-import { ShiftTemplateEvent } from "@classes/calendar/shiftTemplateEvent.ts";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
 import { fromWeekIndex } from "@classes/util/weekDay.ts";
+import { UserClassEventData } from "@classes/calendar/userClassEventData.ts";
 
 //#region Variables
 enum EventState {
@@ -58,10 +51,10 @@ const titleFontSize = ref(FONT_RANGE.max);
 const titleMargin = ref(TITLE_MARGIN_RANGE.max);
 const isPopoverOpen = ref(false);
 const isModalOpen = ref(false);
-const getClassImpl = ref<GetClassFunc>();
-const getStyleImpl = ref<GetStyleFunc>();
-const getLabelImpl = ref<GetLabelFunc>();
-const updateBackendImpl = ref<UpdateBackendFunc>();
+
+const isEditable = computed(
+    () => props.editable && !(model.value instanceof UserClassEventData),
+);
 
 let state: EventState = EventState.None;
 let dragStart: Vector2 = Vector2.zero;
@@ -76,18 +69,6 @@ let resizePointerStart: number;
 
 onMounted(() => {
     const elementValue = element.value.$el;
-
-    if (props.calendarData.isTemplate) {
-        getClassImpl.value = ShiftTemplateEvent.getClass;
-        getStyleImpl.value = ShiftTemplateEvent.getStyle;
-        getLabelImpl.value = ShiftTemplateEvent.getLabel;
-        updateBackendImpl.value = ShiftTemplateEvent.updateBackendEvent;
-    } else {
-        getClassImpl.value = ShiftEvent.getClass;
-        getStyleImpl.value = ShiftEvent.getStyle;
-        getLabelImpl.value = ShiftEvent.getLabel;
-        updateBackendImpl.value = ShiftEvent.updateBackendEvent;
-    }
 
     if (!elementValue) return;
 
@@ -130,7 +111,7 @@ function shouldRender(): boolean {
 function onPointerDown(evt: PointerEvent): void {
     evt.preventDefault();
 
-    if (state == EventState.Resizing || !props.editable) return;
+    if (state == EventState.Resizing || !isEditable.value) return;
 
     dragStart = new Vector2(evt.clientX, evt.clientY);
 
@@ -248,7 +229,7 @@ function onPointerUp(_: PointerEvent): void {
     document.removeEventListener("pointerup", onPointerUp);
 
     if (state != EventState.Dragging) {
-        if (state == EventState.None && props.editable)
+        if (state == EventState.None && isEditable.value)
             isModalOpen.value = true;
 
         return;
@@ -334,7 +315,11 @@ function stopResize(): void {
 //#endregion
 
 function onMouseEnter(): void {
-    if (props.canHover && !props.editable) isPopoverOpen.value = true;
+    if (
+        props.canHover &&
+        (!isEditable.value || model.value instanceof UserClassEventData)
+    )
+        isPopoverOpen.value = true;
     else isPopoverOpen.value = false;
 }
 
@@ -369,30 +354,28 @@ function resizeTitle(): void {
 }
 
 function getClass(): string {
-    if (!getClassImpl.value) return "";
-
-    return getClassImpl.value(getStyleData());
+    return model.value.getClass(getStyleData());
 }
 
 function getStyle(): any {
-    if (!shouldRender() || !getStyleImpl.value)
+    if (!shouldRender() || !model.value)
         return {
             visibility: "hidden",
         };
 
-    return getStyleImpl.value(getStyleData());
+    return model.value.getStyle(getStyleData());
 }
 
 function getLabel(): string {
-    if (!getLabelImpl.value) return "";
+    if (!model.value) return "";
 
-    return getLabelImpl.value(getStyleData());
+    return model.value.getLabel(getStyleData());
 }
 
 function updateBackendEvent(): void {
-    if (!updateBackendImpl.value) return;
+    if (!model.value) return;
 
-    updateBackendImpl.value(getStyleData());
+    model.value.updateBackend();
 }
 
 function getStyleData(): EventStyleData {
@@ -400,7 +383,7 @@ function getStyleData(): EventStyleData {
         model.value,
         props.calendarData,
         props.cellSize,
-        props.editable,
+        isEditable.value,
     );
 }
 
@@ -522,7 +505,7 @@ function onEventDeleted(): void {
                 <div
                     v-if="
                         props.calendarData.selectedView === CalendarMode.Day &&
-                        editable
+                        isEditable
                     "
                     class="resizeHandle bottom-0 top-0 right-0 cursor-ew-resize"
                     style="width: 8px"
@@ -534,7 +517,7 @@ function onEventDeleted(): void {
                 #footer
                 v-if="
                     props.calendarData.selectedView === CalendarMode.Week &&
-                    editable
+                    isEditable
                 "
             >
                 <div

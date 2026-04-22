@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { EventData } from "@classes/calendar/eventData";
 import { Vector2 } from "@classes/util/vector.ts";
 import { CalendarMode } from "@classes/calendar/calendarMode.ts";
 import { CalendarData } from "@classes/calendar/calendarData";
 import { ShiftEventData } from "@classes/calendar/shiftEventData";
 import { ShiftTemplateEventData } from "@classes/calendar/shiftTemplateEventData.ts";
+import { UserClassEventData } from "@classes/calendar/userClassEventData.ts";
+import { stringToWeekDay, toWeekIndex } from "@classes/util/weekDay.ts";
+import { DateFormatter } from "@internationalized/date";
+import { EmployeeUnavailabilityEventData } from "@classes/calendar/employeeUnavailabilityEventData.ts";
+import { Employee } from "@classes/database/employee.ts";
 
 type EventSlot = {
     index: number;
@@ -27,6 +32,20 @@ const { calendarData, cellSize, editable } = defineProps<{
 
 const canHover = ref<boolean>(true);
 
+const relevantEvents = computed(() => {
+    const userClassEvents = getUserClassEvents();
+    const unavailabilities = getEmployeeUnavailabilities();
+
+    return [
+        ...calendarData.refRelevantEvents.value,
+        ...unavailabilities,
+        ...userClassEvents,
+    ];
+});
+
+const weekFormatter = new DateFormatter(CalendarData.localeString, {
+    weekday: "long",
+});
 const eventSlots: Map<EventData, EventSlot> = new Map<EventData, EventSlot>();
 
 const displayClasses = new Map<CalendarMode, string>([
@@ -35,13 +54,113 @@ const displayClasses = new Map<CalendarMode, string>([
     [CalendarMode.Month, "eventContainer monthEventContainer"],
 ]);
 
-watch(calendarData.refRelevantEvents, () => {
+watch(relevantEvents, () => {
     initializeZIndices();
     calculateBisects();
 });
 
+function getUserClassEvents(): UserClassEventData[] {
+    const userClassEvents: UserClassEventData[] = [];
+
+    calendarData.refUserClasses.value.forEach((c) => {
+        if (!calendarData.refEmployeeClassFilter.value.includes(c.employee.id))
+            return;
+
+        const selectedDate = calendarData.selectedDay.toDate(
+            CalendarData.timeZone,
+        );
+
+        if (calendarData.selectedView === CalendarMode.Day) {
+            if (calendarData.isTemplate && calendarData.selectedTemplateDay) {
+                const selectedDay = calendarData.selectedTemplateDay;
+
+                if (!c.weekDays.includes(selectedDay)) return;
+
+                const templateDate = new Date(
+                    2026,
+                    4,
+                    12,
+                    selectedDate.getHours(),
+                    selectedDate.getMinutes(),
+                );
+
+                const eventData = reactive(
+                    new UserClassEventData(c, templateDate),
+                );
+                eventData.templateStartDay = toWeekIndex(selectedDay);
+                eventData.templateEndDay = toWeekIndex(selectedDay);
+                userClassEvents.push(eventData);
+            } else {
+                const selectedDay = stringToWeekDay(
+                    weekFormatter.format(selectedDate),
+                );
+
+                if (
+                    !c.weekDays.includes(selectedDay) ||
+                    c.startDate > selectedDate ||
+                    c.endDate < selectedDate
+                )
+                    return;
+
+                const eventData = reactive(
+                    new UserClassEventData(c, selectedDate),
+                );
+                userClassEvents.push(eventData);
+            }
+        } else {
+            const weekStart = calendarData.selectedWeek.start;
+
+            c.weekDays.forEach((weekDay) => {
+                if (calendarData.isTemplate) {
+                    const templateDate = new Date(
+                        2026,
+                        4,
+                        12,
+                        selectedDate.getHours(),
+                        selectedDate.getMinutes(),
+                    );
+
+                    const eventData = reactive(
+                        new UserClassEventData(c, templateDate),
+                    );
+                    eventData.templateStartDay = toWeekIndex(weekDay);
+                    eventData.templateEndDay = toWeekIndex(weekDay);
+                    userClassEvents.push(eventData);
+                } else {
+                    const weekIndex = toWeekIndex(weekDay);
+                    const eventDate = weekStart.add({ days: weekIndex });
+
+                    const eventData = reactive(
+                        new UserClassEventData(
+                            c,
+                            eventDate.toDate(CalendarData.timeZone),
+                        ),
+                    );
+                    userClassEvents.push(eventData);
+                }
+            });
+        }
+    });
+
+    return userClassEvents;
+}
+
+function getEmployeeUnavailabilities(): EmployeeUnavailabilityEventData[] {
+    const events: EmployeeUnavailabilityEventData[] = [];
+
+    calendarData.refEmployeeUnavailabilities.value.forEach((eu) => {
+        if (!calendarData.refEmployeeClassFilter.value.includes(eu.employee.id))
+            return;
+
+        const event = new EmployeeUnavailabilityEventData(eu);
+        events.push(event);
+    });
+
+    return events;
+}
+
 function initializeZIndices(): void {
-    calendarData.refRelevantEvents.value.forEach((element) => {
+    relevantEvents.value.forEach((element) => {
         element.zIndex = element.startTime.totalTime();
     });
 }
@@ -74,9 +193,9 @@ function onEventDragEnded(event: EventData): void {
 function calculateBisects(): void {
     eventSlots.clear();
 
-    const sortedEvents: EventData[] = [
-        ...calendarData.refRelevantEvents.value,
-    ].sort((a, b) => a.startTime.totalTime() - b.startTime.totalTime());
+    const sortedEvents: EventData[] = [...relevantEvents.value].sort(
+        (a, b) => a.startTime.totalTime() - b.startTime.totalTime(),
+    );
 
     for (const event of sortedEvents) {
         if (eventSlots.has(event)) continue;
@@ -170,24 +289,26 @@ function findLongestBisectChain(event: EventData): EventData[] {
 }
 
 function getAllBisectingEvents(event: EventData): EventData[] {
-    return calendarData.refRelevantEvents.value.filter((e) => {
+    return relevantEvents.value.filter((e) => {
         if (calendarData.selectedView === CalendarMode.Day) {
-            if (event instanceof ShiftEventData && e instanceof ShiftEventData)
-                return (
-                    event.bisects(e) &&
-                    event.shift.employee?.id === e.shift.employee?.id
-                );
-            else if (
-                event instanceof ShiftTemplateEventData &&
-                e instanceof ShiftTemplateEventData
-            )
-                return (
-                    event.bisects(e) &&
-                    event.template.employee?.id === e.template.employee?.id
-                );
+            const employee1 = getEmployeeForEvent(event);
+            const employee2 = getEmployeeForEvent(e);
+
+            if (employee1 && employee2)
+                return event.bisects(e) && employee1.id == employee2.id;
+            else if (employee1 || employee2) return false;
             else return event.bisects(e);
         } else return event.bisects(e);
     });
+}
+
+function getEmployeeForEvent(event: EventData): Employee | undefined {
+    if (event instanceof ShiftEventData) return event.shift.employee;
+    else if (event instanceof ShiftTemplateEventData)
+        return event.template.employee;
+    else if (event instanceof UserClassEventData)
+        return event.userClass.employee;
+    else return undefined;
 }
 </script>
 
@@ -214,7 +335,7 @@ function getAllBisectingEvents(event: EventData): EventData[] {
 <template>
     <div :class="displayClasses.get(calendarData.selectedView)!">
         <CalendarEvent
-            v-for="event in calendarData.refRelevantEvents.value"
+            v-for="event in relevantEvents"
             :model-value="event"
             :calendar-data="calendarData"
             :can-hover="canHover"

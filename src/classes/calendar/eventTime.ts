@@ -19,27 +19,27 @@ export class EventTime {
         );
     }
 
-    isBefore(other: EventTime): boolean {
+    public isBefore(other: EventTime): boolean {
         return this.totalTime() < other.totalTime();
     }
 
-    isBeforeOrEqual(other: EventTime): boolean {
+    public isBeforeOrEqual(other: EventTime): boolean {
         return this.isBefore(other) || this.totalTime() === other.totalTime();
     }
 
-    isAfter(other: EventTime): boolean {
+    public isAfter(other: EventTime): boolean {
         return this.totalTime() > other.totalTime();
     }
 
-    isAfterOrEqual(other: EventTime): boolean {
+    public isAfterOrEqual(other: EventTime): boolean {
         return this.isAfter(other) || this.totalTime() === other.totalTime();
     }
 
-    toTime(): Time {
+    public toTime(): Time {
         return new Time(this.hour, this.minute);
     }
 
-    totalTime(): number {
+    public totalTime(): number {
         const day = new CalendarDate(this.year, this.month, this.day);
         const julianStart = day.calendar.toJulianDay(
             new CalendarDate(day.year, 1, 1),
@@ -50,7 +50,7 @@ export class EventTime {
         return dayValue + 60 * this.hour + this.minute;
     }
 
-    toTimeString(): string {
+    public toTimeString(): string {
         let hour = this.hour;
         let minute = this.minute;
 
@@ -72,7 +72,7 @@ export class EventTime {
         return `${hourText}:${minuteText} ${periodText}`;
     }
 
-    toIsoTimeString(): string {
+    public toIsoTimeString(): string {
         let hour = this.hour;
         let minute = this.minute;
 
@@ -90,7 +90,7 @@ export class EventTime {
         return `${hourText}:${minuteText}`;
     }
 
-    toDate(): Date {
+    public toDate(): Date {
         const date = new Date(
             this.year,
             this.month - 1,
@@ -102,11 +102,11 @@ export class EventTime {
         return date;
     }
 
-    calendarDate(): CalendarDate {
+    public calendarDate(): CalendarDate {
         return new CalendarDate(this.year, this.month, this.day);
     }
 
-    clone(): EventTime {
+    public clone(): EventTime {
         return new EventTime(
             this.year,
             this.month,

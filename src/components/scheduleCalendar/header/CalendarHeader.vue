@@ -15,22 +15,19 @@ import { WeekDay } from "@classes/util/weekDay.ts";
 import { today } from "@internationalized/date";
 import { onMounted, ref } from "vue";
 import { ScheduleTemplateServices } from "../../../services/scheduleTemplateServices.ts";
+import { TaskList } from "@classes/database/taskList.ts";
 
-const { data, cellSize } = defineProps<{
+const { data, cellSize, employeeView } = defineProps<{
     data: CalendarData;
     cellSize: Vector2;
-    template?: boolean;
+    employeeView?: boolean;
 }>();
 
-const editedEvent = ref<EventData>(
-    new ShiftEventData(
-        new Shift(0, 0, "", new Date(), new Date(), EventColor.blue, false),
-    ),
-);
+const business = ref<Business>();
+const editedEvent = ref<EventData>(new ShiftEventData(createDefaultShift()));
 const isModalOpen = ref(false);
 const templateName = ref("");
 const isUpdatingTemplateName = ref(false);
-const business = ref<Business>();
 
 const createItems = [
     [
@@ -111,12 +108,13 @@ function createDefaultShift(): Shift {
 
     return new Shift(
         0,
-        business.value ? business.value.id : 0,
+        business?.value ? business.value.id : 0,
         "New Shift",
         startTime,
         endTime,
         EventColor.blue,
         false,
+        new TaskList(0, 0, "New Task List", []),
     );
 }
 
@@ -240,12 +238,25 @@ async function publishAll(): Promise<void> {
             />
         </div>
         <div class="headerSegment rightSegment">
+            <UFormField v-if="!employeeView" label="Class Filter">
+                <USelectMenu
+                    v-model="data.refEmployeeClassFilter.value"
+                    class="min-w-32 max-w-40"
+                    :items="data.refRelevantEmployees.value"
+                    placeholder="Select Employees"
+                    label-key="fullName"
+                    value-key="id"
+                    multiple
+                />
+            </UFormField>
             <UModal
+                v-if="!employeeView"
                 :title="`Publish All Shifts in ${data.selectedView === CalendarMode.Week ? 'Week' : 'Day'}?`"
                 description="This will notify relevant employees."
                 :ui="{ content: `sm:max-w-xs` }"
             >
                 <UButton
+                    icon="i-lucide-stamp"
                     :label="`Publish ${data.selectedView === CalendarMode.Week ? 'Week' : 'Day'}`"
                     :disabled="!data.hasValidUnpublishedShift"
                 />
@@ -270,7 +281,10 @@ async function publishAll(): Promise<void> {
                     />
                 </template>
             </UModal>
-            <TemplatePaster v-if="!data.isTemplate" :data="data" />
+            <TemplatePaster
+                v-if="!data.isTemplate && !employeeView"
+                :data="data"
+            />
             <UButton
                 v-if="!data.isTemplate"
                 label="Today"
